@@ -25,9 +25,9 @@ def db_ready():
 # ── Header ──────────────────────────────────────────────────────────────────
 col_logo, col_title = st.columns([1, 4])
 with col_logo:
-    st.image("assets/hexsentry_logo.png", width=80)
+    st.image("assets/hexsentry_logo.png", width=140)
 with col_title:
-    st.title("HexSentry")
+    st.title("HexGuard")
     st.caption("Business Intelligence Platform")
 st.subheader("📍 Johnson Motors — Houston TX")
 st.divider()
