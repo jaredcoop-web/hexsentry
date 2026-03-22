@@ -172,7 +172,7 @@ if st.button("Ask", type="primary") and user_q:
         try:
             from ai.chat import ask
             answer = ask(user_q, api_key=api_key if api_key else None)
-            st.info(answer)
+            st.markdown(answer)
         except Exception as e:
             st.error(f"Error: {e}")
 
