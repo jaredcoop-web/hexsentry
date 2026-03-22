@@ -3,3 +3,4 @@ streamlit
 anthropic
 python-dotenv
 openpyxl
+altair==4.2.2
