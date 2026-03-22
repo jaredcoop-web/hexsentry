@@ -1,0 +1,501 @@
+lead_id,created_date,source,salesperson,model_interest,converted,converted_date
+L2000,2026-02-05,Facebook Ad,Troy Williams,F-150,False,
+L2001,2026-02-10,Facebook Ad,Priya Patel,RAV4,True,2026-02-22
+L2002,2026-01-20,Facebook Ad,Diana Lee,Ram 1500,False,
+L2003,2026-02-17,Google Ad,Troy Williams,RAV4,False,
+L2004,2025-09-19,Website,Priya Patel,Silverado,True,2025-10-13
+L2005,2025-12-09,Walk-in,Marcus Johnson,F-150,True,2025-12-19
+L2006,2025-12-23,Referral,Marcus Johnson,Silverado,False,
+L2007,2025-09-23,Facebook Ad,Jake Rivera,Civic,True,2025-10-10
+L2008,2025-12-14,Walk-in,Troy Williams,Civic,True,2025-12-17
+L2009,2026-01-31,Referral,Priya Patel,F-150,False,
+L2010,2025-11-14,Walk-in,Jake Rivera,RAV4,False,
+L2011,2026-01-25,Phone Call,Priya Patel,Silverado,False,
+L2012,2025-10-06,Referral,Priya Patel,Silverado,True,2025-10-09
+L2013,2025-10-13,Facebook Ad,Troy Williams,Tacoma,False,
+L2014,2025-09-20,Website,Priya Patel,Ram 1500,False,
+L2015,2026-02-05,Walk-in,Diana Lee,Mustang,True,2026-02-06
+L2016,2025-12-11,Google Ad,Priya Patel,Accord,True,2025-12-26
+L2017,2025-11-25,Phone Call,Jake Rivera,Silverado,False,
+L2018,2025-11-16,Phone Call,Diana Lee,Tacoma,True,2025-11-27
+L2019,2025-10-16,Referral,Troy Williams,Tacoma,False,
+L2020,2026-01-26,Referral,Priya Patel,Mustang,False,
+L2021,2025-12-10,Google Ad,Diana Lee,Ram 1500,False,
+L2022,2026-01-18,Google Ad,Marcus Johnson,Tacoma,True,2026-02-10
+L2023,2025-10-24,Referral,Marcus Johnson,Explorer,False,
+L2024,2026-02-20,Phone Call,Troy Williams,RAV4,False,
+L2025,2025-11-04,Phone Call,Priya Patel,Explorer,False,
+L2026,2025-09-19,Google Ad,Priya Patel,Ram 1500,False,
+L2027,2025-12-12,Phone Call,Priya Patel,Civic,False,
+L2028,2025-09-10,Referral,Jake Rivera,Ram 1500,False,
+L2029,2026-02-11,Walk-in,Diana Lee,Accord,False,
+L2030,2025-10-13,Walk-in,Jake Rivera,Explorer,False,
+L2031,2025-11-24,Facebook Ad,Marcus Johnson,F-150,False,
+L2032,2025-09-26,Google Ad,Jake Rivera,Civic,True,2025-10-15
+L2033,2026-02-24,Facebook Ad,Troy Williams,Explorer,False,
+L2034,2025-12-28,Google Ad,Jake Rivera,Silverado,False,
+L2035,2025-11-28,Facebook Ad,Marcus Johnson,Mustang,False,
+L2036,2025-12-16,Walk-in,Marcus Johnson,Silverado,False,
+L2037,2025-11-29,Facebook Ad,Diana Lee,Civic,True,2025-12-15
+L2038,2025-11-29,Facebook Ad,Priya Patel,Accord,False,
+L2039,2025-09-18,Phone Call,Marcus Johnson,F-150,True,2025-10-16
+L2040,2025-11-27,Phone Call,Diana Lee,RAV4,False,
+L2041,2026-01-11,Website,Troy Williams,Civic,True,2026-01-25
+L2042,2025-12-28,Facebook Ad,Diana Lee,Silverado,True,2026-01-18
+L2043,2026-02-16,Walk-in,Jake Rivera,RAV4,False,
+L2044,2025-12-25,Facebook Ad,Marcus Johnson,RAV4,False,
+L2045,2025-10-23,Phone Call,Marcus Johnson,Ram 1500,True,2025-10-27
+L2046,2026-01-16,Referral,Diana Lee,Tacoma,True,2026-01-20
+L2047,2025-11-07,Facebook Ad,Jake Rivera,Accord,False,
+L2048,2026-01-31,Facebook Ad,Jake Rivera,Camry,False,
+L2049,2025-11-29,Facebook Ad,Jake Rivera,Silverado,False,
+L2050,2026-02-20,Referral,Jake Rivera,Ram 1500,False,
+L2051,2025-09-22,Referral,Marcus Johnson,RAV4,False,
+L2052,2025-11-18,Referral,Diana Lee,Civic,True,2025-12-01
+L2053,2025-12-17,Google Ad,Priya Patel,Explorer,False,
+L2054,2025-10-18,Google Ad,Diana Lee,Civic,False,
+L2055,2025-10-13,Website,Diana Lee,Accord,False,
+L2056,2025-12-25,Referral,Marcus Johnson,Tacoma,False,
+L2057,2025-10-05,Facebook Ad,Jake Rivera,Civic,True,2025-10-26
+L2058,2026-01-05,Facebook Ad,Priya Patel,Tacoma,False,
+L2059,2026-01-04,Google Ad,Marcus Johnson,RAV4,True,2026-01-14
+L2060,2025-09-09,Google Ad,Troy Williams,Silverado,True,2025-10-04
+L2061,2025-12-27,Facebook Ad,Jake Rivera,Civic,False,
+L2062,2025-09-29,Referral,Jake Rivera,Accord,False,
+L2063,2026-01-17,Walk-in,Priya Patel,Civic,False,
+L2064,2025-10-26,Walk-in,Diana Lee,Mustang,False,
+L2065,2025-09-09,Referral,Marcus Johnson,Tacoma,False,
+L2066,2025-10-01,Website,Diana Lee,Ram 1500,False,
+L2067,2026-02-24,Phone Call,Jake Rivera,Explorer,False,
+L2068,2025-10-13,Website,Diana Lee,F-150,False,
+L2069,2026-01-24,Referral,Jake Rivera,Civic,False,
+L2070,2025-10-14,Phone Call,Troy Williams,Mustang,True,2025-11-02
+L2071,2025-11-08,Google Ad,Marcus Johnson,Silverado,False,
+L2072,2025-12-15,Referral,Diana Lee,Silverado,False,
+L2073,2025-11-03,Referral,Diana Lee,Explorer,True,2025-11-19
+L2074,2025-10-07,Referral,Priya Patel,Explorer,False,
+L2075,2025-12-25,Walk-in,Priya Patel,Civic,True,2026-01-18
+L2076,2025-11-11,Referral,Priya Patel,Tacoma,False,
+L2077,2025-11-23,Phone Call,Marcus Johnson,Tacoma,False,
+L2078,2026-02-10,Referral,Marcus Johnson,Civic,False,
+L2079,2025-12-11,Facebook Ad,Diana Lee,Tacoma,True,2025-12-20
+L2080,2025-11-22,Referral,Jake Rivera,Ram 1500,False,
+L2081,2025-10-04,Facebook Ad,Troy Williams,F-150,False,
+L2082,2025-09-12,Facebook Ad,Marcus Johnson,Camry,True,2025-10-12
+L2083,2025-10-11,Walk-in,Priya Patel,RAV4,False,
+L2084,2026-02-24,Phone Call,Troy Williams,Silverado,False,
+L2085,2025-11-10,Referral,Troy Williams,Camry,True,2025-11-22
+L2086,2026-02-18,Website,Marcus Johnson,Explorer,False,
+L2087,2026-02-08,Phone Call,Diana Lee,Explorer,True,2026-03-01
+L2088,2025-09-24,Walk-in,Diana Lee,Tacoma,False,
+L2089,2025-09-20,Website,Jake Rivera,Tacoma,True,2025-09-21
+L2090,2025-09-03,Walk-in,Priya Patel,Silverado,False,
+L2091,2026-01-01,Facebook Ad,Marcus Johnson,Camry,True,2026-01-05
+L2092,2025-11-20,Referral,Diana Lee,Explorer,False,
+L2093,2025-10-05,Phone Call,Diana Lee,Camry,False,
+L2094,2026-01-14,Google Ad,Diana Lee,Tacoma,False,
+L2095,2025-11-29,Phone Call,Diana Lee,Explorer,False,
+L2096,2026-02-05,Website,Marcus Johnson,Camry,False,
+L2097,2025-10-06,Google Ad,Priya Patel,Accord,False,
+L2098,2025-12-19,Website,Diana Lee,Mustang,True,2026-01-09
+L2099,2025-09-22,Google Ad,Jake Rivera,Ram 1500,True,2025-10-02
+L2100,2026-02-24,Phone Call,Troy Williams,RAV4,True,2026-03-13
+L2101,2026-02-03,Phone Call,Priya Patel,Mustang,False,
+L2102,2026-02-13,Website,Priya Patel,Explorer,True,2026-02-17
+L2103,2025-11-01,Google Ad,Marcus Johnson,Civic,False,
+L2104,2025-09-04,Referral,Diana Lee,Explorer,False,
+L2105,2026-01-24,Google Ad,Diana Lee,Tacoma,False,
+L2106,2025-09-19,Walk-in,Marcus Johnson,Mustang,True,2025-09-26
+L2107,2025-09-11,Facebook Ad,Jake Rivera,Mustang,False,
+L2108,2026-02-08,Facebook Ad,Priya Patel,Explorer,False,
+L2109,2025-09-22,Google Ad,Jake Rivera,Silverado,False,
+L2110,2025-11-11,Walk-in,Jake Rivera,RAV4,True,2025-12-07
+L2111,2025-10-10,Facebook Ad,Jake Rivera,Camry,False,
+L2112,2025-11-19,Phone Call,Diana Lee,F-150,False,
+L2113,2025-11-02,Facebook Ad,Marcus Johnson,Tacoma,True,2025-11-22
+L2114,2026-02-03,Phone Call,Diana Lee,Camry,True,2026-02-04
+L2115,2025-10-06,Website,Priya Patel,Accord,False,
+L2116,2026-01-12,Phone Call,Troy Williams,Silverado,False,
+L2117,2025-12-05,Referral,Marcus Johnson,F-150,True,2025-12-16
+L2118,2025-12-19,Walk-in,Troy Williams,Ram 1500,True,2026-01-09
+L2119,2025-09-20,Google Ad,Troy Williams,F-150,False,
+L2120,2026-01-06,Website,Troy Williams,Silverado,False,
+L2121,2025-11-05,Google Ad,Marcus Johnson,RAV4,False,
+L2122,2026-01-09,Walk-in,Diana Lee,F-150,True,2026-01-25
+L2123,2025-12-03,Website,Diana Lee,F-150,False,
+L2124,2026-01-20,Phone Call,Priya Patel,RAV4,False,
+L2125,2025-11-22,Phone Call,Troy Williams,Mustang,True,2025-12-19
+L2126,2025-09-20,Walk-in,Jake Rivera,F-150,False,
+L2127,2025-10-16,Google Ad,Marcus Johnson,Explorer,True,2025-10-19
+L2128,2025-12-29,Referral,Troy Williams,Camry,False,
+L2129,2026-01-20,Referral,Diana Lee,Mustang,False,
+L2130,2026-01-23,Phone Call,Jake Rivera,RAV4,False,
+L2131,2025-12-28,Facebook Ad,Diana Lee,Civic,False,
+L2132,2025-11-02,Facebook Ad,Marcus Johnson,RAV4,True,2025-11-20
+L2133,2025-11-28,Phone Call,Marcus Johnson,Accord,False,
+L2134,2025-09-01,Facebook Ad,Troy Williams,Camry,False,
+L2135,2025-10-23,Website,Priya Patel,Tacoma,False,
+L2136,2025-09-16,Website,Troy Williams,Camry,False,
+L2137,2025-09-12,Google Ad,Priya Patel,Accord,False,
+L2138,2025-12-27,Walk-in,Jake Rivera,Camry,False,
+L2139,2026-01-08,Facebook Ad,Marcus Johnson,Ram 1500,True,2026-01-27
+L2140,2025-09-16,Website,Diana Lee,Mustang,False,
+L2141,2025-11-06,Facebook Ad,Troy Williams,Accord,False,
+L2142,2025-12-25,Walk-in,Diana Lee,Silverado,True,2026-01-19
+L2143,2026-01-28,Walk-in,Diana Lee,Tacoma,True,2026-02-12
+L2144,2025-11-20,Google Ad,Troy Williams,RAV4,False,
+L2145,2025-12-25,Referral,Marcus Johnson,Camry,True,2025-12-31
+L2146,2026-02-23,Phone Call,Jake Rivera,F-150,True,2026-03-02
+L2147,2025-11-23,Phone Call,Diana Lee,Accord,True,2025-12-06
+L2148,2026-01-10,Referral,Troy Williams,Silverado,True,2026-01-11
+L2149,2025-12-13,Google Ad,Jake Rivera,RAV4,False,
+L2150,2025-09-25,Website,Marcus Johnson,F-150,False,
+L2151,2025-09-16,Website,Diana Lee,RAV4,False,
+L2152,2025-12-12,Phone Call,Marcus Johnson,Ram 1500,False,
+L2153,2026-01-29,Walk-in,Marcus Johnson,Camry,True,2026-02-05
+L2154,2026-02-13,Website,Marcus Johnson,Accord,False,
+L2155,2025-10-02,Facebook Ad,Marcus Johnson,Silverado,True,2025-11-01
+L2156,2026-01-25,Phone Call,Priya Patel,Tacoma,False,
+L2157,2025-09-08,Facebook Ad,Diana Lee,Accord,False,
+L2158,2025-10-25,Referral,Troy Williams,Tacoma,False,
+L2159,2025-10-09,Google Ad,Jake Rivera,RAV4,True,2025-10-30
+L2160,2025-11-15,Google Ad,Priya Patel,F-150,False,
+L2161,2025-09-23,Website,Priya Patel,RAV4,True,2025-10-14
+L2162,2026-01-13,Google Ad,Marcus Johnson,Explorer,True,2026-02-08
+L2163,2025-12-01,Facebook Ad,Troy Williams,Ram 1500,False,
+L2164,2026-01-07,Referral,Diana Lee,F-150,True,2026-01-18
+L2165,2026-01-31,Referral,Marcus Johnson,Tacoma,True,2026-02-17
+L2166,2025-12-01,Website,Diana Lee,Camry,False,
+L2167,2025-11-03,Referral,Jake Rivera,F-150,False,
+L2168,2025-10-27,Facebook Ad,Troy Williams,Silverado,False,
+L2169,2025-10-16,Referral,Troy Williams,Ram 1500,True,2025-10-17
+L2170,2026-02-28,Google Ad,Jake Rivera,Silverado,False,
+L2171,2026-01-23,Facebook Ad,Jake Rivera,Mustang,False,
+L2172,2025-10-15,Walk-in,Marcus Johnson,RAV4,False,
+L2173,2026-02-02,Google Ad,Priya Patel,F-150,True,2026-02-13
+L2174,2026-02-05,Website,Troy Williams,Silverado,True,2026-03-07
+L2175,2025-11-22,Website,Jake Rivera,Silverado,True,2025-12-17
+L2176,2025-09-29,Referral,Marcus Johnson,Accord,False,
+L2177,2026-02-28,Facebook Ad,Jake Rivera,Camry,False,
+L2178,2025-11-26,Website,Diana Lee,Explorer,True,2025-12-22
+L2179,2026-02-11,Phone Call,Troy Williams,Silverado,False,
+L2180,2026-01-22,Google Ad,Troy Williams,RAV4,False,
+L2181,2026-02-18,Website,Priya Patel,Mustang,False,
+L2182,2026-02-24,Website,Marcus Johnson,Ram 1500,True,2026-03-09
+L2183,2026-01-24,Google Ad,Troy Williams,Ram 1500,True,2026-02-01
+L2184,2026-02-11,Facebook Ad,Diana Lee,Accord,False,
+L2185,2025-09-20,Referral,Diana Lee,Camry,True,2025-10-17
+L2186,2026-02-19,Referral,Priya Patel,F-150,False,
+L2187,2025-11-07,Phone Call,Marcus Johnson,Accord,True,2025-11-16
+L2188,2025-09-28,Walk-in,Priya Patel,Tacoma,False,
+L2189,2025-12-17,Facebook Ad,Priya Patel,Explorer,False,
+L2190,2025-11-29,Walk-in,Priya Patel,Ram 1500,False,
+L2191,2026-02-14,Website,Diana Lee,Tacoma,False,
+L2192,2025-09-19,Walk-in,Troy Williams,F-150,False,
+L2193,2025-11-21,Walk-in,Marcus Johnson,Accord,True,2025-11-27
+L2194,2025-12-06,Walk-in,Jake Rivera,Camry,True,2025-12-17
+L2195,2026-01-31,Facebook Ad,Marcus Johnson,Explorer,False,
+L2196,2026-02-15,Facebook Ad,Diana Lee,F-150,True,2026-02-19
+L2197,2025-11-24,Website,Priya Patel,Civic,True,2025-12-18
+L2198,2026-01-17,Referral,Troy Williams,RAV4,True,2026-01-21
+L2199,2025-09-13,Google Ad,Priya Patel,Silverado,False,
+L2200,2025-09-14,Facebook Ad,Marcus Johnson,Mustang,False,
+L2201,2026-02-17,Facebook Ad,Diana Lee,Camry,False,
+L2202,2025-09-07,Phone Call,Troy Williams,Camry,True,2025-09-23
+L2203,2025-09-30,Facebook Ad,Priya Patel,Tacoma,True,2025-10-29
+L2204,2026-02-17,Phone Call,Jake Rivera,Explorer,True,2026-02-23
+L2205,2025-12-04,Referral,Diana Lee,Tacoma,False,
+L2206,2025-09-12,Facebook Ad,Troy Williams,RAV4,True,2025-10-09
+L2207,2025-11-08,Website,Marcus Johnson,Camry,False,
+L2208,2026-02-19,Google Ad,Priya Patel,Ram 1500,True,2026-02-27
+L2209,2026-01-20,Facebook Ad,Jake Rivera,Explorer,True,2026-02-07
+L2210,2026-02-23,Facebook Ad,Jake Rivera,RAV4,False,
+L2211,2025-12-31,Facebook Ad,Marcus Johnson,Civic,True,2026-01-19
+L2212,2026-01-11,Phone Call,Jake Rivera,Silverado,False,
+L2213,2025-10-01,Facebook Ad,Diana Lee,Silverado,False,
+L2214,2025-10-25,Website,Marcus Johnson,Explorer,False,
+L2215,2025-09-21,Facebook Ad,Diana Lee,Silverado,False,
+L2216,2026-01-31,Phone Call,Marcus Johnson,Camry,True,2026-02-13
+L2217,2026-01-21,Referral,Troy Williams,Civic,False,
+L2218,2025-12-27,Walk-in,Jake Rivera,Ram 1500,False,
+L2219,2026-01-12,Walk-in,Priya Patel,Silverado,False,
+L2220,2025-10-08,Google Ad,Marcus Johnson,Camry,False,
+L2221,2026-01-23,Referral,Jake Rivera,Accord,False,
+L2222,2025-12-15,Phone Call,Priya Patel,Ram 1500,True,2026-01-04
+L2223,2025-12-31,Referral,Priya Patel,Silverado,True,2026-01-20
+L2224,2026-02-03,Facebook Ad,Marcus Johnson,Explorer,False,
+L2225,2025-11-24,Walk-in,Priya Patel,Mustang,False,
+L2226,2025-12-05,Referral,Troy Williams,Mustang,True,2026-01-01
+L2227,2026-01-04,Phone Call,Marcus Johnson,RAV4,False,
+L2228,2025-10-05,Phone Call,Priya Patel,Accord,True,2025-10-14
+L2229,2025-12-16,Walk-in,Diana Lee,Tacoma,False,
+L2230,2025-10-25,Facebook Ad,Priya Patel,Civic,False,
+L2231,2025-12-05,Google Ad,Diana Lee,Camry,False,
+L2232,2025-11-19,Facebook Ad,Diana Lee,Civic,False,
+L2233,2026-01-24,Website,Diana Lee,F-150,True,2026-02-01
+L2234,2025-09-09,Referral,Diana Lee,Mustang,False,
+L2235,2025-12-04,Google Ad,Priya Patel,Camry,False,
+L2236,2026-02-22,Referral,Priya Patel,Ram 1500,True,2026-03-09
+L2237,2025-10-16,Facebook Ad,Jake Rivera,Civic,False,
+L2238,2025-11-29,Referral,Marcus Johnson,Mustang,True,2025-11-30
+L2239,2025-12-08,Google Ad,Diana Lee,RAV4,True,2025-12-29
+L2240,2025-10-28,Referral,Priya Patel,Civic,False,
+L2241,2025-09-06,Phone Call,Marcus Johnson,Tacoma,False,
+L2242,2025-10-04,Google Ad,Marcus Johnson,RAV4,False,
+L2243,2025-11-04,Referral,Troy Williams,Explorer,False,
+L2244,2025-12-06,Facebook Ad,Troy Williams,RAV4,False,
+L2245,2025-12-29,Google Ad,Jake Rivera,Explorer,True,2026-01-17
+L2246,2025-09-27,Phone Call,Troy Williams,Civic,True,2025-10-18
+L2247,2026-01-31,Referral,Marcus Johnson,Tacoma,False,
+L2248,2025-09-17,Referral,Troy Williams,Mustang,True,2025-09-26
+L2249,2026-02-15,Phone Call,Troy Williams,RAV4,False,
+L2250,2025-10-09,Website,Marcus Johnson,Ram 1500,False,
+L2251,2025-12-13,Phone Call,Diana Lee,F-150,False,
+L2252,2026-02-15,Referral,Troy Williams,Explorer,False,
+L2253,2025-12-13,Walk-in,Jake Rivera,Ram 1500,False,
+L2254,2025-10-19,Phone Call,Diana Lee,Civic,True,2025-11-09
+L2255,2025-12-31,Phone Call,Troy Williams,Civic,False,
+L2256,2025-11-16,Phone Call,Jake Rivera,Silverado,False,
+L2257,2025-11-15,Website,Troy Williams,Civic,True,2025-12-10
+L2258,2025-10-17,Referral,Marcus Johnson,RAV4,False,
+L2259,2025-11-30,Referral,Priya Patel,Accord,True,2025-12-12
+L2260,2025-11-06,Facebook Ad,Marcus Johnson,Tacoma,False,
+L2261,2025-09-14,Google Ad,Jake Rivera,Ram 1500,False,
+L2262,2025-09-19,Website,Jake Rivera,Camry,False,
+L2263,2026-02-22,Referral,Priya Patel,F-150,False,
+L2264,2025-10-09,Website,Troy Williams,Explorer,True,2025-10-28
+L2265,2025-12-27,Phone Call,Diana Lee,Camry,True,2026-01-12
+L2266,2025-11-25,Website,Troy Williams,F-150,False,
+L2267,2025-09-02,Website,Diana Lee,Ram 1500,False,
+L2268,2025-10-11,Walk-in,Diana Lee,Ram 1500,False,
+L2269,2025-12-21,Facebook Ad,Priya Patel,Tacoma,False,
+L2270,2025-12-08,Google Ad,Diana Lee,Accord,True,2025-12-09
+L2271,2025-11-22,Google Ad,Diana Lee,F-150,False,
+L2272,2026-02-21,Phone Call,Diana Lee,RAV4,True,2026-03-16
+L2273,2025-11-28,Walk-in,Priya Patel,Civic,True,2025-12-17
+L2274,2025-11-18,Walk-in,Troy Williams,Mustang,True,2025-12-03
+L2275,2026-01-12,Referral,Priya Patel,Silverado,False,
+L2276,2025-11-27,Facebook Ad,Troy Williams,RAV4,False,
+L2277,2025-10-13,Facebook Ad,Marcus Johnson,RAV4,False,
+L2278,2025-10-28,Website,Diana Lee,F-150,False,
+L2279,2026-01-29,Walk-in,Troy Williams,F-150,False,
+L2280,2025-12-06,Referral,Jake Rivera,Ram 1500,False,
+L2281,2025-09-13,Walk-in,Marcus Johnson,F-150,False,
+L2282,2025-09-13,Facebook Ad,Priya Patel,Explorer,False,
+L2283,2025-10-02,Facebook Ad,Diana Lee,RAV4,False,
+L2284,2026-02-25,Walk-in,Troy Williams,Explorer,False,
+L2285,2026-02-17,Google Ad,Troy Williams,Ram 1500,True,2026-03-09
+L2286,2026-02-27,Walk-in,Jake Rivera,Ram 1500,True,2026-03-03
+L2287,2025-11-12,Walk-in,Priya Patel,RAV4,True,2025-12-02
+L2288,2025-10-22,Google Ad,Diana Lee,Accord,False,
+L2289,2026-02-28,Website,Marcus Johnson,Civic,False,
+L2290,2026-01-06,Phone Call,Priya Patel,Accord,False,
+L2291,2025-10-31,Phone Call,Marcus Johnson,Camry,True,2025-11-27
+L2292,2026-01-25,Website,Marcus Johnson,Civic,False,
+L2293,2025-09-20,Walk-in,Troy Williams,RAV4,False,
+L2294,2025-12-26,Referral,Troy Williams,Tacoma,False,
+L2295,2025-09-13,Website,Marcus Johnson,Mustang,True,2025-09-25
+L2296,2026-02-21,Phone Call,Marcus Johnson,Camry,True,2026-03-21
+L2297,2025-09-12,Website,Diana Lee,Accord,True,2025-09-24
+L2298,2025-12-22,Referral,Marcus Johnson,Accord,False,
+L2299,2025-11-27,Facebook Ad,Priya Patel,Tacoma,True,2025-12-06
+L2300,2025-12-08,Facebook Ad,Priya Patel,Silverado,False,
+L2301,2025-09-29,Phone Call,Marcus Johnson,Silverado,True,2025-10-03
+L2302,2025-12-16,Facebook Ad,Jake Rivera,Tacoma,False,
+L2303,2025-10-17,Referral,Jake Rivera,F-150,False,
+L2304,2026-02-23,Phone Call,Diana Lee,Tacoma,False,
+L2305,2026-01-03,Facebook Ad,Priya Patel,F-150,True,2026-01-06
+L2306,2025-11-06,Walk-in,Jake Rivera,Ram 1500,False,
+L2307,2026-01-23,Phone Call,Troy Williams,Civic,True,2026-02-09
+L2308,2026-02-24,Walk-in,Priya Patel,RAV4,False,
+L2309,2026-01-02,Phone Call,Priya Patel,Silverado,True,2026-01-29
+L2310,2026-01-21,Google Ad,Marcus Johnson,F-150,False,
+L2311,2026-02-12,Google Ad,Priya Patel,Tacoma,False,
+L2312,2025-10-13,Facebook Ad,Troy Williams,RAV4,True,2025-10-24
+L2313,2025-11-11,Website,Jake Rivera,Explorer,True,2025-11-24
+L2314,2025-10-31,Facebook Ad,Jake Rivera,Tacoma,True,2025-11-03
+L2315,2026-01-06,Walk-in,Priya Patel,F-150,False,
+L2316,2025-09-27,Walk-in,Jake Rivera,Civic,False,
+L2317,2025-09-01,Google Ad,Jake Rivera,Mustang,False,
+L2318,2026-01-09,Phone Call,Priya Patel,Accord,False,
+L2319,2025-12-03,Website,Priya Patel,Accord,False,
+L2320,2026-01-22,Google Ad,Priya Patel,Accord,False,
+L2321,2025-12-25,Phone Call,Diana Lee,F-150,True,2026-01-05
+L2322,2025-11-30,Referral,Jake Rivera,Civic,False,
+L2323,2025-12-05,Walk-in,Diana Lee,Tacoma,False,
+L2324,2025-10-06,Phone Call,Priya Patel,Camry,False,
+L2325,2025-11-05,Website,Marcus Johnson,Explorer,False,
+L2326,2025-10-26,Website,Troy Williams,Camry,False,
+L2327,2025-12-16,Phone Call,Jake Rivera,Camry,True,2026-01-10
+L2328,2025-12-25,Google Ad,Jake Rivera,Silverado,False,
+L2329,2026-01-06,Phone Call,Marcus Johnson,Civic,True,2026-02-05
+L2330,2025-12-20,Facebook Ad,Jake Rivera,Silverado,False,
+L2331,2026-02-25,Phone Call,Diana Lee,Camry,False,
+L2332,2025-12-09,Google Ad,Troy Williams,Civic,False,
+L2333,2025-12-08,Google Ad,Diana Lee,Mustang,False,
+L2334,2025-12-11,Referral,Priya Patel,Silverado,False,
+L2335,2025-10-06,Phone Call,Jake Rivera,Mustang,False,
+L2336,2026-02-27,Referral,Jake Rivera,RAV4,False,
+L2337,2025-10-22,Phone Call,Troy Williams,Accord,True,2025-11-21
+L2338,2026-02-20,Phone Call,Diana Lee,Civic,True,2026-03-10
+L2339,2026-02-25,Phone Call,Marcus Johnson,Accord,False,
+L2340,2026-01-22,Google Ad,Priya Patel,Civic,False,
+L2341,2025-11-13,Facebook Ad,Marcus Johnson,Civic,False,
+L2342,2025-09-28,Website,Marcus Johnson,F-150,True,2025-10-05
+L2343,2025-11-08,Website,Troy Williams,Mustang,False,
+L2344,2025-10-08,Phone Call,Troy Williams,RAV4,False,
+L2345,2026-01-17,Facebook Ad,Marcus Johnson,Ram 1500,True,2026-02-14
+L2346,2026-02-20,Website,Jake Rivera,Explorer,False,
+L2347,2025-10-31,Phone Call,Troy Williams,F-150,False,
+L2348,2025-12-07,Phone Call,Troy Williams,Civic,False,
+L2349,2025-09-14,Referral,Diana Lee,Ram 1500,True,2025-10-12
+L2350,2025-12-23,Phone Call,Troy Williams,Ram 1500,False,
+L2351,2026-01-18,Website,Diana Lee,Mustang,False,
+L2352,2025-12-24,Phone Call,Marcus Johnson,Silverado,True,2025-12-30
+L2353,2026-01-10,Walk-in,Priya Patel,Mustang,True,2026-01-28
+L2354,2025-11-07,Google Ad,Troy Williams,F-150,True,2025-11-18
+L2355,2025-12-29,Website,Marcus Johnson,Silverado,False,
+L2356,2025-11-22,Phone Call,Jake Rivera,Mustang,False,
+L2357,2026-01-04,Google Ad,Troy Williams,Camry,False,
+L2358,2025-11-21,Website,Jake Rivera,Camry,False,
+L2359,2026-01-08,Google Ad,Jake Rivera,Explorer,True,2026-01-11
+L2360,2025-11-29,Website,Troy Williams,Accord,True,2025-12-11
+L2361,2025-11-15,Google Ad,Jake Rivera,Tacoma,True,2025-12-03
+L2362,2026-02-14,Phone Call,Troy Williams,Tacoma,True,2026-02-22
+L2363,2026-02-12,Google Ad,Diana Lee,F-150,False,
+L2364,2026-02-22,Facebook Ad,Marcus Johnson,Explorer,False,
+L2365,2025-11-05,Referral,Marcus Johnson,Civic,False,
+L2366,2025-12-05,Google Ad,Priya Patel,Tacoma,False,
+L2367,2025-09-12,Phone Call,Diana Lee,Accord,True,2025-09-29
+L2368,2025-09-22,Website,Jake Rivera,Civic,False,
+L2369,2025-09-02,Website,Diana Lee,Explorer,False,
+L2370,2025-09-27,Phone Call,Priya Patel,Camry,True,2025-10-21
+L2371,2026-02-23,Facebook Ad,Troy Williams,F-150,True,2026-02-26
+L2372,2025-09-19,Referral,Jake Rivera,Camry,True,2025-10-08
+L2373,2025-10-29,Facebook Ad,Priya Patel,Tacoma,False,
+L2374,2026-02-09,Referral,Marcus Johnson,Explorer,False,
+L2375,2026-02-20,Walk-in,Jake Rivera,Camry,True,2026-03-17
+L2376,2026-01-28,Walk-in,Troy Williams,Civic,True,2026-02-01
+L2377,2025-11-14,Referral,Jake Rivera,Camry,False,
+L2378,2025-11-12,Facebook Ad,Priya Patel,Explorer,False,
+L2379,2026-02-17,Website,Jake Rivera,RAV4,True,2026-02-22
+L2380,2025-12-10,Google Ad,Troy Williams,Silverado,False,
+L2381,2025-11-16,Phone Call,Troy Williams,F-150,False,
+L2382,2026-01-20,Website,Marcus Johnson,F-150,False,
+L2383,2025-09-02,Facebook Ad,Jake Rivera,Civic,False,
+L2384,2025-09-22,Phone Call,Troy Williams,RAV4,True,2025-10-06
+L2385,2026-02-13,Website,Diana Lee,Silverado,False,
+L2386,2025-10-27,Referral,Diana Lee,Camry,False,
+L2387,2025-10-17,Google Ad,Marcus Johnson,Civic,False,
+L2388,2025-12-28,Walk-in,Troy Williams,Camry,False,
+L2389,2025-11-04,Phone Call,Jake Rivera,Tacoma,True,2025-11-15
+L2390,2025-12-01,Phone Call,Diana Lee,Camry,True,2025-12-11
+L2391,2026-02-06,Website,Troy Williams,Tacoma,True,2026-02-21
+L2392,2025-11-24,Referral,Jake Rivera,Silverado,False,
+L2393,2026-01-23,Referral,Priya Patel,Silverado,False,
+L2394,2025-09-02,Website,Priya Patel,Mustang,True,2025-09-29
+L2395,2025-12-02,Phone Call,Troy Williams,Tacoma,True,2025-12-17
+L2396,2025-12-24,Referral,Priya Patel,Civic,False,
+L2397,2025-09-28,Google Ad,Marcus Johnson,Mustang,True,2025-10-26
+L2398,2025-10-06,Website,Troy Williams,Camry,False,
+L2399,2025-09-20,Google Ad,Marcus Johnson,Ram 1500,False,
+L2400,2026-01-27,Google Ad,Diana Lee,F-150,False,
+L2401,2026-01-20,Google Ad,Priya Patel,Silverado,True,2026-02-01
+L2402,2025-12-10,Google Ad,Troy Williams,Silverado,True,2025-12-25
+L2403,2026-01-07,Facebook Ad,Troy Williams,Civic,False,
+L2404,2025-09-03,Google Ad,Diana Lee,Civic,False,
+L2405,2025-10-06,Website,Jake Rivera,Ram 1500,False,
+L2406,2026-02-16,Website,Priya Patel,Accord,False,
+L2407,2025-09-11,Facebook Ad,Diana Lee,Camry,True,2025-09-20
+L2408,2025-12-04,Phone Call,Diana Lee,Civic,True,2026-01-03
+L2409,2025-12-02,Facebook Ad,Marcus Johnson,F-150,False,
+L2410,2026-02-14,Phone Call,Jake Rivera,Mustang,True,2026-03-13
+L2411,2025-11-07,Google Ad,Diana Lee,Explorer,False,
+L2412,2026-02-15,Google Ad,Marcus Johnson,Civic,False,
+L2413,2025-11-04,Website,Jake Rivera,Explorer,False,
+L2414,2025-11-30,Referral,Priya Patel,Tacoma,False,
+L2415,2026-02-02,Website,Priya Patel,Silverado,True,2026-02-10
+L2416,2025-09-20,Referral,Diana Lee,Silverado,False,
+L2417,2025-10-18,Google Ad,Marcus Johnson,RAV4,True,2025-11-01
+L2418,2025-11-24,Facebook Ad,Priya Patel,Tacoma,False,
+L2419,2025-10-24,Phone Call,Priya Patel,F-150,False,
+L2420,2025-11-02,Google Ad,Jake Rivera,Silverado,True,2025-11-07
+L2421,2026-02-09,Google Ad,Diana Lee,F-150,False,
+L2422,2025-10-13,Website,Jake Rivera,Explorer,True,2025-11-02
+L2423,2026-01-23,Phone Call,Troy Williams,Camry,False,
+L2424,2025-10-26,Facebook Ad,Priya Patel,Silverado,False,
+L2425,2025-10-27,Google Ad,Diana Lee,Ram 1500,False,
+L2426,2025-10-17,Google Ad,Troy Williams,Silverado,False,
+L2427,2026-02-23,Facebook Ad,Jake Rivera,Ram 1500,True,2026-02-26
+L2428,2025-10-29,Website,Marcus Johnson,F-150,False,
+L2429,2025-10-22,Google Ad,Priya Patel,Silverado,False,
+L2430,2026-02-03,Facebook Ad,Jake Rivera,Ram 1500,True,2026-02-05
+L2431,2026-01-15,Walk-in,Marcus Johnson,Tacoma,False,
+L2432,2026-02-16,Google Ad,Jake Rivera,F-150,True,2026-03-17
+L2433,2026-02-21,Google Ad,Priya Patel,Accord,False,
+L2434,2025-09-12,Facebook Ad,Diana Lee,Tacoma,False,
+L2435,2025-12-07,Phone Call,Jake Rivera,Camry,False,
+L2436,2025-12-18,Facebook Ad,Diana Lee,Camry,True,2025-12-28
+L2437,2026-02-01,Facebook Ad,Troy Williams,RAV4,False,
+L2438,2025-09-02,Walk-in,Jake Rivera,Civic,False,
+L2439,2025-10-01,Facebook Ad,Diana Lee,Accord,False,
+L2440,2025-12-14,Website,Priya Patel,Ram 1500,False,
+L2441,2025-11-04,Google Ad,Priya Patel,Ram 1500,True,2025-11-16
+L2442,2026-02-04,Phone Call,Priya Patel,RAV4,True,2026-02-18
+L2443,2026-01-20,Facebook Ad,Diana Lee,Accord,False,
+L2444,2026-01-22,Referral,Troy Williams,Ram 1500,False,
+L2445,2025-11-28,Facebook Ad,Diana Lee,Camry,False,
+L2446,2025-10-29,Phone Call,Diana Lee,Camry,False,
+L2447,2025-10-25,Referral,Jake Rivera,Ram 1500,False,
+L2448,2026-02-26,Walk-in,Diana Lee,Explorer,False,
+L2449,2026-02-10,Walk-in,Diana Lee,Tacoma,True,2026-03-12
+L2450,2026-02-01,Walk-in,Troy Williams,RAV4,False,
+L2451,2025-12-04,Walk-in,Priya Patel,Explorer,True,2025-12-24
+L2452,2026-02-15,Phone Call,Jake Rivera,F-150,False,
+L2453,2025-10-15,Facebook Ad,Marcus Johnson,RAV4,False,
+L2454,2026-02-16,Google Ad,Troy Williams,RAV4,False,
+L2455,2025-09-09,Google Ad,Jake Rivera,RAV4,False,
+L2456,2026-02-05,Walk-in,Troy Williams,RAV4,True,2026-02-26
+L2457,2025-09-01,Walk-in,Troy Williams,Explorer,False,
+L2458,2025-11-30,Facebook Ad,Jake Rivera,RAV4,False,
+L2459,2026-01-11,Phone Call,Marcus Johnson,Camry,True,2026-01-29
+L2460,2025-11-12,Google Ad,Jake Rivera,Accord,False,
+L2461,2025-11-28,Referral,Diana Lee,Ram 1500,False,
+L2462,2025-10-20,Facebook Ad,Jake Rivera,F-150,False,
+L2463,2025-11-06,Google Ad,Marcus Johnson,Civic,True,2025-11-09
+L2464,2026-01-07,Walk-in,Jake Rivera,Mustang,True,2026-02-05
+L2465,2026-01-16,Google Ad,Troy Williams,Tacoma,False,
+L2466,2025-12-06,Website,Troy Williams,Tacoma,False,
+L2467,2026-02-22,Google Ad,Marcus Johnson,Tacoma,False,
+L2468,2025-09-30,Facebook Ad,Diana Lee,RAV4,True,2025-10-26
+L2469,2025-11-20,Referral,Jake Rivera,Civic,False,
+L2470,2025-09-03,Referral,Diana Lee,Mustang,False,
+L2471,2025-09-24,Phone Call,Troy Williams,Camry,False,
+L2472,2026-01-20,Facebook Ad,Troy Williams,Accord,False,
+L2473,2025-10-26,Referral,Diana Lee,RAV4,False,
+L2474,2026-01-06,Website,Diana Lee,Mustang,False,
+L2475,2025-10-23,Website,Jake Rivera,Accord,True,2025-10-28
+L2476,2025-09-28,Walk-in,Priya Patel,Ram 1500,True,2025-09-29
+L2477,2026-01-17,Facebook Ad,Troy Williams,Ram 1500,False,
+L2478,2025-11-20,Google Ad,Troy Williams,Tacoma,False,
+L2479,2025-10-17,Google Ad,Troy Williams,Explorer,False,
+L2480,2025-10-27,Website,Marcus Johnson,Civic,False,
+L2481,2025-12-18,Google Ad,Marcus Johnson,Civic,False,
+L2482,2025-11-28,Phone Call,Diana Lee,Tacoma,False,
+L2483,2025-10-01,Facebook Ad,Troy Williams,F-150,False,
+L2484,2025-09-04,Facebook Ad,Jake Rivera,Camry,False,
+L2485,2025-11-23,Referral,Diana Lee,Civic,False,
+L2486,2025-11-07,Facebook Ad,Jake Rivera,Accord,True,2025-11-19
+L2487,2025-10-18,Website,Priya Patel,Accord,False,
+L2488,2025-12-03,Referral,Priya Patel,Silverado,False,
+L2489,2026-01-25,Google Ad,Diana Lee,Camry,True,2026-02-18
+L2490,2025-11-09,Google Ad,Priya Patel,Explorer,False,
+L2491,2025-10-21,Phone Call,Diana Lee,Tacoma,True,2025-11-16
+L2492,2025-09-03,Facebook Ad,Diana Lee,Civic,True,2025-09-21
+L2493,2025-11-20,Referral,Troy Williams,Civic,False,
+L2494,2026-01-24,Walk-in,Diana Lee,F-150,True,2026-01-31
+L2495,2025-11-05,Phone Call,Marcus Johnson,Tacoma,False,
+L2496,2025-11-25,Referral,Jake Rivera,Civic,True,2025-12-25
+L2497,2025-11-05,Facebook Ad,Marcus Johnson,Accord,True,2025-12-03
+L2498,2026-02-21,Website,Jake Rivera,Ram 1500,False,
+L2499,2026-02-14,Website,Troy Williams,Accord,False,

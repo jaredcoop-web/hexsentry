@@ -1,0 +1,121 @@
+review_id,date,rating,sentiment,text,platform
+R3090,2025-09-02,4,positive,"Very smooth process, no pressure at all.",Yelp
+R3056,2025-09-06,5,positive,Best dealership in Houston.,DealerRater
+R3034,2025-09-06,4,positive,Quick and easy. Will come back for my next car.,Google
+R3091,2025-09-06,4,positive,"Very smooth process, no pressure at all.",DealerRater
+R3092,2025-09-10,4,positive,"Great experience, Marcus was super helpful!",Yelp
+R3101,2025-09-11,5,positive,Quick and easy. Will come back for my next car.,Yelp
+R3077,2025-09-11,5,positive,Quick and easy. Will come back for my next car.,DealerRater
+R3069,2025-09-12,3,neutral,Decent experience overall.,Google
+R3116,2025-09-12,1,negative,Felt pressured by the salesperson.,Google
+R3098,2025-09-15,5,positive,"Great experience, Marcus was super helpful!",Yelp
+R3053,2025-09-16,2,negative,"Price changed last minute, very frustrating.",Google
+R3065,2025-09-17,1,negative,Felt pressured by the salesperson.,DealerRater
+R3111,2025-09-19,4,positive,Best dealership in Houston.,Yelp
+R3003,2025-09-21,2,negative,Waited over an hour with no update.,Google
+R3000,2025-09-21,5,positive,Diana helped me find exactly what I wanted.,Yelp
+R3117,2025-09-22,5,positive,Best dealership in Houston.,Google
+R3011,2025-09-22,5,positive,Quick and easy. Will come back for my next car.,Google
+R3106,2025-09-22,4,positive,"Very smooth process, no pressure at all.",Yelp
+R3112,2025-09-23,5,positive,Quick and easy. Will come back for my next car.,Google
+R3020,2025-09-23,3,neutral,Decent experience overall.,Yelp
+R3052,2025-09-24,4,positive,Diana helped me find exactly what I wanted.,DealerRater
+R3043,2025-09-25,4,positive,Diana helped me find exactly what I wanted.,DealerRater
+R3070,2025-09-28,4,positive,Best dealership in Houston.,Yelp
+R3054,2025-09-28,4,positive,Quick and easy. Will come back for my next car.,Google
+R3068,2025-09-29,5,positive,"Very smooth process, no pressure at all.",Google
+R3049,2025-10-01,5,positive,Quick and easy. Will come back for my next car.,Yelp
+R3099,2025-10-01,5,positive,Diana helped me find exactly what I wanted.,Google
+R3035,2025-10-03,5,positive,"Very smooth process, no pressure at all.",DealerRater
+R3031,2025-10-05,4,positive,Best dealership in Houston.,Yelp
+R3039,2025-10-08,5,positive,"Great experience, Marcus was super helpful!",Google
+R3118,2025-10-08,4,positive,Quick and easy. Will come back for my next car.,Yelp
+R3007,2025-10-13,3,neutral,Decent experience overall.,Google
+R3014,2025-10-14,4,positive,Quick and easy. Will come back for my next car.,Google
+R3096,2025-10-15,5,positive,Diana helped me find exactly what I wanted.,Yelp
+R3083,2025-10-17,4,positive,Best dealership in Houston.,DealerRater
+R3066,2025-10-19,3,neutral,Decent experience overall.,DealerRater
+R3059,2025-10-19,3,neutral,Decent experience overall.,DealerRater
+R3026,2025-10-19,3,neutral,Decent experience overall.,Yelp
+R3074,2025-10-24,1,negative,Waited over an hour with no update.,DealerRater
+R3037,2025-10-26,4,positive,Diana helped me find exactly what I wanted.,Yelp
+R3095,2025-10-26,5,positive,Quick and easy. Will come back for my next car.,DealerRater
+R3078,2025-10-26,5,positive,"Great experience, Marcus was super helpful!",DealerRater
+R3028,2025-10-27,5,positive,Diana helped me find exactly what I wanted.,Yelp
+R3036,2025-10-30,3,neutral,Decent experience overall.,Google
+R3025,2025-10-30,5,positive,Quick and easy. Will come back for my next car.,Google
+R3057,2025-11-04,5,positive,Best dealership in Houston.,Google
+R3094,2025-11-05,1,negative,Waited over an hour with no update.,Yelp
+R3021,2025-11-06,5,positive,Diana helped me find exactly what I wanted.,Google
+R3062,2025-11-07,3,neutral,Decent experience overall.,DealerRater
+R3093,2025-11-07,4,positive,Best dealership in Houston.,Yelp
+R3030,2025-11-08,5,positive,Quick and easy. Will come back for my next car.,Yelp
+R3089,2025-11-12,4,positive,"Great experience, Marcus was super helpful!",DealerRater
+R3013,2025-11-12,4,positive,Best dealership in Houston.,Yelp
+R3105,2025-11-14,4,positive,Diana helped me find exactly what I wanted.,Yelp
+R3024,2025-11-16,3,neutral,Decent experience overall.,Google
+R3119,2025-11-18,5,positive,"Great experience, Marcus was super helpful!",Yelp
+R3085,2025-11-20,3,neutral,Decent experience overall.,DealerRater
+R3004,2025-11-21,4,positive,"Very smooth process, no pressure at all.",DealerRater
+R3055,2025-11-21,3,neutral,Decent experience overall.,DealerRater
+R3033,2025-11-22,2,negative,Waited over an hour with no update.,Google
+R3102,2025-11-23,3,neutral,Decent experience overall.,DealerRater
+R3048,2025-11-23,4,positive,Diana helped me find exactly what I wanted.,Google
+R3019,2025-11-28,3,neutral,Decent experience overall.,Yelp
+R3113,2025-11-29,5,positive,"Very smooth process, no pressure at all.",Google
+R3073,2025-12-03,2,negative,Waited over an hour with no update.,Google
+R3051,2025-12-05,3,neutral,Decent experience overall.,Google
+R3038,2025-12-05,5,positive,Diana helped me find exactly what I wanted.,Yelp
+R3041,2025-12-07,4,positive,"Very smooth process, no pressure at all.",Google
+R3009,2025-12-11,4,positive,Best dealership in Houston.,Google
+R3027,2025-12-11,3,neutral,Decent experience overall.,Google
+R3107,2025-12-12,1,negative,"Price changed last minute, very frustrating.",Yelp
+R3076,2025-12-16,5,positive,Quick and easy. Will come back for my next car.,Yelp
+R3108,2025-12-21,5,positive,Quick and easy. Will come back for my next car.,DealerRater
+R3042,2025-12-23,4,positive,Diana helped me find exactly what I wanted.,Google
+R3032,2025-12-25,5,positive,Quick and easy. Will come back for my next car.,Yelp
+R3088,2025-12-25,5,positive,"Very smooth process, no pressure at all.",Yelp
+R3060,2025-12-29,5,positive,"Very smooth process, no pressure at all.",Yelp
+R3075,2025-12-29,3,neutral,Decent experience overall.,DealerRater
+R3015,2025-12-31,5,positive,"Very smooth process, no pressure at all.",Yelp
+R3029,2026-01-11,5,positive,Best dealership in Houston.,DealerRater
+R3022,2026-01-12,4,positive,"Great experience, Marcus was super helpful!",Google
+R3061,2026-01-14,1,negative,Waited over an hour with no update.,Google
+R3079,2026-01-15,4,positive,Best dealership in Houston.,Yelp
+R3023,2026-01-15,5,positive,Diana helped me find exactly what I wanted.,Google
+R3084,2026-01-15,5,positive,Best dealership in Houston.,DealerRater
+R3040,2026-01-18,5,positive,"Great experience, Marcus was super helpful!",Yelp
+R3087,2026-01-18,4,positive,Quick and easy. Will come back for my next car.,Google
+R3045,2026-01-19,4,positive,"Great experience, Marcus was super helpful!",DealerRater
+R3010,2026-01-19,4,positive,Diana helped me find exactly what I wanted.,Google
+R3016,2026-01-19,3,neutral,Decent experience overall.,Yelp
+R3081,2026-01-21,1,negative,"Price changed last minute, very frustrating.",Yelp
+R3058,2026-01-22,3,neutral,Decent experience overall.,Yelp
+R3109,2026-01-22,4,positive,Diana helped me find exactly what I wanted.,Google
+R3071,2026-01-25,4,positive,"Great experience, Marcus was super helpful!",DealerRater
+R3104,2026-01-26,5,positive,Quick and easy. Will come back for my next car.,DealerRater
+R3050,2026-01-27,4,positive,"Great experience, Marcus was super helpful!",DealerRater
+R3006,2026-01-29,5,positive,"Very smooth process, no pressure at all.",DealerRater
+R3017,2026-01-31,4,positive,Quick and easy. Will come back for my next car.,Yelp
+R3067,2026-02-04,3,neutral,Decent experience overall.,Yelp
+R3115,2026-02-05,4,positive,"Very smooth process, no pressure at all.",Yelp
+R3064,2026-02-06,4,positive,"Great experience, Marcus was super helpful!",Yelp
+R3072,2026-02-07,5,positive,Quick and easy. Will come back for my next car.,DealerRater
+R3100,2026-02-09,1,negative,"Price changed last minute, very frustrating.",Yelp
+R3002,2026-02-09,5,positive,Diana helped me find exactly what I wanted.,DealerRater
+R3001,2026-02-09,2,negative,Felt pressured by the salesperson.,Google
+R3086,2026-02-10,5,positive,Diana helped me find exactly what I wanted.,Yelp
+R3046,2026-02-11,5,positive,Diana helped me find exactly what I wanted.,Yelp
+R3063,2026-02-11,5,positive,"Great experience, Marcus was super helpful!",DealerRater
+R3018,2026-02-11,2,negative,"Price changed last minute, very frustrating.",DealerRater
+R3097,2026-02-12,1,negative,"Price changed last minute, very frustrating.",Yelp
+R3005,2026-02-13,5,positive,Quick and easy. Will come back for my next car.,Yelp
+R3110,2026-02-14,3,neutral,Decent experience overall.,DealerRater
+R3114,2026-02-15,5,positive,Quick and easy. Will come back for my next car.,Google
+R3012,2026-02-15,4,positive,"Great experience, Marcus was super helpful!",Yelp
+R3080,2026-02-16,4,positive,Quick and easy. Will come back for my next car.,Google
+R3008,2026-02-17,4,positive,Best dealership in Houston.,Yelp
+R3047,2026-02-18,5,positive,"Great experience, Marcus was super helpful!",Google
+R3103,2026-02-20,4,positive,"Great experience, Marcus was super helpful!",DealerRater
+R3044,2026-02-22,5,positive,Diana helped me find exactly what I wanted.,Yelp
+R3082,2026-02-27,5,positive,Diana helped me find exactly what I wanted.,DealerRater
