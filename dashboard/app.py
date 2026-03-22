@@ -23,8 +23,14 @@ def db_ready():
 
 
 # ── Header ──────────────────────────────────────────────────────────────────
-st.title("🚗 Dealership Intelligence Dashboard")
-st.caption("Powered by your data — updated automatically every morning")
+col_logo, col_title = st.columns([1, 4])
+with col_logo:
+    st.image("assets/hexsentry_logo.png", width=80)
+with col_title:
+    st.title("HexSentry")
+    st.caption("Business Intelligence Platform")
+st.subheader("📍 Johnson Motors — Houston TX")
+st.divider()
 
 if not db_ready():
     st.error("Database not found. Run the pipeline first: `python pipeline/run_pipeline.py`")
