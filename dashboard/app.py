@@ -163,7 +163,7 @@ st.divider()
 st.subheader("🤖 Ask Your Data")
 st.caption("Ask anything about your dealership performance in plain English")
 
-api_key = st.text_input("Anthropic API Key (optional — needed for AI answers)", type="password")
+api_key = os.getenv("ANTHROPIC_API_KEY", "")
 
 user_q = st.text_input("Your question", placeholder="Who is my best salesperson this quarter?")
 
