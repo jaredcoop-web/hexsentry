@@ -1,7 +1,5 @@
 pandas
-streamlit==1.32.0
+streamlit==1.28.0
 anthropic
 python-dotenv
 openpyxl
-altair==4.2.2
-pillow==10.2.0
