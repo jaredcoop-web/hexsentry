@@ -18,4 +18,5 @@ def extract_all():
         "inventory": load_csv("inventory.csv"),
         "leads":     load_csv("leads.csv"),
         "reviews":   load_csv("reviews.csv"),
+        "finance": load_csv("finance.csv"),
     }

@@ -1,3 +1,7 @@
+## The python line, copy:
+## Set-Alias python C:\Users\jared\PycharmProjects\PythonProject\.venv\Scripts\python
+## To open website: python -m streamlit run dashboard\app.py
+## Render link: https://hexsentry.onrender.com/
 import os
 
 BASE = os.path.join(os.getcwd(), "dealership-dashboard")
@@ -12,6 +16,7 @@ import os
 
 random.seed(42)
 np.random.seed(42)
+
 
 SALESPEOPLE = ["Marcus Johnson", "Diana Lee", "Troy Williams", "Priya Patel", "Jake Rivera"]
 MODELS = ["F-150", "Camry", "Silverado", "RAV4", "Mustang", "Accord", "Explorer", "Tacoma", "Civic", "Ram 1500"]

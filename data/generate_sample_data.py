@@ -35,6 +35,20 @@ def generate_sales():
     df.to_csv("sales.csv", index=False)
     print(f"  sales.csv — {len(df)} records")
 
+def generate_finance():
+    rows = []
+    for i in range(300):
+        rows.append({
+            "deal_id": f"S{1000+i}",
+            "date": random_date(START_DATE, END_DATE).strftime("%Y-%m-%d"),
+            "salesperson": random.choice(SALESPEOPLE),
+            "finance_income": random.randint(0, 2000),
+            "warranty_income": random.randint(0, 1500),
+            "addon_income": random.randint(0, 800),
+        })
+    pd.DataFrame(rows).to_csv("finance.csv", index=False)
+    print(f"  finance.csv — 300 records")
+    
 def generate_inventory():
     rows = []
     for i in range(80):
@@ -90,4 +104,5 @@ if __name__ == "__main__":
     generate_inventory()
     generate_leads()
     generate_reviews()
+    generate_finance()
     print("Done!")

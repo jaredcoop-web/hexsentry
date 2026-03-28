@@ -93,6 +93,29 @@ except Exception as e:
     st.warning(f"Could not run anomaly checks: {e}")
 
 st.divider()
+#--------------------------------------------------------------------------------
+st.subheader("💰 Finance & Insurance")
+
+fi = q("""
+    SELECT 
+        month,
+        ROUND(SUM(total_backend), 0) as total_fi,
+        ROUND(AVG(total_backend), 0) as avg_fi_per_deal,
+        ROUND(SUM(finance_income), 0) as finance,
+        ROUND(SUM(warranty_income), 0) as warranty
+    FROM finance
+    GROUP BY month ORDER BY month
+""")
+
+col_a, col_b = st.columns(2)
+with col_a:
+    st.metric("Total F&I Income", 
+              f"${int(fi['total_fi'].sum()):,}")
+with col_b:
+    st.metric("Avg F&I Per Deal", 
+              f"${int(fi['avg_fi_per_deal'].mean()):,}")
+
+st.bar_chart(fi.set_index("month")["total_fi"])
 
 # ── Sales Over Time + Top Salespeople ────────────────────────────────────────
 col_a, col_b = st.columns([2, 1])

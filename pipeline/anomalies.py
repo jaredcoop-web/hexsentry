@@ -80,6 +80,32 @@ def check_inventory_anomalies():
 
     return alerts
 
+def check_fi_anomalies():
+    alerts = []
+    
+    fi = query("""
+        SELECT month, 
+               ROUND(AVG(total_backend), 0) as avg_fi
+        FROM finance
+        GROUP BY month ORDER BY month
+    """)
+    
+    if len(fi) < 2:
+        return alerts
+    
+    avg = fi["avg_fi"].mean()
+    latest = fi.iloc[-1]["avg_fi"]
+    
+    if latest < avg * 0.6:
+        drop = round((1 - latest/avg) * 100)
+        alerts.append({
+            "level": "warning",
+            "title": "F&I income below average",
+            "detail": f"Average F&I this month is ${int(latest):,} — {drop}% below your usual ${int(avg):,}. Check if backend products are being offered on every deal.",
+            "category": "Finance"
+        })
+    
+    return alerts
 
 def check_salesperson_anomalies():
     alerts = []
@@ -186,6 +212,7 @@ def run_all_checks():
     all_alerts += check_salesperson_anomalies()
     all_alerts += check_review_anomalies()
     all_alerts += check_lead_anomalies()
+    all_alerts += check_fi_anomalies()
     return all_alerts
 
 

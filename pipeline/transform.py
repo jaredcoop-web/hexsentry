@@ -31,11 +31,23 @@ def transform_reviews(df):
     df["is_negative"] = df["rating"] <= 2
     return df
 
+def transform_finance(df):
+    df = df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+    df["total_backend"] = (
+        df["finance_income"] + 
+        df["warranty_income"] + 
+        df["addon_income"]
+    )
+    df["month"] = df["date"].dt.to_period("M").astype(str)
+    return df
+
 def transform_all(raw):
     print("Transforming data...")
     return {
         "sales":     transform_sales(raw["sales"]),
         "inventory": transform_inventory(raw["inventory"]),
+        "finance":   transform_finance(raw["finance"]), 
         "leads":     transform_leads(raw["leads"]),
         "reviews":   transform_reviews(raw["reviews"]),
     }
