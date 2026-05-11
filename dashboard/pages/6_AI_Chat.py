@@ -3,11 +3,21 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import streamlit as st
+from pipeline.auth import init_auth_db, require_login
 
 st.set_page_config(page_title="AI Chat — HexGuard", layout="wide", page_icon="🤖")
 
+init_auth_db()
+user = require_login()
+
 st.title("🤖 Ask HexGuard")
-st.caption("Ask anything about your dealership in plain English")
+st.caption(f"{user['business_name']} — Ask anything about your dealership in plain English")
+
+if st.button("Log out", key="logout"):
+    st.session_state.user = None
+    st.rerun()
+
+st.divider()
 
 api_key = os.getenv("ANTHROPIC_API_KEY", "")
 

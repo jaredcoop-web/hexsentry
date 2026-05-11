@@ -1,4 +1,5 @@
 ## The python line, copy:
+# cd C:\Users\jared\PycharmProjects\PythonProject\dealership-dashboard
 ## Set-Alias python C:\Users\jared\PycharmProjects\PythonProject\.venv\Scripts\python
 ## To open website: python -m streamlit run dashboard\app.py
 ## Render link: https://hexsentry.onrender.com/
