@@ -1,8 +1,18 @@
+# pandas
+# streamlit
+# anthropic
+# python-dotenv
+# openpyxl
+# pillow==11.1.0
+# bcrypt
+# streamlit-authenticator
+
 pandas
-streamlit
+streamlit==1.41.0
 anthropic
 python-dotenv
 openpyxl
-pillow==11.1.0
 bcrypt
 streamlit-authenticator
+requests
+streamlit-cookies-manager
