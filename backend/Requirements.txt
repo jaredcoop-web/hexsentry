@@ -5,3 +5,5 @@ passlib[bcrypt]
 python-multipart
 pandas
 bcrypt
+python-dotenv
+requests
