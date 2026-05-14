@@ -30,7 +30,7 @@ app = FastAPI(title="HexGuard API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://hexguard.onrender.com", "https://hexguard-app.onrender.com",],
+    allow_origins=["http://localhost:5173", "https://hex-guard.onrender.com", "https://hexguard-app.onrender.com",],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
