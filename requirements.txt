@@ -7,12 +7,12 @@
 # bcrypt
 # streamlit-authenticator
 
+fastapi
+uvicorn
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
 pandas
-streamlit==1.41.0
-anthropic
-python-dotenv
-openpyxl
 bcrypt
-streamlit-authenticator
+python-dotenv
 requests
-streamlit-cookies-manager
