@@ -1,7 +1,7 @@
 import sqlite3
 import bcrypt
 import os
-import streamlit as st
+
  
 AUTH_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "auth.db")
  
@@ -103,20 +103,6 @@ def login(email, password):
         return user
     return None
  
- 
-def require_login():
-    if "user" not in st.session_state or st.session_state.user is None:
-        st.warning("Please log in to access this page.")
-        st.stop()
-    return st.session_state.user
- 
- 
-def require_admin():
-    user = require_login()
-    if user["role"] != "admin":
-        st.error("You don't have permission to access this page.")
-        st.stop()
-    return user
  
  
 def get_client_table(client_id, table_name):
