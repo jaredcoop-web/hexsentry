@@ -24,6 +24,9 @@ import hmac
 import hashlib
 import base64
 import json
+from pipeline.auth import init_auth_db, login as auth_login, get_client_table
+
+app = FastAPI(title="HexGuard API", version="1.0.0")
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 
