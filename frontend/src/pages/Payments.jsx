@@ -11,8 +11,8 @@ export default function Payments({ user }) {
   const clientId       = user?.client_id || 'admin'
   const squareUrl = `https://hexsentry-api.onrender.com/webhooks/square/${clientId}`
   const stripeUrl = `https://hexsentry-api.onrender.com/webhooks/stripe/${clientId}`
-  const localSquareUrl = `http://localhost:8000/webhooks/square/${clientId}`
-  const localStripeUrl = `http://localhost:8000/webhooks/stripe/${clientId}`
+  const localSquareUrl = `https://hex-guard.onrender.com/webhooks/square/${clientId}`
+  const localStripeUrl = `https://hex-guard.onrender.com/webhooks/stripe/${clientId}`
 
   const copy = (text, setter) => {
     navigator.clipboard.writeText(text)
