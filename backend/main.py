@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-print("GOOGLE_CLIENT_ID:", os.getenv("GOOGLE_CLIENT_ID"))
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, HTTPException, Depends, Request
@@ -15,16 +15,24 @@ from fastapi.responses import RedirectResponse
 from datetime import datetime, timedelta
 import sqlite3
 import pandas as pd
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from dotenv import load_dotenv
-import requests
-from urllib.parse import urlencode
+from sqlalchemy import create_engine, text
 
-load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pipeline.auth import init_auth_db, login as auth_login, get_client_table
+if DATABASE_URL:
+    engine = create_engine(DATABASE_URL)
+    def q(sql):
+        with engine.connect() as conn:
+            df = pd.read_sql_query(text(sql), conn)
+        return df.to_dict(orient="records")
+else:
+    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dealership.db")
+    engine = None
+    def q(sql):
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query(sql, conn)
+        conn.close()
+        return df.to_dict(orient="records")
 
 app = FastAPI(title="HexGuard API", version="1.0.0")
 
