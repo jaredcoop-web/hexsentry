@@ -334,7 +334,11 @@ def get_sales(user=Depends(get_current_user)):
         return {"monthly": monthly, "top_salespeople": top_sp, "top_models": models}
     except Exception as e:
         return {"error": str(e)}
-
+@app.get("/debug")
+def debug(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table = ct(client_id, "sales")
+    return {"table_name": table, "client_id": client_id}
 
 @app.get("/reviews")
 def get_reviews(user=Depends(get_current_user)):
