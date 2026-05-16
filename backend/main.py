@@ -101,38 +101,42 @@ def ct(client_id, table):
 
 
 def save_google_tokens(client_id, access_token, refresh_token):
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS google_tokens (
-            client_id     TEXT PRIMARY KEY,
-            access_token  TEXT,
-            refresh_token TEXT,
-            updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.execute("""
-        INSERT INTO google_tokens (client_id, access_token, refresh_token)
-        VALUES (?, ?, ?)
-        ON CONFLICT(client_id) DO UPDATE SET
-            access_token=excluded.access_token,
-            refresh_token=excluded.refresh_token,
-            updated_at=CURRENT_TIMESTAMP
-    """, (client_id, access_token, refresh_token))
-    conn.commit()
-    conn.close()
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS google_tokens (
+                    client_id     TEXT PRIMARY KEY,
+                    access_token  TEXT,
+                    refresh_token TEXT,
+                    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            conn.execute(text("""
+                INSERT INTO google_tokens (client_id, access_token, refresh_token)
+                VALUES (:client_id, :access_token, :refresh_token)
+                ON CONFLICT(client_id) DO UPDATE SET
+                    access_token=EXCLUDED.access_token,
+                    refresh_token=EXCLUDED.refresh_token,
+                    updated_at=CURRENT_TIMESTAMP
+            """), {
+                "client_id":     client_id,
+                "access_token":  access_token,
+                "refresh_token": refresh_token,
+            })
+            conn.commit()
+    except Exception as e:
+        print(f"Error saving Google tokens: {e}")
 
 
 def load_google_tokens(client_id):
-    conn = sqlite3.connect(DB_PATH)
     try:
-        row = conn.execute(
-            "SELECT access_token, refresh_token FROM google_tokens WHERE client_id=?",
-            (client_id,)
-        ).fetchone()
-        conn.close()
-        return row if row else (None, None)
+        with engine.connect() as conn:
+            result = conn.execute(
+                text("SELECT access_token, refresh_token FROM google_tokens WHERE client_id=:client_id"),
+                {"client_id": client_id}
+            ).fetchone()
+        return (result[0], result[1]) if result else (None, None)
     except:
-        conn.close()
         return None, None
 
 
@@ -386,27 +390,32 @@ class ManualSale(BaseModel):
 def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
     client_id = user["client_id"]
     table     = ct(client_id, "sales")
-    conn      = sqlite3.connect(DB_PATH)
     try:
-        conn.execute(f"""
-            INSERT INTO {table}
-            (date, model, sale_price, cost, gross_profit, salesperson,
-             lead_source, finance_income, total_income, month, year,
-             days_on_lot, gross_margin_pct)
-            VALUES (?,?,?,?,?,?,?,0,?,?,?,0,?)
-        """, (
-            sale.date, sale.description, sale.sale_price, sale.cost,
-            sale.gross_profit, sale.salesperson, sale.lead_source,
-            sale.gross_profit, sale.date[:7], sale.date[:4],
-            round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
-        ))
-        conn.commit()
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                INSERT INTO {table}
+                (date, model, sale_price, cost, gross_profit, salesperson,
+                 lead_source, finance_income, total_income, month, year,
+                 days_on_lot, gross_margin_pct)
+                VALUES (:date, :model, :sale_price, :cost, :gross_profit, :salesperson,
+                        :lead_source, 0, :total_income, :month, :year, 0, :margin)
+            """), {
+                "date":         sale.date,
+                "model":        sale.description,
+                "sale_price":   sale.sale_price,
+                "cost":         sale.cost,
+                "gross_profit": sale.gross_profit,
+                "salesperson":  sale.salesperson,
+                "lead_source":  sale.lead_source,
+                "total_income": sale.gross_profit,
+                "month":        sale.date[:7],
+                "year":         sale.date[:4],
+                "margin":       round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
+            })
+            conn.commit()
         return {"message": "Sale recorded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        conn.close()
-        
 # ── Square webhook ────────────────────────────────────────────────────────────
 import hmac
 import hashlib
@@ -453,20 +462,27 @@ async def square_webhook(client_id: str, request: Request):
             return {"status": "ignored"}
         sale  = parse_square_payment(event.get("data", {}))
         table = ct(client_id, "sales")
-        conn  = sqlite3.connect(DB_PATH)
-        conn.execute(f"""
-            INSERT INTO {table}
-            (date, model, sale_price, cost, gross_profit, salesperson,
-             lead_source, finance_income, total_income, month, year,
-             days_on_lot, gross_margin_pct)
-            VALUES (?,?,?,?,?,?,?,0,?,?,?,0,0)
-        """, (
-            sale["date"], sale["description"], sale["sale_price"], sale["cost"],
-            sale["gross_profit"], sale["salesperson"], sale["lead_source"],
-            sale["gross_profit"], sale["date"][:7], sale["date"][:4],
-        ))
-        conn.commit()
-        conn.close()
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                INSERT INTO {table}
+                (date, model, sale_price, cost, gross_profit, salesperson,
+                 lead_source, finance_income, total_income, month, year,
+                 days_on_lot, gross_margin_pct)
+                VALUES (:date, :model, :sale_price, :cost, :gross_profit, :salesperson,
+                        :lead_source, 0, :total_income, :month, :year, 0, 0)
+            """), {
+                "date":         sale["date"],
+                "model":        sale["description"],
+                "sale_price":   sale["sale_price"],
+                "cost":         sale["cost"],
+                "gross_profit": sale["gross_profit"],
+                "salesperson":  sale["salesperson"],
+                "lead_source":  sale["lead_source"],
+                "total_income": sale["gross_profit"],
+                "month":        sale["date"][:7],
+                "year":         sale["date"][:4],
+            })
+            conn.commit()
         return {"status": "success", "amount": sale["sale_price"]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -510,20 +526,27 @@ async def stripe_webhook(client_id: str, request: Request):
             return {"status": "ignored"}
         sale  = parse_stripe_payment(event.get("data", {}))
         table = ct(client_id, "sales")
-        conn  = sqlite3.connect(DB_PATH)
-        conn.execute(f"""
-            INSERT INTO {table}
-            (date, model, sale_price, cost, gross_profit, salesperson,
-             lead_source, finance_income, total_income, month, year,
-             days_on_lot, gross_margin_pct)
-            VALUES (?,?,?,?,?,?,?,0,?,?,?,0,0)
-        """, (
-            sale["date"], sale["description"], sale["sale_price"], sale["cost"],
-            sale["gross_profit"], sale["salesperson"], sale["lead_source"],
-            sale["gross_profit"], sale["date"][:7], sale["date"][:4],
-        ))
-        conn.commit()
-        conn.close()
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                INSERT INTO {table}
+                (date, model, sale_price, cost, gross_profit, salesperson,
+                 lead_source, finance_income, total_income, month, year,
+                 days_on_lot, gross_margin_pct)
+                VALUES (:date, :model, :sale_price, :cost, :gross_profit, :salesperson,
+                        :lead_source, 0, :total_income, :month, :year, 0, 0)
+            """), {
+                "date":         sale["date"],
+                "model":        sale["description"],
+                "sale_price":   sale["sale_price"],
+                "cost":         sale["cost"],
+                "gross_profit": sale["gross_profit"],
+                "salesperson":  sale["salesperson"],
+                "lead_source":  sale["lead_source"],
+                "total_income": sale["gross_profit"],
+                "month":        sale["date"][:7],
+                "year":         sale["date"][:4],
+            })
+            conn.commit()
         return {"status": "success", "amount": sale["sale_price"]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
