@@ -150,20 +150,16 @@ def refresh_google_token(refresh_token):
     return resp.json().get("access_token")
 
 
-def fetch_and_save_reviews(client_id, access_token):
-    headers  = {"Authorization": f"Bearer {access_token}"}
-    accounts = requests.get(
-        "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
-        headers=headers
-    ).json()
 
+def fetch_and_save_reviews(client_id, access_token):
+    headers      = {"Authorization": f"Bearer {access_token}"}
+    accounts     = requests.get("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", headers=headers).json()
     account_list = accounts.get("accounts", [])
     if not account_list:
         return 0
 
     account_id = account_list[0]["name"]
-
-    locations = requests.get(
+    locations  = requests.get(
         f"https://mybusinessbusinessinformation.googleapis.com/v1/{account_id}/locations",
         headers=headers,
         params={"readMask": "name,title"}
@@ -206,21 +202,22 @@ def fetch_and_save_reviews(client_id, access_token):
         if rows:
             df    = pd.DataFrame(rows)
             table = ct(client_id, "reviews")
-            conn  = sqlite3.connect(DB_PATH)
             try:
-                existing = pd.read_sql_query(f"SELECT date FROM {table}", conn)
-                existing["date"] = pd.to_datetime(existing["date"], errors="coerce")
-                df["date"]       = pd.to_datetime(df["date"], errors="coerce")
-                df = df[~df["date"].dt.date.isin(set(existing["date"].dt.date))]
+                with engine.connect() as conn:
+                    existing = pd.read_sql_query(
+                        text(f"SELECT date FROM {table}"), conn
+                    )
+                    existing["date"] = pd.to_datetime(existing["date"], errors="coerce")
+                    df["date"]       = pd.to_datetime(df["date"], errors="coerce")
+                    df = df[~df["date"].dt.date.isin(set(existing["date"].dt.date))]
             except:
                 pass
+
             if len(df) > 0:
-                df.to_sql(table, conn, if_exists="append", index=False)
+                df.to_sql(table, engine, if_exists="append", index=False)
                 total_saved += len(df)
-            conn.close()
 
     return total_saved
-
 
 # ── Auth endpoints ────────────────────────────────────────────────────────────
 @app.post("/token")
@@ -302,11 +299,16 @@ def google_sync(user=Depends(get_current_user)):
 
 @app.delete("/auth/google")
 def google_disconnect(user=Depends(get_current_user)):
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("DELETE FROM google_tokens WHERE client_id=?", (user["client_id"],))
-    conn.commit()
-    conn.close()
-    return {"message": "Disconnected"}
+    try:
+        with engine.connect() as conn:
+            conn.execute(
+                text("DELETE FROM google_tokens WHERE client_id=:client_id"),
+                {"client_id": user["client_id"]}
+            )
+            conn.commit()
+        return {"message": "Disconnected"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── Data endpoints ────────────────────────────────────────────────────────────
