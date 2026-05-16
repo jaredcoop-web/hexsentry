@@ -39,11 +39,6 @@ if DATABASE_URL:
 else:
     DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dealership.db")
     engine = None
-    def q(sql):
-        conn = sqlite3.connect(DB_PATH)
-        df = pd.read_sql_query(sql, conn)
-        conn.close()
-        return df.to_dict(orient="records")
 
 app = FastAPI(title="HexGuard API", version="1.0.0")
 
