@@ -315,9 +315,9 @@ def google_disconnect(user=Depends(get_current_user)):
 def get_kpis(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        sales = q(f"SELECT COUNT(*) as total_sales, ROUND(SUM(gross_profit),0) as total_gross, ROUND(AVG(gross_profit),0) as avg_gross FROM {ct(client_id, 'sales')}")
+        sales = q(f"SELECT COUNT(*) as total_sales, ROUND(CAST(SUM(gross_profit) AS numeric), 0) as total_gross, ROUND(CAST(AVG(gross_profit) AS numeric), 0) as avg_gross FROM {ct(client_id, 'sales')}")
         inv   = q(f"SELECT SUM(CASE WHEN is_stale=1 AND status='Available' THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')}")
-        rev   = q(f"SELECT ROUND(AVG(rating),2) as avg_rating FROM {ct(client_id, 'reviews')}")
+        rev   = q(f"SELECT ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating FROM {ct(client_id, 'reviews')}")
         return {"sales": sales[0] if sales else {}, "inventory": inv[0] if inv else {}, "reviews": rev[0] if rev else {}}
     except Exception as e:
         return {"error": str(e)}
@@ -327,8 +327,8 @@ def get_kpis(user=Depends(get_current_user)):
 def get_sales(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        monthly = q(f"SELECT month, COUNT(*) as units, ROUND(SUM(gross_profit),0) as gross FROM {ct(client_id, 'sales')} GROUP BY month ORDER BY month")
-        top_sp  = q(f"SELECT salesperson, COUNT(*) as deals, ROUND(SUM(gross_profit),0) as gross FROM {ct(client_id, 'sales')} GROUP BY salesperson ORDER BY gross DESC")
+        monthly = q(f"SELECT month, COUNT(*) as units, ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross FROM {ct(client_id, 'sales')} GROUP BY month ORDER BY month")
+        top_sp  = q(f"SELECT salesperson, COUNT(*) as deals, ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross FROM {ct(client_id, 'sales')} GROUP BY salesperson ORDER BY gross DESC")
         models  = q(f"SELECT model, COUNT(*) as units FROM {ct(client_id, 'sales')} GROUP BY model ORDER BY units DESC LIMIT 10")
         return {"monthly": monthly, "top_salespeople": top_sp, "top_models": models}
     except Exception as e:
@@ -352,9 +352,9 @@ def debug2(user=Depends(get_current_user)):
 def get_reviews(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        summary = q(f"SELECT ROUND(AVG(rating),2) as avg_rating, COUNT(*) as total, SUM(is_negative) as negative FROM {ct(client_id, 'reviews')}")
+        summary = q(f"SELECT ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating, COUNT(*) as total, SUM(CASE WHEN is_negative=true THEN 1 ELSE 0 END) as negative FROM {ct(client_id, 'reviews')}")
         recent  = q(f"SELECT date, rating, text, platform, sentiment FROM {ct(client_id, 'reviews')} ORDER BY date DESC LIMIT 20")
-        monthly = q(f"SELECT month, ROUND(AVG(rating),2) as avg_rating FROM {ct(client_id, 'reviews')} GROUP BY month ORDER BY month")
+        monthly = q(f"SELECT month, ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating FROM {ct(client_id, 'reviews')} GROUP BY month ORDER BY month")
         return {"summary": summary[0] if summary else {}, "recent": recent, "monthly": monthly}
     except Exception as e:
         return {"error": str(e)}
@@ -364,8 +364,8 @@ def get_reviews(user=Depends(get_current_user)):
 def get_inventory(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        summary = q(f"SELECT COUNT(*) as total, SUM(CASE WHEN status='Available' THEN 1 ELSE 0 END) as available, SUM(CASE WHEN is_stale=1 AND status='Available' THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')}")
-        stale   = q(f"SELECT vin, model, year, list_price, days_on_lot FROM {ct(client_id, 'inventory')} WHERE is_stale=1 AND status='Available' ORDER BY days_on_lot DESC LIMIT 20")
+        summary = q(f"SELECT COUNT(*) as total, SUM(CASE WHEN status='Available' THEN 1 ELSE 0 END) as available, SUM(CASE WHEN is_stale=true AND status='Available' THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')}")
+        stale   = q(f"SELECT vin, model, year, list_price, days_on_lot FROM {ct(client_id, 'inventory')} WHERE is_stale=true AND status='Available' ORDER BY days_on_lot DESC LIMIT 20")
         age     = q(f"SELECT age_bucket, COUNT(*) as units FROM {ct(client_id, 'inventory')} WHERE status='Available' GROUP BY age_bucket")
         return {"summary": summary[0] if summary else {}, "stale": stale, "age_buckets": age}
     except Exception as e:
