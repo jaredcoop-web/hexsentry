@@ -268,7 +268,7 @@ def google_callback(code: str, state: str, request: Request):
         return RedirectResponse(f"http://localhost:5173/reviews?error=google_auth_failed")
 
     save_google_tokens(state, tokens["access_token"], tokens.get("refresh_token", ""))
-    return RedirectResponse(f"http://localhost:5173/reviews?connected=true")
+    return RedirectResponse(f"https://hexguard-app.onrender.com/reviews?connected=true")
 
 
 @app.get("/auth/google/status")
