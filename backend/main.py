@@ -479,7 +479,27 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 "margin":       round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
             })
             conn.commit()
-        return {"message": "Sale recorded successfully"}
+            
+        # Auto-mark matching inventory item as sold
+        try:
+            inv_table = ct(client_id, "inventory")
+            with engine.connect() as inv_conn:
+                inv_conn.execute(text(f"""
+                    UPDATE {inv_table} 
+                    SET status='Sold' 
+                    WHERE id = (
+                        SELECT id FROM {inv_table}
+                        WHERE LOWER(model) = LOWER(:name) 
+                        AND status='Available'
+                        LIMIT 1
+                    )
+                """), {"name": sale.description})
+                inv_conn.commit()
+        except:
+            pass
+        
+        return {"message": "Sale recorded successfully"}    
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 # ── Square webhook ────────────────────────────────────────────────────────────
