@@ -334,6 +334,17 @@ def get_sales(user=Depends(get_current_user)):
     except Exception as e:
         return {"error": str(e)}
     
+@app.get("/sales/list")
+def get_all_sales(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        sales = q(f"SELECT id, date, model, salesperson, sale_price, gross_profit FROM {ct(client_id, 'sales')} ORDER BY date DESC")
+        return sales
+    except Exception as e:
+        return []
+    
+
+    
 # ── Delete endpoints ──────────────────────────────────────────────────────────
 @app.delete("/sales/{sale_id}")
 def delete_sale(sale_id: int, user=Depends(get_current_user)):

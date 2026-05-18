@@ -15,7 +15,7 @@ export default function Sales() {
     try {
       const [salesRes, rawRes] = await Promise.all([
         api.get('/sales'),
-        api.get('/sales/all'),
+        api.get("/sales/list"),
       ])
       setData(salesRes.data)
       setAllSales(rawRes.data || [])
