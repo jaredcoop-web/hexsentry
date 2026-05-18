@@ -334,6 +334,35 @@ def get_sales(user=Depends(get_current_user)):
     except Exception as e:
         return {"error": str(e)}
     
+# ── Delete endpoints ──────────────────────────────────────────────────────────
+@app.delete("/sales/{sale_id}")
+def delete_sale(sale_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "sales")
+    try:
+        with engine.connect() as conn:
+            conn.execute(
+                text(f"DELETE FROM {table} WHERE id=:id"),
+                {"id": sale_id}
+            )
+            conn.commit()
+        return {"message": "Sale deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/sales")
+def clear_all_sales(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "sales")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"TRUNCATE TABLE {table}"))
+            conn.commit()
+        return {"message": "All sales cleared"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 @app.get("/debug")
 def debug(user=Depends(get_current_user)):
     client_id = user["client_id"]
