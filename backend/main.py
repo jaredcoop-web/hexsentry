@@ -616,3 +616,92 @@ async def stripe_webhook(client_id: str, request: Request):
         return {"status": "success", "amount": sale["sale_price"]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# ── Inventory endpoints ───────────────────────────────────────────────────────
+class InventoryItem(BaseModel):
+    name:           str
+    category:       str = "General"
+    sku:            Optional[str] = ""
+    cost:           float = 0
+    asking_price:   float = 0
+    date_received:  str = ""
+    condition:      str = "Used"
+    notes:          Optional[str] = ""
+
+@app.post("/inventory/add")
+def add_inventory_item(item: InventoryItem, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "inventory")
+    date      = item.date_received or datetime.utcnow().strftime("%Y-%m-%d")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                INSERT INTO {table}
+                (vin, model, year, list_price, arrival_date, days_on_lot,
+                 status, is_stale, color, age_bucket, cost, category, condition, notes)
+                VALUES (:vin, :model, :year, :list_price, :arrival_date, 0,
+                        'Available', false, :condition, '0-30 days', :cost, :category, :condition, :notes)
+            """), {
+                "vin":          item.sku or f"SKU-{datetime.utcnow().timestamp()}",
+                "model":        item.name,
+                "year":         datetime.utcnow().year,
+                "list_price":   item.asking_price,
+                "arrival_date": date,
+                "cost":         item.cost,
+                "category":     item.category,
+                "condition":    item.condition,
+                "notes":        item.notes or "",
+            })
+            conn.commit()
+        return {"message": "Item added successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/inventory/list")
+def get_inventory_list(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "inventory")
+    try:
+        items = q(f"""
+            SELECT id, vin as sku, model as name, list_price as asking_price,
+                   cost, arrival_date, status, condition,
+                   CURRENT_DATE - CAST(arrival_date AS date) as days_in_stock
+            FROM {table}
+            ORDER BY arrival_date ASC
+        """)
+        return items
+    except Exception as e:
+        return []
+
+
+@app.patch("/inventory/{item_id}/sell")
+def mark_item_sold(item_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "inventory")
+    try:
+        with engine.connect() as conn:
+            conn.execute(
+                text(f"UPDATE {table} SET status='Sold' WHERE id=:id"),
+                {"id": item_id}
+            )
+            conn.commit()
+        return {"message": "Item marked as sold"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/inventory/{item_id}")
+def delete_inventory_item(item_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "inventory")
+    try:
+        with engine.connect() as conn:
+            conn.execute(
+                text(f"DELETE FROM {table} WHERE id=:id"),
+                {"id": item_id}
+            )
+            conn.commit()
+        return {"message": "Item deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

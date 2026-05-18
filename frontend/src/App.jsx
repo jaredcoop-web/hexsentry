@@ -6,6 +6,7 @@ import Sales from './pages/Sales'
 import Reviews from './pages/Reviews'
 import AddSale from './pages/AddSale'
 import Payments from './pages/Payments'
+import Inventory from './pages/Inventory'
 
 const Placeholder = ({ title }) => (
   <div style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -41,7 +42,7 @@ export default function App() {
       case 'sales':     return <Sales />
       case 'add-sale':  return <AddSale user={user} />
       case 'reviews':   return <Reviews />
-      case 'inventory': return <Placeholder title="🚙 Inventory" />
+      case 'inventory': return <Inventory />
       case 'upload':    return <Placeholder title="📤 Upload Data" />
       case 'email':     return <Placeholder title="📧 Email Report" />
       case 'ai':        return <Placeholder title="🤖 AI Chat" />
