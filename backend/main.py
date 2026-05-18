@@ -85,11 +85,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 def q(sql):
-    conn = sqlite3.connect(DB_PATH)
-    df = pd.read_sql_query(sql, conn)
-    conn.close()
-    return df.to_dict(orient="records")
-
+    if DATABASE_URL:
+        with engine.connect() as conn:
+            df = pd.read_sql_query(text(sql), conn)
+        return df.to_dict(orient="records")
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query(sql, conn)
+        conn.close()
+        return df.to_dict(orient="records")
 
 def ct(client_id, table):
     return get_client_table(client_id, table)
