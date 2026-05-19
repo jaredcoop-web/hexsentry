@@ -774,4 +774,6 @@ REVIEWS DATA (last 20):
         return {"response": response.content[0].text}
 
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
