@@ -7,6 +7,7 @@ import Reviews from './pages/Reviews'
 import AddSale from './pages/AddSale'
 import Payments from './pages/Payments'
 import Inventory from './pages/Inventory'
+import AIChat from './pages/AIChat'
 
 const Placeholder = ({ title }) => (
   <div style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -45,7 +46,7 @@ export default function App() {
       case 'inventory': return <Inventory />
       case 'upload':    return <Placeholder title="📤 Upload Data" />
       case 'email':     return <Placeholder title="📧 Email Report" />
-      case 'ai':        return <Placeholder title="🤖 AI Chat" />
+      case 'ai': return <AIChat user={user} />
       case 'admin':     return <Placeholder title="⚙️ Admin" />
       case 'payments': return <Payments user={user} />
       default:          return <Dashboard user={user} />
