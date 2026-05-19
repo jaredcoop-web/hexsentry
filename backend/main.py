@@ -725,3 +725,53 @@ def delete_inventory_item(item_id: int, user=Depends(get_current_user)):
         return {"message": "Item deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+    # ── AI Chat endpoint ──────────────────────────────────────────────────────────
+class ChatMessage(BaseModel):
+    message: str
+
+@app.post("/chat")
+def chat(msg: ChatMessage, user=Depends(get_current_user)):
+    client_id     = user["client_id"]
+    business_name = user["business_name"]
+
+    try:
+        try:
+            sales = q(f"SELECT salesperson, model, sale_price, gross_profit, lead_source, date, month FROM {ct(client_id, 'sales')} ORDER BY date DESC LIMIT 100")
+        except: sales = []
+        try:
+            inv = q(f"SELECT model, list_price, days_on_lot, status, age_bucket FROM {ct(client_id, 'inventory')} LIMIT 50")
+        except: inv = []
+        try:
+            reviews = q(f"SELECT rating, text, sentiment, date FROM {ct(client_id, 'reviews')} ORDER BY date DESC LIMIT 20")
+        except: reviews = []
+
+        context = f"""
+You are a business intelligence assistant for {business_name}.
+Answer questions about their business data clearly and concisely.
+Do not use markdown formatting — plain text only, no asterisks, no hashtags, no bullet dashes.
+Use numbers and be specific. Keep answers under 150 words unless asked for more detail.
+
+SALES DATA (last 100 deals):
+{sales}
+
+INVENTORY DATA:
+{inv}
+
+REVIEWS DATA (last 20):
+{reviews}
+"""
+
+        import anthropic
+        client   = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        response = client.messages.create(
+            model      = "claude-sonnet-4-5",
+            max_tokens = 500,
+            system     = context,
+            messages   = [{"role": "user", "content": msg.message}]
+        )
+
+        return {"response": response.content[0].text}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
