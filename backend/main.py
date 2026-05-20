@@ -426,12 +426,96 @@ def get_inventory(user=Depends(get_current_user)):
 
 @app.get("/anomalies")
 def get_anomalies(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    alerts = []
     try:
-        from pipeline.anomalies import run_all_checks
-        alerts = run_all_checks()
-        return {"alerts": alerts}
+        # Stale inventory check
+        try:
+            inv = q(f"SELECT COUNT(*) as total, SUM(CASE WHEN is_stale=true THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')} WHERE status='Available'")
+            if inv and inv[0]["total"] and inv[0]["total"] > 0:
+                stale     = inv[0]["stale"] or 0
+                total     = inv[0]["total"]
+                pct       = round(stale / total * 100)
+                if stale > 0:
+                    level = "critical" if pct > 50 else "warning"
+                    alerts.append({
+                        "level":    level,
+                        "category": "Inventory",
+                        "title":    f"High stale inventory" if pct > 50 else "Stale inventory warning",
+                        "detail":   f"{stale} of {total} items ({pct}%) have been sitting 60+ days. Consider price reductions."
+                    })
+        except: pass
+
+        # Sales performance check
+        try:
+            sales = q(f"""
+                SELECT 
+                    COUNT(*) as total_deals,
+                    ROUND(CAST(AVG(gross_profit) AS numeric), 0) as avg_gross,
+                    ROUND(CAST(SUM(gross_profit) AS numeric), 0) as total_gross
+                FROM {ct(client_id, 'sales')}
+                WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+            """)
+            if sales and sales[0]["total_deals"] and sales[0]["total_deals"] > 0:
+                avg_gross = sales[0]["avg_gross"] or 0
+                total     = sales[0]["total_deals"]
+                alerts.append({
+                    "level":    "positive",
+                    "category": "Sales",
+                    "title":    f"{total} deals closed this month",
+                    "detail":   f"Average gross profit per deal: ${int(avg_gross):,}"
+                })
+        except: pass
+
+        # Reviews check
+        try:
+            rev = q(f"""
+                SELECT 
+                    ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating,
+                    SUM(CASE WHEN is_negative=true THEN 1 ELSE 0 END) as negative,
+                    COUNT(*) as total
+                FROM {ct(client_id, 'reviews')}
+            """)
+            if rev and rev[0]["total"] and rev[0]["total"] > 0:
+                avg    = float(rev[0]["avg_rating"] or 0)
+                neg    = rev[0]["negative"] or 0
+                if neg > 0:
+                    alerts.append({
+                        "level":    "warning",
+                        "category": "Reviews",
+                        "title":    f"{neg} negative review{'s' if neg > 1 else ''} detected",
+                        "detail":   f"Average rating: {avg} stars. Respond to negative reviews promptly."
+                    })
+                elif avg >= 4.5:
+                    alerts.append({
+                        "level":    "positive",
+                        "category": "Reviews",
+                        "title":    f"Excellent reputation — {avg} star average",
+                        "detail":   f"Based on {rev[0]['total']} reviews. Keep up the great work!"
+                    })
+        except: pass
+
+        # Lead source check
+        try:
+            leads = q(f"""
+                SELECT lead_source, COUNT(*) as deals,
+                       ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross
+                FROM {ct(client_id, 'sales')}
+                GROUP BY lead_source ORDER BY deals DESC LIMIT 1
+            """)
+            if leads and leads[0]["lead_source"]:
+                alerts.append({
+                    "level":    "positive",
+                    "category": "Sales",
+                    "title":    f"{leads[0]['lead_source']} is your best lead source",
+                    "detail":   f"{leads[0]['deals']} deals, ${int(leads[0]['gross'] or 0):,} gross. Consider increasing investment here."
+                })
+        except: pass
+
     except Exception as e:
-        return {"alerts": [], "error": str(e)}
+        print(f"Anomaly error: {e}")
+
+    return {"alerts": alerts}
 
 
 @app.get("/")
