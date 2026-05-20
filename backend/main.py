@@ -316,7 +316,7 @@ def get_kpis(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
         sales = q(f"SELECT COUNT(*) as total_sales, ROUND(CAST(SUM(gross_profit) AS numeric), 0) as total_gross, ROUND(CAST(AVG(gross_profit) AS numeric), 0) as avg_gross FROM {ct(client_id, 'sales')}")
-        inv   = q(f"SELECT SUM(CASE WHEN is_stale=1 AND status='Available' THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')}")
+        inv   = q(f"SELECT SUM(CASE WHEN is_stale=true AND status='Available' THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')}")
         rev   = q(f"SELECT ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating FROM {ct(client_id, 'reviews')}")
         return {"sales": sales[0] if sales else {}, "inventory": inv[0] if inv else {}, "reviews": rev[0] if rev else {}}
     except Exception as e:
