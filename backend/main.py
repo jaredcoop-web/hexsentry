@@ -861,3 +861,134 @@ REVIEWS DATA (last 20):
         import traceback
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+    
+# ── Email Report endpoint ─────────────────────────────────────────────────────
+class EmailReportRequest(BaseModel):
+    sender_email:    str
+    sender_password: str
+    recipient_email: str
+    business_name:   Optional[str] = ""
+
+@app.post("/email/send")
+def send_email_report(req: EmailReportRequest, user=Depends(get_current_user)):
+    client_id     = user["client_id"]
+    business_name = req.business_name or user["business_name"]
+
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        # Pull data
+        try:
+            sales = q(f"""
+                SELECT COUNT(*) as deals,
+                       ROUND(CAST(SUM(gross_profit) AS numeric), 0) as total_gross,
+                       ROUND(CAST(AVG(gross_profit) AS numeric), 0) as avg_gross
+                FROM {ct(client_id, 'sales')}
+                WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+            """)[0]
+        except: sales = {}
+
+        try:
+            top_sp = q(f"""
+                SELECT salesperson, COUNT(*) as deals,
+                       ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross
+                FROM {ct(client_id, 'sales')}
+                WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+                GROUP BY salesperson ORDER BY gross DESC LIMIT 1
+            """)
+            top_sp = top_sp[0] if top_sp else {}
+        except: top_sp = {}
+
+        try:
+            stale = q(f"""
+                SELECT COUNT(*) as count FROM {ct(client_id, 'inventory')}
+                WHERE is_stale=true AND status='Available'
+            """)[0]
+        except: stale = {}
+
+        try:
+            reviews = q(f"""
+                SELECT ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating,
+                       COUNT(*) as total
+                FROM {ct(client_id, 'reviews')}
+            """)[0]
+        except: reviews = {}
+
+        # Build email HTML
+        week = datetime.utcnow().strftime("%B %d, %Y")
+
+        deals      = int(sales.get("deals") or 0)
+        total_gross = int(sales.get("total_gross") or 0)
+        avg_gross  = int(sales.get("avg_gross") or 0)
+        stale_count = int(stale.get("count") or 0)
+        avg_rating = reviews.get("avg_rating") or "N/A"
+        total_rev  = int(reviews.get("total") or 0)
+
+        top_sp_html = ""
+        if top_sp.get("salesperson"):
+            top_sp_html = f"<p>🏆 <strong>{top_sp['salesperson']}</strong> — {int(top_sp['deals'])} deals, ${int(top_sp['gross'] or 0):,} gross</p>"
+        else:
+            top_sp_html = "<p>No sales data this period.</p>"
+
+        html = f"""
+        <html>
+        <body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#333;'>
+            <div style='background:#0A0A0A;padding:20px;border-radius:8px;margin-bottom:20px;'>
+                <h1 style='color:#C0C0C0;margin:0;font-size:24px;'>🛡️ HexGuard</h1>
+                <p style='color:#888;margin:5px 0 0;'>Weekly Business Intelligence Report</p>
+            </div>
+
+            <p style='color:#666;'>Week of {week} — {business_name}</p>
+
+            <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>📊 This Month at a Glance</h2>
+            <table style='width:100%;border-collapse:collapse;margin:10px 0;'>
+                <tr style='background:#f8f9fa;'>
+                    <td style='padding:10px;border:1px solid #dee2e6;'><strong>Total Sales</strong></td>
+                    <td style='padding:10px;border:1px solid #dee2e6;'>{deals} deals</td>
+                </tr>
+                <tr>
+                    <td style='padding:10px;border:1px solid #dee2e6;'><strong>Total Gross</strong></td>
+                    <td style='padding:10px;border:1px solid #dee2e6;'>${total_gross:,}</td>
+                </tr>
+                <tr style='background:#f8f9fa;'>
+                    <td style='padding:10px;border:1px solid #dee2e6;'><strong>Avg Gross/Deal</strong></td>
+                    <td style='padding:10px;border:1px solid #dee2e6;'>${avg_gross:,}</td>
+                </tr>
+                <tr>
+                    <td style='padding:10px;border:1px solid #dee2e6;'><strong>Avg Review Rating</strong></td>
+                    <td style='padding:10px;border:1px solid #dee2e6;'>⭐ {avg_rating} ({total_rev} reviews)</td>
+                </tr>
+            </table>
+
+            <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>🏆 Top Performer</h2>
+            {top_sp_html}
+
+            <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>⚠️ Needs Attention</h2>
+            {"<p style='color:#c0392b;'>🔴 <strong>" + str(stale_count) + " items</strong> sitting 60+ days — consider price reductions or promotions.</p>" if stale_count > 0 else "<p style='color:#27ae60;'>✅ No stale inventory right now.</p>"}
+
+            <div style='background:#f8f9fa;padding:15px;border-radius:8px;margin-top:30px;text-align:center;'>
+                <p style='margin:0;color:#666;font-size:12px;'>
+                    Powered by <strong>HexGuard</strong> — Business Intelligence Platform<br>
+                    <a href='https://hexguard-app.onrender.com' style='color:#333;'>View Full Dashboard</a>
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"HexGuard Weekly Report — {business_name} — {week}"
+        msg["From"]    = req.sender_email
+        msg["To"]      = req.recipient_email
+        msg.attach(MIMEText(html, "html"))
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(req.sender_email, req.sender_password)
+            server.sendmail(req.sender_email, req.recipient_email, msg.as_string())
+
+        return {"message": "Email sent successfully"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
