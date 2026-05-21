@@ -10,6 +10,7 @@ import Inventory from './pages/Inventory'
 import AIChat from './pages/AIChat'
 import EmailReport from './pages/EmailReport'
 import Admin from './pages/Admin'
+import Finances from './pages/Finances'
 
 // Mobile warning component
 const MobileWarning = () => (
@@ -77,6 +78,7 @@ export default function App() {
       case 'ai': return <AIChat user={user} />
       case 'admin': return <Admin user={user} />
       case 'payments': return <Payments user={user} />
+      case 'finances': return <Finances />
       default:          return <Dashboard user={user} />
     }
   }

@@ -1059,3 +1059,124 @@ def delete_client(email: str, user=Depends(get_current_user)):
     from pipeline.auth import delete_user
     delete_user(email)
     return {"message": f"Client {email} deleted"}
+
+# ── Expenses endpoints ────────────────────────────────────────────────────────
+class Expense(BaseModel):
+    date:        str
+    category:    str
+    description: str
+    amount:      float
+    recurring:   bool = False
+    frequency:   str = "one-time"
+    notes:       Optional[str] = ""
+
+@app.post("/expenses/add")
+def add_expense(expense: Expense, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "expenses")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                INSERT INTO {table}
+                (date, category, description, amount, recurring, frequency, notes, month, year)
+                VALUES (:date, :category, :description, :amount, :recurring, :frequency, :notes, :month, :year)
+            """), {
+                "date":        expense.date,
+                "category":    expense.category,
+                "description": expense.description,
+                "amount":      expense.amount,
+                "recurring":   expense.recurring,
+                "frequency":   expense.frequency,
+                "notes":       expense.notes or "",
+                "month":       expense.date[:7],
+                "year":        expense.date[:4],
+            })
+            conn.commit()
+        return {"message": "Expense added"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/expenses")
+def get_expenses(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "expenses")
+    try:
+        summary = q(f"""
+            SELECT
+                ROUND(CAST(SUM(amount) AS numeric), 0) as total_expenses,
+                COUNT(*) as total_count
+            FROM {table}
+            WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+        """)
+        by_category = q(f"""
+            SELECT category,
+                   ROUND(CAST(SUM(amount) AS numeric), 0) as total
+            FROM {table}
+            WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+            GROUP BY category ORDER BY total DESC
+        """)
+        monthly = q(f"""
+            SELECT month,
+                   ROUND(CAST(SUM(amount) AS numeric), 0) as total
+            FROM {table}
+            GROUP BY month ORDER BY month
+        """)
+        recent = q(f"""
+            SELECT id, date, category, description, amount, recurring, frequency
+            FROM {table}
+            ORDER BY date DESC LIMIT 50
+        """)
+        return {
+            "summary":     summary[0] if summary else {},
+            "by_category": by_category,
+            "monthly":     monthly,
+            "recent":      recent,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/cashflow")
+def get_cashflow(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        sales_data = q(f"""
+            SELECT month,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as income
+            FROM {ct(client_id, 'sales')}
+            GROUP BY month ORDER BY month
+        """)
+        expense_data = q(f"""
+            SELECT month,
+                   ROUND(CAST(SUM(amount) AS numeric), 0) as expenses
+            FROM {ct(client_id, 'expenses')}
+            GROUP BY month ORDER BY month
+        """)
+        months = {}
+        for s in sales_data:
+            months[s["month"]] = {"month": s["month"], "income": s["income"] or 0, "expenses": 0}
+        for e in expense_data:
+            if e["month"] in months:
+                months[e["month"]]["expenses"] = e["expenses"] or 0
+            else:
+                months[e["month"]] = {"month": e["month"], "income": 0, "expenses": e["expenses"] or 0}
+        result = sorted(months.values(), key=lambda x: x["month"])
+        for r in result:
+            r["net"] = r["income"] - r["expenses"]
+        return {"cashflow": result}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.delete("/expenses/{expense_id}")
+def delete_expense(expense_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "expenses")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"DELETE FROM {table} WHERE id=:id"), {"id": expense_id})
+            conn.commit()
+        return {"message": "Expense deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

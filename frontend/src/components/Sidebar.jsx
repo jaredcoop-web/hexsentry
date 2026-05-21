@@ -9,6 +9,7 @@ export default function Sidebar({ user, currentPage, setPage, onLogout }) {
     { id: 'email',     label: '📧 Email Report' },
     { id: 'ai',        label: '🤖 AI Chat' },
     { id: 'payments', label: '💳 Payments' },
+    { id: 'finances', label: '💰 Finances' },
   ]
   if (user?.role === 'admin') pages.push({ id: 'admin', label: '⚙️ Admin' })
   return (
