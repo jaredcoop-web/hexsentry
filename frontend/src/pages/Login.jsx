@@ -51,7 +51,7 @@ export default function Login({ onLogin }) {
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: position === 'left'
+        backgroundPosition: position === 'left' ? 'center 70%' : 'center center',
           ? 'linear-gradient(to right, rgba(0,0,0,0.3), rgba(0,0,0,0.7))'
           : 'linear-gradient(to left, rgba(0,0,0,0.3), rgba(0,0,0,0.7))',
       }} />
