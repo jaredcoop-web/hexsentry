@@ -44,14 +44,14 @@ export default function Login({ onLogin }) {
       flex: 1,
       backgroundImage: position === 'left' ? 'url(/login-left.png)' : 'url(/login-right.png)',
       backgroundSize: 'cover',
-      backgroundPosition: position === 'left' ? 'top center' : 'top center',
+      backgroundPosition: position === 'left' ? 'center 70%' : 'center center',
       minHeight: '100vh',
       position: 'relative',
     }}>
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundPosition: position === 'left' ? 'center 70%' : 'center center',
+        background: position === 'left'
           ? 'linear-gradient(to right, rgba(0,0,0,0.3), rgba(0,0,0,0.7))'
           : 'linear-gradient(to left, rgba(0,0,0,0.3), rgba(0,0,0,0.7))',
       }} />
