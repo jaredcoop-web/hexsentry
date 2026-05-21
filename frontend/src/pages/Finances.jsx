@@ -7,31 +7,26 @@ const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom
 const SELECT = { ...INPUT, cursor: 'pointer' }
 const CARD   = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px', marginBottom: '24px' }
 
-const CATEGORIES = ['Rent', 'Payroll', 'Marketing', 'Utilities', 'Insurance', 'Supplies', 'Equipment', 'Software', 'Taxes', 'Other']
+const EXPENSE_CATEGORIES = ['Rent', 'Payroll', 'Marketing', 'Utilities', 'Insurance', 'Supplies', 'Equipment', 'Software', 'Taxes', 'Other']
+const INCOME_CATEGORIES  = ['Owner Contribution', 'Business Loan', 'Tax Refund', 'Insurance Payout', 'Grant', 'Investment', 'Other Income']
 
-const SUGGESTIONS = (data) => {
+const SUGGESTIONS = ({ summary, cashflow }) => {
   const suggestions = []
-  if (!data) return suggestions
-
-  const { summary, cashflow } = data
   const thisMonth = cashflow?.cashflow?.slice(-1)[0]
-
   if (thisMonth) {
     const { income, expenses, net } = thisMonth
     if (net < 0) {
-      suggestions.push({ type: 'critical', text: `Your expenses exceeded income by $${Math.abs(net).toLocaleString()} this month. Review your largest expense categories immediately.` })
+      suggestions.push({ type: 'critical', text: `Expenses exceeded income by $${Math.abs(net).toLocaleString()} this month. Review your largest expense categories immediately.` })
     } else if (net > 0) {
       suggestions.push({ type: 'positive', text: `Positive cash flow of $${net.toLocaleString()} this month. Consider reinvesting in marketing or building a cash reserve.` })
     }
     if (income > 0 && expenses / income > 0.8) {
-      suggestions.push({ type: 'warning', text: `Your expenses are ${Math.round(expenses/income*100)}% of revenue. Aim to keep total expenses below 70% of revenue for a healthy margin.` })
+      suggestions.push({ type: 'warning', text: `Expenses are ${Math.round(expenses/income*100)}% of revenue. Aim to keep total expenses below 70% of revenue for a healthy margin.` })
     }
   }
-
   if (summary?.total_expenses > 0) {
-    suggestions.push({ type: 'info', text: `You have spent $${Number(summary.total_expenses).toLocaleString()} this month across ${summary.total_count} expense entries.` })
+    suggestions.push({ type: 'info', text: `You have spent $${Number(summary.total_expenses).toLocaleString()} this month across ${summary.expense_count} expense entries.` })
   }
-
   return suggestions
 }
 
@@ -39,17 +34,23 @@ export default function Finances() {
   const [data, setData]         = useState(null)
   const [cashflow, setCashflow] = useState(null)
   const [loading, setLoading]   = useState(true)
-  const [showAdd, setShowAdd]   = useState(false)
+  const [showAdd, setShowAdd]   = useState(null) // 'expense' | 'income' | null
   const [saving, setSaving]     = useState(false)
   const [msg, setMsg]           = useState(null)
 
   const today = new Date().toISOString().slice(0, 10)
-  const [form, setForm] = useState({
+
+  const [expenseForm, setExpenseForm] = useState({
     date: today, category: 'Rent', description: '', amount: '',
     recurring: false, frequency: 'one-time', notes: ''
   })
 
-  const update = (k, v) => setForm(p => ({ ...p, [k]: v }))
+  const [incomeForm, setIncomeForm] = useState({
+    date: today, category: 'Owner Contribution', description: '', amount: '', notes: ''
+  })
+
+  const updateExpense = (k, v) => setExpenseForm(p => ({ ...p, [k]: v }))
+  const updateIncome  = (k, v) => setIncomeForm(p => ({ ...p, [k]: v }))
 
   const load = async () => {
     setLoading(true)
@@ -66,23 +67,39 @@ export default function Finances() {
 
   useEffect(() => { load() }, [])
 
-  const handleAdd = async () => {
-    if (!form.description || !form.amount) {
+  const handleAddExpense = async () => {
+    if (!expenseForm.description || !expenseForm.amount) {
       setMsg({ type: 'error', text: 'Description and amount are required.' })
       return
     }
     setSaving(true)
     try {
-      await api.post('/expenses/add', { ...form, amount: parseFloat(form.amount) })
+      await api.post('/expenses/add', { ...expenseForm, amount: parseFloat(expenseForm.amount) })
       setMsg({ type: 'success', text: 'Expense added!' })
-      setForm({ date: today, category: 'Rent', description: '', amount: '', recurring: false, frequency: 'one-time', notes: '' })
-      setShowAdd(false)
+      setExpenseForm({ date: today, category: 'Rent', description: '', amount: '', recurring: false, frequency: 'one-time', notes: '' })
+      setShowAdd(null)
       load()
     } catch { setMsg({ type: 'error', text: 'Failed to add expense' }) }
     setSaving(false)
   }
 
-  const handleDelete = async (id) => {
+  const handleAddIncome = async () => {
+    if (!incomeForm.description || !incomeForm.amount) {
+      setMsg({ type: 'error', text: 'Description and amount are required.' })
+      return
+    }
+    setSaving(true)
+    try:
+      await api.post('/income/add', { ...incomeForm, amount: parseFloat(incomeForm.amount) })
+      setMsg({ type: 'success', text: 'Income added!' })
+      setIncomeForm({ date: today, category: 'Owner Contribution', description: '', amount: '', notes: '' })
+      setShowAdd(null)
+      load()
+    } catch { setMsg({ type: 'error', text: 'Failed to add income' }) }
+    setSaving(false)
+  }
+
+  const handleDeleteExpense = async (id) => {
     try {
       await api.delete(`/expenses/${id}`)
       setMsg({ type: 'success', text: 'Expense deleted' })
@@ -90,12 +107,20 @@ export default function Finances() {
     } catch { setMsg({ type: 'error', text: 'Failed to delete' }) }
   }
 
-  const suggestions = SUGGESTIONS({ summary: data?.summary, cashflow })
+  const handleDeleteIncome = async (id) => {
+    try {
+      await api.delete(`/income/${id}`)
+      setMsg({ type: 'success', text: 'Income deleted' })
+      load()
+    } catch { setMsg({ type: 'error', text: 'Failed to delete' }) }
+  }
 
-  const thisMonth = cashflow?.cashflow?.slice(-1)[0]
-  const totalIncome   = thisMonth?.income || 0
-  const totalExpenses = parseInt(data?.summary?.total_expenses || 0)
-  const netCashflow   = totalIncome - totalExpenses
+  const suggestions    = SUGGESTIONS({ summary: data?.summary, cashflow })
+  const thisMonth      = cashflow?.cashflow?.slice(-1)[0]
+  const totalIncome    = thisMonth?.income || 0
+  const totalExpenses  = parseInt(data?.summary?.total_expenses || 0)
+  const totalOtherInc  = parseInt(data?.summary?.total_other_income || 0)
+  const netCashflow    = (totalIncome + totalOtherInc) - totalExpenses
 
   if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading finances...</p>
 
@@ -106,9 +131,14 @@ export default function Finances() {
           <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: '24px' }}>💰 Finances</h1>
           <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Track income, expenses, and real cash flow</p>
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '10px 20px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
-          {showAdd ? 'Cancel' : '➕ Add Expense'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => setShowAdd(showAdd === 'income' ? null : 'income')} style={{ padding: '10px 16px', background: showAdd === 'income' ? '#27ae60' : 'transparent', color: showAdd === 'income' ? '#fff' : '#2ecc71', border: '1px solid #27ae60', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+            ➕ Add Income
+          </button>
+          <button onClick={() => setShowAdd(showAdd === 'expense' ? null : 'expense')} style={{ padding: '10px 16px', background: showAdd === 'expense' ? '#c0392b' : 'transparent', color: showAdd === 'expense' ? '#fff' : '#e74c3c', border: '1px solid #c0392b', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+            ➖ Add Expense
+          </button>
+        </div>
       </div>
 
       {msg && (
@@ -117,40 +147,74 @@ export default function Finances() {
         </div>
       )}
 
-      {/* Add Expense Form */}
-      {showAdd && (
-        <div style={CARD}>
-          <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '20px' }}>Add Expense</h2>
+      {/* Add Income Form */}
+      {showAdd === 'income' && (
+        <div style={{ ...CARD, border: '1px solid #27ae60' }}>
+          <h2 style={{ color: '#2ecc71', fontSize: '16px', marginBottom: '20px' }}>Add Income</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
               <label style={LABEL}>Date</label>
-              <input type="date" value={form.date} onChange={e => update('date', e.target.value)} style={INPUT} />
+              <input type="date" value={incomeForm.date} onChange={e => updateIncome('date', e.target.value)} style={INPUT} />
             </div>
             <div>
               <label style={LABEL}>Category</label>
-              <select value={form.category} onChange={e => update('category', e.target.value)} style={SELECT}>
-                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              <select value={incomeForm.category} onChange={e => updateIncome('category', e.target.value)} style={SELECT}>
+                {INCOME_CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div>
               <label style={LABEL}>Description *</label>
-              <input type="text" value={form.description} onChange={e => update('description', e.target.value)} placeholder="e.g. Monthly rent payment" style={INPUT} />
+              <input type="text" value={incomeForm.description} onChange={e => updateIncome('description', e.target.value)} placeholder="e.g. Owner contribution for payroll" style={INPUT} />
             </div>
             <div>
               <label style={LABEL}>Amount ($) *</label>
-              <input type="number" value={form.amount} onChange={e => update('amount', e.target.value)} placeholder="0.00" style={INPUT} />
+              <input type="number" value={incomeForm.amount} onChange={e => updateIncome('amount', e.target.value)} placeholder="0.00" style={INPUT} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={LABEL}>Notes <span style={{ color: '#555' }}>optional</span></label>
+              <input type="text" value={incomeForm.notes} onChange={e => updateIncome('notes', e.target.value)} placeholder="Any additional details" style={INPUT} />
+            </div>
+          </div>
+          <button onClick={handleAddIncome} disabled={saving} style={{ padding: '12px 24px', background: saving ? '#333' : '#27ae60', color: '#fff', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+            {saving ? 'Saving...' : 'Add Income'}
+          </button>
+        </div>
+      )}
+
+      {/* Add Expense Form */}
+      {showAdd === 'expense' && (
+        <div style={{ ...CARD, border: '1px solid #c0392b' }}>
+          <h2 style={{ color: '#e74c3c', fontSize: '16px', marginBottom: '20px' }}>Add Expense</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label style={LABEL}>Date</label>
+              <input type="date" value={expenseForm.date} onChange={e => updateExpense('date', e.target.value)} style={INPUT} />
+            </div>
+            <div>
+              <label style={LABEL}>Category</label>
+              <select value={expenseForm.category} onChange={e => updateExpense('category', e.target.value)} style={SELECT}>
+                {EXPENSE_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={LABEL}>Description *</label>
+              <input type="text" value={expenseForm.description} onChange={e => updateExpense('description', e.target.value)} placeholder="e.g. Monthly rent payment" style={INPUT} />
+            </div>
+            <div>
+              <label style={LABEL}>Amount ($) *</label>
+              <input type="number" value={expenseForm.amount} onChange={e => updateExpense('amount', e.target.value)} placeholder="0.00" style={INPUT} />
             </div>
             <div>
               <label style={LABEL}>Recurring?</label>
-              <select value={form.recurring ? 'yes' : 'no'} onChange={e => update('recurring', e.target.value === 'yes')} style={SELECT}>
+              <select value={expenseForm.recurring ? 'yes' : 'no'} onChange={e => updateExpense('recurring', e.target.value === 'yes')} style={SELECT}>
                 <option value="no">One-time</option>
                 <option value="yes">Recurring</option>
               </select>
             </div>
-            {form.recurring && (
+            {expenseForm.recurring && (
               <div>
                 <label style={LABEL}>Frequency</label>
-                <select value={form.frequency} onChange={e => update('frequency', e.target.value)} style={SELECT}>
+                <select value={expenseForm.frequency} onChange={e => updateExpense('frequency', e.target.value)} style={SELECT}>
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>
                   <option value="quarterly">Quarterly</option>
@@ -160,10 +224,10 @@ export default function Finances() {
             )}
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={LABEL}>Notes <span style={{ color: '#555' }}>optional</span></label>
-              <input type="text" value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="Any additional details" style={INPUT} />
+              <input type="text" value={expenseForm.notes} onChange={e => updateExpense('notes', e.target.value)} placeholder="Any additional details" style={INPUT} />
             </div>
           </div>
-          <button onClick={handleAdd} disabled={saving} style={{ padding: '12px 24px', background: saving ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+          <button onClick={handleAddExpense} disabled={saving} style={{ padding: '12px 24px', background: saving ? '#333' : '#c0392b', color: '#fff', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
             {saving ? 'Saving...' : 'Add Expense'}
           </button>
         </div>
@@ -172,10 +236,10 @@ export default function Finances() {
       {/* KPIs */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
         {[
-          { label: 'Total Income',    value: `$${totalIncome.toLocaleString()}`,   color: '#2ecc71' },
-          { label: 'Total Expenses',  value: `$${totalExpenses.toLocaleString()}`, color: '#e74c3c' },
-          { label: 'Net Cash Flow',   value: `$${netCashflow.toLocaleString()}`,   color: netCashflow >= 0 ? '#2ecc71' : '#e74c3c' },
-          { label: 'Expense Entries', value: data?.summary?.total_count || 0 },
+          { label: 'Sales Income',    value: `$${totalIncome.toLocaleString()}`,     color: '#2ecc71' },
+          { label: 'Other Income',    value: `$${totalOtherInc.toLocaleString()}`,   color: '#3498db' },
+          { label: 'Total Expenses',  value: `$${totalExpenses.toLocaleString()}`,   color: '#e74c3c' },
+          { label: 'Net Cash Flow',   value: `$${netCashflow.toLocaleString()}`,     color: netCashflow >= 0 ? '#2ecc71' : '#e74c3c' },
         ].map((k, i) => (
           <div key={i} style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '20px', flex: 1, minWidth: '140px' }}>
             <p style={{ color: '#666', fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase' }}>{k.label}</p>
@@ -184,7 +248,7 @@ export default function Finances() {
         ))}
       </div>
 
-      {/* HexGuard Suggestions */}
+      {/* Suggestions */}
       {suggestions.length > 0 && (
         <div style={{ marginBottom: '24px' }}>
           <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '12px' }}>🤖 HexGuard Suggestions</h2>
@@ -216,8 +280,8 @@ export default function Finances() {
               <YAxis stroke="#666" tick={{ fontSize: 12 }} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{ background: '#1A1A2E', border: '1px solid #333', color: '#C0C0C0' }} formatter={v => [`$${Number(v).toLocaleString()}`]} />
               <Legend />
-              <Bar dataKey="income"   name="Income"   fill="#2ecc71" radius={[4,4,0,0]} />
-              <Bar dataKey="expenses" name="Expenses" fill="#e74c3c" radius={[4,4,0,0]} />
+              <Bar dataKey="income"   name="Sales Income" fill="#2ecc71" radius={[4,4,0,0]} />
+              <Bar dataKey="expenses" name="Expenses"      fill="#e74c3c" radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -228,7 +292,7 @@ export default function Finances() {
         <div style={CARD}>
           <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '16px' }}>Expenses by Category This Month</h2>
           {data.by_category.map((c, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
               <span style={{ color: '#999', fontSize: '14px' }}>{c.category}</span>
               <span style={{ color: '#e74c3c', fontSize: '14px', fontWeight: 'bold' }}>${Number(c.total).toLocaleString()}</span>
             </div>
@@ -236,30 +300,42 @@ export default function Finances() {
         </div>
       )}
 
-      {/* Recent expenses table */}
+      {/* Recent transactions */}
       <div style={CARD}>
-        <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '16px' }}>Recent Expenses</h2>
-        {!data?.recent?.length ? (
-          <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No expenses yet. Add your first expense above.</p>
+        <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '16px' }}>Recent Transactions</h2>
+        {!data?.recent?.length && !data?.recent_income?.length ? (
+          <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No transactions yet. Add income or expenses above.</p>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                {['Date', 'Category', 'Description', 'Amount', 'Recurring', ''].map(h => (
+                {['Date', 'Type', 'Category', 'Description', 'Amount', ''].map(h => (
                   <th key={h} style={{ color: '#666', fontSize: '12px', textAlign: 'left', padding: '8px 0', borderBottom: '1px solid #333' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {data.recent.map((e, i) => (
+              {[
+                ...(data?.recent_income || []).map(i => ({ ...i, type: 'income' })),
+                ...(data?.recent || []).map(e => ({ ...e, type: 'expense' })),
+              ].sort((a, b) => b.date.localeCompare(a.date)).map((t, i) => (
                 <tr key={i}>
-                  <td style={{ color: '#999', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{e.date}</td>
-                  <td style={{ color: '#999', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{e.category}</td>
-                  <td style={{ color: '#C0C0C0', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{e.description}</td>
-                  <td style={{ color: '#e74c3c', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>${Number(e.amount).toLocaleString()}</td>
-                  <td style={{ color: '#555', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{e.recurring ? `Yes (${e.frequency})` : 'No'}</td>
+                  <td style={{ color: '#999', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{t.date}</td>
+                  <td style={{ padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>
+                    <span style={{ color: t.type === 'income' ? '#2ecc71' : '#e74c3c', border: `1px solid ${t.type === 'income' ? '#27ae60' : '#c0392b'}`, borderRadius: '12px', padding: '2px 8px' }}>
+                      {t.type === 'income' ? '↑ Income' : '↓ Expense'}
+                    </span>
+                  </td>
+                  <td style={{ color: '#999', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{t.category}</td>
+                  <td style={{ color: '#C0C0C0', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{t.description}</td>
+                  <td style={{ color: t.type === 'income' ? '#2ecc71' : '#e74c3c', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px', fontWeight: 'bold' }}>
+                    {t.type === 'income' ? '+' : '-'}${Number(t.amount).toLocaleString()}
+                  </td>
                   <td style={{ padding: '12px 0', borderBottom: '1px solid #1a1a1a' }}>
-                    <button onClick={() => handleDelete(e.id)} style={{ padding: '4px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                    <button
+                      onClick={() => t.type === 'income' ? handleDeleteIncome(t.id) : handleDeleteExpense(t.id)}
+                      style={{ padding: '4px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                    >
                       Delete
                     </button>
                   </td>
