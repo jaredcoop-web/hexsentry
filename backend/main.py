@@ -946,9 +946,14 @@ def _send_report(user: dict, recipient_email: str):
     msg["To"]      = recipient_email
     msg.attach(MIMEText(html, "html"))
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, recipient_email, msg.as_string())
+    import resend
+    resend.api_key = os.getenv("RESEND_API_KEY")
+    resend.Emails.send({
+        "from":    "HexGuard <onboarding@resend.dev>",
+        "to":      recipient_email,
+        "subject": f"HexGuard Weekly Report — {business_name} — {week}",
+        "html":    html,
+    })
         
 @app.delete("/settings/report-email")
 def cancel_report_email(user=Depends(get_current_user)):
