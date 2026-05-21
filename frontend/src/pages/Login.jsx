@@ -44,7 +44,7 @@ export default function Login({ onLogin }) {
       flex: 1,
       backgroundImage: position === 'left' ? 'url(/login-left.png)' : 'url(/login-right.png)',
       backgroundSize: 'cover',
-      backgroundPosition: 'center',
+      backgroundPosition: position === 'left' ? 'top center' : 'top center',
       minHeight: '100vh',
       position: 'relative',
     }}>
@@ -92,8 +92,8 @@ export default function Login({ onLogin }) {
 
       {/* Center login panel */}
       <div style={{
-        width: isMobile ? '100%' : '420px',
-        minWidth: isMobile ? 'unset' : '420px',
+        width: isMobile ? '100%' : '600px',
+        minWidth: isMobile ? 'unset' : '600px',
         minHeight: '100vh',
         background: '#0A0A0A',
         display: 'flex',
