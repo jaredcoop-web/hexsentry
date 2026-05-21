@@ -110,8 +110,10 @@ code {
   background: var(--code-bg);
 }
 
-body, html {
+body, html, #root {
   margin: 0;
   padding: 0;
+  background: #0d0d1a;
+  min-height: 100vh;
   overflow-x: hidden;
 }
