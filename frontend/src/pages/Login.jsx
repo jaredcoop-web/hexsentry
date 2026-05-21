@@ -39,59 +39,74 @@ export default function Login({ onLogin }) {
     }
   }
 
-  return (
+  const ImagePanel = ({ position }) => (
     <div style={{
-      position: 'fixed',
-      inset: 0,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'Arial, sans-serif',
+      flex: 1,
       backgroundImage: 'url(/login-bg.png)',
       backgroundSize: 'cover',
-      backgroundPosition: 'center',
+      backgroundPosition: position === 'left' ? 'left center' : 'right center',
+      minHeight: '100vh',
+      position: 'relative',
     }}>
-      {/* Dark overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: isMobile
-          ? 'rgba(0,0,0,0.75)'
-          : 'linear-gradient(to right, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.15) 65%, rgba(0,0,0,0.5) 100%)',
+        background: position === 'left'
+          ? 'linear-gradient(to right, rgba(0,0,0,0.3), rgba(0,0,0,0.7))'
+          : 'linear-gradient(to left, rgba(0,0,0,0.3), rgba(0,0,0,0.7))',
       }} />
 
-      {/* Tagline bottom left */}
-      {!isMobile && (
+      {/* Tagline on right panel */}
+      {position === 'right' && (
         <div style={{
           position: 'absolute',
-          bottom: '40px',
-          left: '48px',
-          zIndex: 2,
+          bottom: '48px',
+          right: '32px',
+          textAlign: 'right',
+          zIndex: 1,
         }}>
-          <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '18px', fontWeight: 'bold', margin: '0 0 4px', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', fontWeight: 'bold', margin: '0 0 4px', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
             Guarding your business 24/7
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '13px', margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
             Intelligence that never sleeps
           </p>
         </div>
       )}
+    </div>
+  )
 
-      {/* Login card */}
+  return (
+    <div style={{
+      display: 'flex',
+      minHeight: '100vh',
+      width: '100vw',
+      fontFamily: 'Arial, sans-serif',
+      background: '#0A0A0A',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+    }}>
+      {/* Left image panel — hidden on mobile */}
+      {!isMobile && <ImagePanel position="left" />}
+
+      {/* Center login panel */}
       <div style={{
-        position: 'relative',
-        zIndex: 2,
-        background: 'rgba(10,10,10,0.92)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '16px',
-        padding: isMobile ? '32px 24px' : '48px 40px',
-        width: '100%',
-        maxWidth: isMobile ? '90vw' : '420px',
-        backdropFilter: 'blur(12px)',
-        boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
+        width: isMobile ? '100%' : '420px',
+        minWidth: isMobile ? 'unset' : '420px',
+        minHeight: '100vh',
+        background: '#0A0A0A',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: isMobile ? '40px 24px' : '48px 40px',
+        boxSizing: 'border-box',
+        zIndex: 1,
+        borderLeft: isMobile ? 'none' : '1px solid #1a1a1a',
+        borderRight: isMobile ? 'none' : '1px solid #1a1a1a',
       }}>
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '48px' }}>
           <img src="/logo.png" alt="HexGuard" style={{ width: '44px', height: '44px', borderRadius: '8px' }} />
           <div>
             <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '22px', fontWeight: 'bold' }}>HexGuard</h1>
@@ -99,11 +114,11 @@ export default function Login({ onLogin }) {
           </div>
         </div>
 
-        <h2 style={{ color: '#fff', margin: '0 0 6px', fontSize: '20px' }}>Welcome back</h2>
-        <p style={{ color: '#555', margin: '0 0 28px', fontSize: '13px' }}>Sign in to your account</p>
+        <h2 style={{ color: '#fff', margin: '0 0 6px', fontSize: '22px' }}>Welcome back</h2>
+        <p style={{ color: '#555', margin: '0 0 32px', fontSize: '13px' }}>Sign in to your account</p>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '14px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#666', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Email address</label>
             <input
               type="email"
@@ -111,11 +126,11 @@ export default function Login({ onLogin }) {
               onChange={e => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              style={{ width: '100%', padding: '11px 14px', background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+              style={{ width: '100%', padding: '12px 14px', background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
             />
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <label style={{ color: '#666', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Password</label>
             <input
               type="password"
@@ -123,7 +138,7 @@ export default function Login({ onLogin }) {
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              style={{ width: '100%', padding: '11px 14px', background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+              style={{ width: '100%', padding: '12px 14px', background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
             />
           </div>
 
@@ -142,10 +157,20 @@ export default function Login({ onLogin }) {
           </button>
         </form>
 
-        <p style={{ color: '#333', fontSize: '12px', textAlign: 'center', marginTop: '20px', marginBottom: 0 }}>
+        <p style={{ color: '#333', fontSize: '12px', textAlign: 'center', marginTop: '24px' }}>
           Don't have an account? Contact HexGuard to get set up.
         </p>
+
+        {/* Mobile tagline */}
+        {isMobile && (
+          <p style={{ color: '#333', fontSize: '12px', textAlign: 'center', marginTop: '48px' }}>
+            Guarding your business 24/7
+          </p>
+        )}
       </div>
+
+      {/* Right image panel — hidden on mobile */}
+      {!isMobile && <ImagePanel position="right" />}
     </div>
   )
 }
