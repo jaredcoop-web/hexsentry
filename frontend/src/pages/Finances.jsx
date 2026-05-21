@@ -89,7 +89,7 @@ export default function Finances() {
       return
     }
     setSaving(true)
-    try:
+    try {
       await api.post('/income/add', { ...incomeForm, amount: parseFloat(incomeForm.amount) })
       setMsg({ type: 'success', text: 'Income added!' })
       setIncomeForm({ date: today, category: 'Owner Contribution', description: '', amount: '', notes: '' })
