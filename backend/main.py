@@ -1180,3 +1180,48 @@ def delete_expense(expense_id: int, user=Depends(get_current_user)):
         return {"message": "Expense deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# ── Income endpoints ──────────────────────────────────────────────────────────
+class Income(BaseModel):
+    date:        str
+    category:    str
+    description: str
+    amount:      float
+    notes:       Optional[str] = ""
+
+@app.post("/income/add")
+def add_income(income: Income, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "income")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                INSERT INTO {table}
+                (date, category, description, amount, notes, month, year)
+                VALUES (:date, :category, :description, :amount, :notes, :month, :year)
+            """), {
+                "date":        income.date,
+                "category":    income.category,
+                "description": income.description,
+                "amount":      income.amount,
+                "notes":       income.notes or "",
+                "month":       income.date[:7],
+                "year":        income.date[:4],
+            })
+            conn.commit()
+        return {"message": "Income added"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/income/{income_id}")
+def delete_income(income_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "income")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"DELETE FROM {table} WHERE id=:id"), {"id": income_id})
+            conn.commit()
+        return {"message": "Income deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
