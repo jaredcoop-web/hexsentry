@@ -969,6 +969,8 @@ def send_email_report(req: EmailReportRequest, user=Depends(get_current_user)):
         )
         return {"message": "Email sent successfully"}
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 # ── Admin endpoints ───────────────────────────────────────────────────────────
 class NewClient(BaseModel):
