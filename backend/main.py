@@ -1100,38 +1100,53 @@ def add_expense(expense: Expense, user=Depends(get_current_user)):
 @app.get("/expenses")
 def get_expenses(user=Depends(get_current_user)):
     client_id = user["client_id"]
-    table     = ct(client_id, "expenses")
+    exp_table = ct(client_id, "expenses")
+    inc_table = ct(client_id, "income")
     try:
         summary = q(f"""
             SELECT
                 ROUND(CAST(SUM(amount) AS numeric), 0) as total_expenses,
-                COUNT(*) as total_count
-            FROM {table}
+                COUNT(*) as expense_count
+            FROM {exp_table}
+            WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+        """)
+        other_income = q(f"""
+            SELECT ROUND(CAST(SUM(amount) AS numeric), 0) as total_other_income
+            FROM {inc_table}
             WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
         """)
         by_category = q(f"""
             SELECT category,
                    ROUND(CAST(SUM(amount) AS numeric), 0) as total
-            FROM {table}
+            FROM {exp_table}
             WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
             GROUP BY category ORDER BY total DESC
         """)
         monthly = q(f"""
             SELECT month,
                    ROUND(CAST(SUM(amount) AS numeric), 0) as total
-            FROM {table}
+            FROM {exp_table}
             GROUP BY month ORDER BY month
         """)
         recent = q(f"""
             SELECT id, date, category, description, amount, recurring, frequency
-            FROM {table}
+            FROM {exp_table}
+            ORDER BY date DESC LIMIT 50
+        """)
+        recent_income = q(f"""
+            SELECT id, date, category, description, amount
+            FROM {inc_table}
             ORDER BY date DESC LIMIT 50
         """)
         return {
-            "summary":     summary[0] if summary else {},
-            "by_category": by_category,
-            "monthly":     monthly,
-            "recent":      recent,
+            "summary": {
+                **(summary[0] if summary else {}),
+                "total_other_income": other_income[0].get("total_other_income", 0) if other_income else 0,
+            },
+            "by_category":   by_category,
+            "monthly":       monthly,
+            "recent":        recent,
+            "recent_income": recent_income,
         }
     except Exception as e:
         return {"error": str(e)}
@@ -1153,17 +1168,28 @@ def get_cashflow(user=Depends(get_current_user)):
             FROM {ct(client_id, 'expenses')}
             GROUP BY month ORDER BY month
         """)
+        other_income_data = q(f"""
+            SELECT month,
+                   ROUND(CAST(SUM(amount) AS numeric), 0) as other_income
+            FROM {ct(client_id, 'income')}
+            GROUP BY month ORDER BY month
+        """)
         months = {}
         for s in sales_data:
-            months[s["month"]] = {"month": s["month"], "income": s["income"] or 0, "expenses": 0}
+            months[s["month"]] = {"month": s["month"], "income": s["income"] or 0, "expenses": 0, "other_income": 0}
         for e in expense_data:
             if e["month"] in months:
                 months[e["month"]]["expenses"] = e["expenses"] or 0
             else:
-                months[e["month"]] = {"month": e["month"], "income": 0, "expenses": e["expenses"] or 0}
+                months[e["month"]] = {"month": e["month"], "income": 0, "expenses": e["expenses"] or 0, "other_income": 0}
+        for o in other_income_data:
+            if o["month"] in months:
+                months[o["month"]]["other_income"] = o["other_income"] or 0
+            else:
+                months[o["month"]] = {"month": o["month"], "income": 0, "expenses": 0, "other_income": o["other_income"] or 0}
         result = sorted(months.values(), key=lambda x: x["month"])
         for r in result:
-            r["net"] = r["income"] - r["expenses"]
+            r["net"] = (r["income"] + r["other_income"]) - r["expenses"]
         return {"cashflow": result}
     except Exception as e:
         return {"error": str(e)}
