@@ -104,6 +104,7 @@ export default function Login({ onLogin }) {
         zIndex: 1,
         borderLeft: isMobile ? 'none' : '1px solid #1a1a1a',
         borderRight: isMobile ? 'none' : '1px solid #1a1a1a',
+        justifyContent: 'center',
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '48px' }}>
