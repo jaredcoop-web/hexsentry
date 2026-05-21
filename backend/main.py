@@ -229,6 +229,7 @@ def login(form: OAuth2PasswordRequestForm = Depends()):
         "client_id":     user["client_id"],
         "business_name": user["business_name"],
         "role":          user["role"],
+        "plan":          user.get("plan", "starter"),
     })
     return {"access_token": token, "token_type": "bearer"}
 
@@ -992,3 +993,69 @@ def send_email_report(req: EmailReportRequest, user=Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# ── Admin endpoints ───────────────────────────────────────────────────────────
+class NewClient(BaseModel):
+    email:         str
+    password:      str
+    business_name: str
+    client_id:     str
+    plan:          str = "starter"
+
+@app.post("/admin/clients")
+def create_client(client: NewClient, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    from pipeline.auth import create_user
+    success = create_user(
+        email=client.email,
+        password=client.password,
+        business_name=client.business_name,
+        client_id=client.client_id,
+        role="client",
+        plan=client.plan
+    )
+    if not success:
+        raise HTTPException(status_code=400, detail="Email or client ID already exists")
+
+    # Create their tables in Neon
+    try:
+        with engine.connect() as conn:
+            for table_suffix, schema in [
+                ("sales", """id SERIAL PRIMARY KEY, date TEXT, model TEXT, sale_price FLOAT,
+                    cost FLOAT, gross_profit FLOAT, salesperson TEXT, lead_source TEXT,
+                    finance_income FLOAT DEFAULT 0, total_income FLOAT, month TEXT,
+                    year TEXT, days_on_lot INTEGER DEFAULT 0, gross_margin_pct FLOAT DEFAULT 0"""),
+                ("reviews", """id SERIAL PRIMARY KEY, date TEXT, rating FLOAT, text TEXT,
+                    platform TEXT, is_negative BOOLEAN, sentiment TEXT, month TEXT"""),
+                ("inventory", """id SERIAL PRIMARY KEY, vin TEXT, model TEXT, year INTEGER,
+                    list_price FLOAT, arrival_date TEXT, days_on_lot INTEGER DEFAULT 0,
+                    status TEXT, is_stale BOOLEAN, color TEXT, age_bucket TEXT,
+                    cost FLOAT DEFAULT 0, category TEXT DEFAULT 'General',
+                    condition TEXT DEFAULT 'Used', notes TEXT DEFAULT ''"""),
+            ]:
+                table = f"client_{client.client_id}_{table_suffix}"
+                conn.execute(text(f"CREATE TABLE IF NOT EXISTS {table} ({schema})"))
+            conn.commit()
+    except Exception as e:
+        print(f"Table creation error: {e}")
+
+    return {"message": f"Client {client.business_name} created successfully"}
+
+
+@app.get("/admin/clients")
+def get_clients(user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    from pipeline.auth import get_all_users
+    users = get_all_users()
+    return [{"id": u[0], "email": u[1], "business_name": u[2], "client_id": u[3], "role": u[4], "plan": u[5] if len(u) > 5 else "starter", "created_at": u[6] if len(u) > 6 else ""} for u in users if u[4] != "admin"]
+
+
+@app.delete("/admin/clients/{email}")
+def delete_client(email: str, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    from pipeline.auth import delete_user
+    delete_user(email)
+    return {"message": f"Client {email} deleted"}

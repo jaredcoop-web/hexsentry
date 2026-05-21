@@ -50,13 +50,13 @@ def verify_password(password, hashed):
     return bcrypt.checkpw(password.encode(), hashed.encode())
  
  
-def create_user(email, password, business_name, client_id, role="client"):
+def create_user(email, password, business_name, client_id, role="client", plan="starter"):
     conn = get_auth_connection()
     try:
         conn.execute("""
-            INSERT INTO users (email, password_hash, business_name, client_id, role)
-            VALUES (?, ?, ?, ?, ?)
-        """, (email.lower().strip(), hash_password(password), business_name, client_id.lower().replace(" ", "_"), role))
+            INSERT INTO users (email, password_hash, business_name, client_id, role, plan)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (email.lower().strip(), hash_password(password), business_name, client_id.lower().replace(" ", "_"), role, plan))
         conn.commit()
         conn.close()
         return True
@@ -78,9 +78,9 @@ def get_user(email):
             "business_name": row[3],
             "client_id":     row[4],
             "role":          row[5],
+            "plan":          row[6] if len(row) > 6 else "starter",
         }
     return None
- 
  
 def get_all_users():
     conn = get_auth_connection()
