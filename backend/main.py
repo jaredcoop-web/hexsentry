@@ -870,6 +870,88 @@ class EmailReportRequest(BaseModel):
     recipient_email: str
     business_name:   Optional[str] = ""
 
+def _send_report(user: dict, recipient_email: str):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    sender_email    = os.getenv("EMAIL_ADDRESS")
+    sender_password = os.getenv("EMAIL_APP_PASSWORD")
+    client_id       = user["client_id"]
+    business_name   = user["business_name"]
+
+    try:
+        sales = q(f"""
+            SELECT COUNT(*) as deals,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as total_gross,
+                   ROUND(CAST(AVG(gross_profit) AS numeric), 0) as avg_gross
+            FROM {ct(client_id, 'sales')}
+            WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+        """)[0]
+    except: sales = {}
+
+    try:
+        top_sp = q(f"""
+            SELECT salesperson, COUNT(*) as deals,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross
+            FROM {ct(client_id, 'sales')}
+            WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+            GROUP BY salesperson ORDER BY gross DESC LIMIT 1
+        """)
+        top_sp = top_sp[0] if top_sp else {}
+    except: top_sp = {}
+
+    try:
+        stale = q(f"SELECT COUNT(*) as count FROM {ct(client_id, 'inventory')} WHERE is_stale=true AND status='Available'")[0]
+    except: stale = {}
+
+    try:
+        reviews = q(f"SELECT ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating, COUNT(*) as total FROM {ct(client_id, 'reviews')}")[0]
+    except: reviews = {}
+
+    week        = datetime.utcnow().strftime("%B %d, %Y")
+    deals       = int(sales.get("deals") or 0)
+    total_gross = int(sales.get("total_gross") or 0)
+    avg_gross   = int(sales.get("avg_gross") or 0)
+    stale_count = int(stale.get("count") or 0)
+    avg_rating  = reviews.get("avg_rating") or "N/A"
+    total_rev   = int(reviews.get("total") or 0)
+    top_sp_html = f"<p>🏆 <strong>{top_sp['salesperson']}</strong> — {int(top_sp['deals'])} deals, ${int(top_sp['gross'] or 0):,} gross</p>" if top_sp.get("salesperson") else "<p>No sales data this period.</p>"
+
+    html = f"""
+    <html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#333;'>
+        <div style='background:#0A0A0A;padding:20px;border-radius:8px;margin-bottom:20px;'>
+            <h1 style='color:#C0C0C0;margin:0;font-size:24px;'>🛡️ HexGuard</h1>
+            <p style='color:#888;margin:5px 0 0;'>Weekly Business Intelligence Report</p>
+        </div>
+        <p style='color:#666;'>Week of {week} — {business_name}</p>
+        <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>📊 This Month at a Glance</h2>
+        <table style='width:100%;border-collapse:collapse;margin:10px 0;'>
+            <tr style='background:#f8f9fa;'><td style='padding:10px;border:1px solid #dee2e6;'><strong>Total Sales</strong></td><td style='padding:10px;border:1px solid #dee2e6;'>{deals} deals</td></tr>
+            <tr><td style='padding:10px;border:1px solid #dee2e6;'><strong>Total Gross</strong></td><td style='padding:10px;border:1px solid #dee2e6;'>${total_gross:,}</td></tr>
+            <tr style='background:#f8f9fa;'><td style='padding:10px;border:1px solid #dee2e6;'><strong>Avg Gross/Deal</strong></td><td style='padding:10px;border:1px solid #dee2e6;'>${avg_gross:,}</td></tr>
+            <tr><td style='padding:10px;border:1px solid #dee2e6;'><strong>Avg Review Rating</strong></td><td style='padding:10px;border:1px solid #dee2e6;'>⭐ {avg_rating} ({total_rev} reviews)</td></tr>
+        </table>
+        <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>🏆 Top Performer</h2>
+        {top_sp_html}
+        <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>⚠️ Needs Attention</h2>
+        {"<p style='color:#c0392b;'>🔴 <strong>" + str(stale_count) + " items</strong> sitting 60+ days.</p>" if stale_count > 0 else "<p style='color:#27ae60;'>✅ No stale inventory.</p>"}
+        <div style='background:#f8f9fa;padding:15px;border-radius:8px;margin-top:30px;text-align:center;'>
+            <p style='margin:0;color:#666;font-size:12px;'>Powered by <strong>HexGuard</strong> | <a href='https://hexguard-app.onrender.com'>View Dashboard</a></p>
+        </div>
+    </body></html>
+    """
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"HexGuard Weekly Report — {business_name} — {week}"
+    msg["From"]    = sender_email
+    msg["To"]      = recipient_email
+    msg.attach(MIMEText(html, "html"))
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, recipient_email, msg.as_string())
+        
 @app.post("/email/send")
 def send_email_report(req: EmailReportRequest, user=Depends(get_current_user)):
     client_id     = user["client_id"]
@@ -1251,3 +1333,74 @@ def delete_income(income_id: int, user=Depends(get_current_user)):
         return {"message": "Income deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# ── Scheduler endpoints ───────────────────────────────────────────────────────
+SCHEDULER_KEY = os.getenv("SCHEDULER_API_KEY", "hexguard_scheduler_2024")
+
+class ReportEmailUpdate(BaseModel):
+    report_email: str
+
+@app.post("/settings/report-email")
+def update_report_email(req: ReportEmailUpdate, user=Depends(get_current_user)):
+    from pipeline.auth import get_auth_connection
+    conn = get_auth_connection()
+    conn.execute("UPDATE users SET report_email=? WHERE email=?", (req.report_email, user["sub"]))
+    conn.commit()
+    conn.close()
+    return {"message": "Report email saved"}
+
+@app.get("/email/send-all")
+def send_all_reports(api_key: str):
+    if api_key != SCHEDULER_KEY:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+    from pipeline.auth import get_all_users
+    users   = get_all_users()
+    sent    = 0
+    failed  = 0
+    for u in users:
+        if u[4] == "admin": continue
+        report_email = u[6] if len(u) > 6 else ""
+        if not report_email: continue
+        try:
+            mock_user = {"client_id": u[3], "business_name": u[2], "sub": u[1]}
+            _send_report(mock_user, report_email)
+            sent += 1
+        except Exception as e:
+            print(f"Failed {u[1]}: {e}")
+            failed += 1
+    return {"sent": sent, "failed": failed}
+
+@app.post("/recurring/process")
+def process_recurring(api_key: str):
+    if api_key != SCHEDULER_KEY:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+    from pipeline.auth import get_all_users
+    users         = get_all_users()
+    processed     = 0
+    current_month = datetime.utcnow().strftime("%Y-%m")
+    today         = datetime.utcnow().strftime("%Y-%m-%d")
+    for u in users:
+        if u[4] == "admin": continue
+        client_id = u[3]
+        exp_table = ct(client_id, "expenses")
+        try:
+            recurring = q(f"SELECT id, category, description, amount, frequency, notes FROM {exp_table} WHERE recurring=true")
+            for r in recurring:
+                already = q(f"SELECT COUNT(*) as count FROM {exp_table} WHERE description='{r['description']} (auto)' AND month='{current_month}'")
+                if already and already[0]["count"] == 0:
+                    with engine.connect() as conn:
+                        conn.execute(text(f"""
+                            INSERT INTO {exp_table}
+                            (date, category, description, amount, recurring, frequency, notes, month, year)
+                            VALUES (:date, :category, :description, :amount, false, :frequency, :notes, :month, :year)
+                        """), {
+                            "date": today, "category": r["category"],
+                            "description": f"{r['description']} (auto)",
+                            "amount": r["amount"], "frequency": r["frequency"],
+                            "notes": r["notes"], "month": current_month, "year": today[:4],
+                        })
+                        conn.commit()
+                    processed += 1
+        except Exception as e:
+            print(f"Error {client_id}: {e}")
+    return {"processed": processed}

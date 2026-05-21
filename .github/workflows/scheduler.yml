@@ -1,0 +1,22 @@
+name: HexGuard Scheduler
+
+on:
+  schedule:
+    - cron: '0 22 * * 5'    # Every Friday at 5pm CST (22:00 UTC)
+    - cron: '0 9 1 * *'     # 1st of every month at 9am UTC
+  workflow_dispatch:          # allows manual trigger from GitHub
+
+jobs:
+  friday-email-reports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send weekly email reports to all clients
+        run: |
+          curl -X GET "https://hex-guard.onrender.com/email/send-all?api_key=${{ secrets.SCHEDULER_API_KEY }}"
+
+  monthly-recurring-expenses:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process recurring expenses for all clients
+        run: |
+          curl -X POST "https://hex-guard.onrender.com/recurring/process?api_key=${{ secrets.SCHEDULER_API_KEY }}"
