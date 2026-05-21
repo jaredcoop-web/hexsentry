@@ -56,7 +56,8 @@ export default function Login({ onLogin }) {
         border: '1px solid #333'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '28px' }}>🛡️ HexGuard</h1>
+          <img src="/logo.png" alt="HexGuard" style={{ width: '80px', height: '80px', borderRadius: '12px', marginBottom: '12px' }} />
+          <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '28px' }}>HexGuard</h1>
           <p style={{ color: '#666', margin: '8px 0 0' }}>Business Intelligence Platform</p>
         </div>
 

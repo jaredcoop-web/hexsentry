@@ -14,8 +14,11 @@ export default function Sidebar({ user, currentPage, setPage, onLogout }) {
   return (
     <div style={{ width: '220px', minHeight: '100vh', background: '#0A0A0A', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif', position: 'fixed', left: 0, top: 0 }}>
       <div style={{ padding: '24px 16px', borderBottom: '1px solid #222' }}>
-        <h2 style={{ color: '#C0C0C0', margin: 0, fontSize: '20px' }}>🛡️ HexGuard</h2>
-        <p style={{ color: '#555', margin: '4px 0 0', fontSize: '11px' }}>{user?.business_name || 'Business Intelligence'}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+          <img src="/logo.png" alt="HexGuard" style={{ width: '36px', height: '36px', borderRadius: '6px' }} />
+          <h2 style={{ color: '#C0C0C0', margin: 0, fontSize: '18px' }}>HexGuard</h2>
+        </div>
+        <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>{user?.business_name || 'Business Intelligence'}</p>
       </div>
       <nav style={{ flex: 1, padding: '12px 0' }}>
         {pages.map(page => (
