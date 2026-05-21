@@ -11,6 +11,30 @@ import AIChat from './pages/AIChat'
 import EmailReport from './pages/EmailReport'
 import Admin from './pages/Admin'
 
+// Mobile warning component
+const MobileWarning = () => (
+  <div style={{
+    minHeight: '100vh',
+    background: '#0A0A0A',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '32px 24px',
+    fontFamily: 'Arial, sans-serif',
+    textAlign: 'center',
+  }}>
+    <img src="/logo.png" alt="HexGuard" style={{ width: '64px', height: '64px', borderRadius: '12px', marginBottom: '24px' }} />
+    <h1 style={{ color: '#C0C0C0', margin: '0 0 12px', fontSize: '24px' }}>HexGuard</h1>
+    <p style={{ color: '#666', margin: '0 0 32px', fontSize: '15px', lineHeight: '1.6', maxWidth: '300px' }}>
+      HexGuard is optimized for desktop. Please open this on your computer for the best experience.
+    </p>
+    <p style={{ color: '#444', fontSize: '13px', margin: 0 }}>
+      📧 Your weekly email report still works on any device
+    </p>
+  </div>
+)
+
 const Placeholder = ({ title }) => (
   <div style={{ fontFamily: 'Arial, sans-serif' }}>
     <h1 style={{ color: '#C0C0C0' }}>{title}</h1>
@@ -38,6 +62,8 @@ export default function App() {
   }
 
   if (!user) return <Login onLogin={handleLogin} />
+  // Show mobile warning for logged in users
+  if (window.innerWidth < 768 && user) return <MobileWarning />
 
   const renderPage = () => {
     switch (currentPage) {
