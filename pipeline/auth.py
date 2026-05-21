@@ -20,9 +20,15 @@ def init_auth_db():
             business_name TEXT NOT NULL,
             client_id     TEXT UNIQUE NOT NULL,
             role          TEXT DEFAULT 'client',
-            created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            plan          TEXT DEFAULT 'starter'
         )
     """)
+    # Add plan column if it doesn't exist (for existing databases)
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'starter'")
+    except:
+        pass
     conn.commit()
  
     admin_email    = os.getenv("ADMIN_EMAIL",    "admin@hexguard.com")
