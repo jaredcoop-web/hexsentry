@@ -66,11 +66,9 @@ export default function Login({ onLogin }) {
           zIndex: 1,
         }}>
           <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', fontWeight: 'bold', margin: '0 0 4px', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
-            Guarding your business 24/7
+            24/7 Business monitor platform
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
-            Intelligence that never sleeps
-          </p>
+          
         </div>
       )}
     </div>
