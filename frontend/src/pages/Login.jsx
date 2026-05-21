@@ -44,7 +44,7 @@ export default function Login({ onLogin }) {
       flex: 1,
       backgroundImage: position === 'left' ? 'url(/login-left.png)' : 'url(/login-right.png)',
       backgroundSize: 'cover',
-      backgroundPosition: position === 'left' ? 'center 70%' : 'center 90%',
+      backgroundPosition: position === 'left' ? 'center 70%' : 'center 70%',
       minHeight: '100vh',
       position: 'relative',
     }}>
