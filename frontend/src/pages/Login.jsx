@@ -21,7 +21,6 @@ export default function Login({ onLogin }) {
 
       const res = await axios.post(`${API_URL}/token`, form)
       const token = res.data.access_token
-
       localStorage.setItem('token', token)
 
       const me = await axios.get(`${API_URL}/me`, {
@@ -40,110 +39,165 @@ export default function Login({ onLogin }) {
 
   return (
     <div style={{
+      display: 'flex',
       minHeight: '100vh',
       background: '#0A0A0A',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'Arial, sans-serif'
+      fontFamily: 'Arial, sans-serif',
     }}>
+      {/* Left side — login form */}
       <div style={{
-        background: '#1A1A2E',
-        padding: '40px',
-        borderRadius: '12px',
-        width: '100%',
-        maxWidth: '400px',
-        border: '1px solid #333'
+        flex: '0 0 480px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '60px 48px',
+        background: '#0A0A0A',
+        zIndex: 1,
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <img src="/logo.png" alt="HexGuard" style={{ width: '80px', height: '80px', borderRadius: '12px', marginBottom: '12px' }} />
-          <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '28px' }}>HexGuard</h1>
-          <p style={{ color: '#666', margin: '8px 0 0' }}>Business Intelligence Platform</p>
+        {/* Logo */}
+        <div style={{ marginBottom: '48px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+            <img src="/logo.png" alt="HexGuard" style={{ width: '48px', height: '48px', borderRadius: '8px' }} />
+            <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '28px', fontWeight: 'bold' }}>HexGuard</h1>
+          </div>
+          <p style={{ color: '#444', margin: 0, fontSize: '14px' }}>Business Intelligence Platform</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ color: '#999', fontSize: '14px', display: 'block', marginBottom: '6px' }}>
-              Email address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                background: '#0A0A0A',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                color: '#fff',
-                fontSize: '14px',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
+        {/* Form */}
+        <div>
+          <h2 style={{ color: '#C0C0C0', margin: '0 0 8px', fontSize: '22px' }}>Welcome back</h2>
+          <p style={{ color: '#555', margin: '0 0 32px', fontSize: '14px' }}>Sign in to your account</p>
 
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ color: '#999', fontSize: '14px', display: 'block', marginBottom: '6px' }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                background: '#0A0A0A',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                color: '#fff',
-                fontSize: '14px',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          {error && (
-            <div style={{
-              background: '#2d1515',
-              border: '1px solid #c0392b',
-              borderRadius: '6px',
-              padding: '10px 12px',
-              color: '#e74c3c',
-              fontSize: '14px',
-              marginBottom: '16px'
-            }}>
-              {error}
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ color: '#777', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+                Email address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  background: '#111',
+                  border: '1px solid #222',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                }}
+              />
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '12px',
-              background: loading ? '#333' : '#C0C0C0',
-              color: '#0A0A0A',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '15px',
-              fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ color: '#777', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  background: '#111',
+                  border: '1px solid #222',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                }}
+              />
+            </div>
 
-        <p style={{ color: '#555', fontSize: '12px', textAlign: 'center', marginTop: '24px' }}>
-          Don't have an account? Contact HexGuard to get set up.
-        </p>
+            {error && (
+              <div style={{
+                background: '#1a0808',
+                border: '1px solid #c0392b',
+                borderRadius: '8px',
+                padding: '10px 14px',
+                color: '#e74c3c',
+                fontSize: '13px',
+                marginBottom: '16px',
+              }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '13px',
+                background: loading ? '#222' : '#4a9eff',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '15px',
+                fontWeight: 'bold',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                transition: 'background 0.2s',
+              }}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          <p style={{ color: '#333', fontSize: '12px', textAlign: 'center', marginTop: '24px' }}>
+            Don't have an account? Contact HexGuard to get set up.
+          </p>
+        </div>
+      </div>
+
+      {/* Right side — image */}
+      <div style={{
+        flex: 1,
+        backgroundImage: 'url(/login-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        position: 'relative',
+        minHeight: '100vh',
+      }}>
+        {/* Dark overlay */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(to right, #0A0A0A 0%, transparent 30%)',
+        }} />
+
+        {/* Tagline */}
+        <div style={{
+          position: 'absolute',
+          bottom: '60px',
+          right: '48px',
+          textAlign: 'right',
+        }}>
+          <p style={{
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: '22px',
+            fontWeight: 'bold',
+            margin: '0 0 8px',
+            textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+          }}>
+            Guarding your business 24/7
+          </p>
+          <p style={{
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: '14px',
+            margin: 0,
+            textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+          }}>
+            Intelligence that never sleeps
+          </p>
+        </div>
       </div>
     </div>
   )
