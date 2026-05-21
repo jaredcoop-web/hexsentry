@@ -42,9 +42,9 @@ export default function Login({ onLogin }) {
   const ImagePanel = ({ position }) => (
     <div style={{
       flex: 1,
-      backgroundImage: 'url(/login-bg.png)',
+      backgroundImage: position === 'left' ? 'url(/login-left.png)' : 'url(/login-right.png)',
       backgroundSize: 'cover',
-      backgroundPosition: position === 'left' ? 'left center' : 'right center',
+      backgroundPosition: 'center',
       minHeight: '100vh',
       position: 'relative',
     }}>
