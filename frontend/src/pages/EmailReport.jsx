@@ -84,6 +84,16 @@ export default function EmailReport({ user }) {
         >
           {saving ? 'Saving...' : 'Save & Activate'}
         </button>
+        <button
+          onClick={async () => {
+            await api.delete('/settings/report-email')
+            setReportEmail('')
+            setMsg({ type: 'success', text: 'Weekly reports cancelled.' })
+          }}
+          style={{ width: '100%', padding: '10px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', marginTop: '8px' }}
+        >
+          Cancel Weekly Reports
+        </button>
       </div>
 
       {/* Send test report */}

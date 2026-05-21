@@ -952,6 +952,15 @@ def _send_report(user: dict, recipient_email: str):
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, recipient_email, msg.as_string())
         
+@app.delete("/settings/report-email")
+def cancel_report_email(user=Depends(get_current_user)):
+    from pipeline.auth import get_auth_connection
+    conn = get_auth_connection()
+    conn.execute("UPDATE users SET report_email='' WHERE email=?", (user["sub"],))
+    conn.commit()
+    conn.close()
+    return {"message": "Weekly reports cancelled"}
+
 @app.post("/email/send")
 def send_email_report(req: EmailReportRequest, user=Depends(get_current_user)):
     client_id     = user["client_id"]
