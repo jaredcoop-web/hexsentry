@@ -917,27 +917,81 @@ def _send_report(user: dict, recipient_email: str):
     top_sp_html = f"<p>🏆 <strong>{top_sp['salesperson']}</strong> — {int(top_sp['deals'])} deals, ${int(top_sp['gross'] or 0):,} gross</p>" if top_sp.get("salesperson") else "<p>No sales data this period.</p>"
 
     html = f"""
-    <html><body style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#333;'>
-        <div style='background:#0A0A0A;padding:20px;border-radius:8px;margin-bottom:20px;'>
-            <h1 style='color:#C0C0C0;margin:0;font-size:24px;'>🛡️ HexGuard</h1>
-            <p style='color:#888;margin:5px 0 0;'>Weekly Business Intelligence Report</p>
+    <html>
+    <body style='margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;'>
+      <div style='max-width:600px;margin:0 auto;padding:20px;'>
+
+        <!-- Header -->
+        <div style='background:#0A0A0A;border-radius:12px;padding:24px;margin-bottom:20px;text-align:center;'>
+          <h1 style='color:#C0C0C0;margin:0 0 4px;font-size:28px;'>🛡️ HexGuard</h1>
+          <p style='color:#555;margin:0;font-size:13px;'>Weekly Business Intelligence Report</p>
         </div>
-        <p style='color:#666;'>Week of {week} — {business_name}</p>
-        <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>📊 This Month at a Glance</h2>
-        <table style='width:100%;border-collapse:collapse;margin:10px 0;'>
-            <tr style='background:#f8f9fa;'><td style='padding:10px;border:1px solid #dee2e6;'><strong>Total Sales</strong></td><td style='padding:10px;border:1px solid #dee2e6;'>{deals} deals</td></tr>
-            <tr><td style='padding:10px;border:1px solid #dee2e6;'><strong>Total Gross</strong></td><td style='padding:10px;border:1px solid #dee2e6;'>${total_gross:,}</td></tr>
-            <tr style='background:#f8f9fa;'><td style='padding:10px;border:1px solid #dee2e6;'><strong>Avg Gross/Deal</strong></td><td style='padding:10px;border:1px solid #dee2e6;'>${avg_gross:,}</td></tr>
-            <tr><td style='padding:10px;border:1px solid #dee2e6;'><strong>Avg Review Rating</strong></td><td style='padding:10px;border:1px solid #dee2e6;'>⭐ {avg_rating} ({total_rev} reviews)</td></tr>
-        </table>
-        <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>🏆 Top Performer</h2>
-        {top_sp_html}
-        <h2 style='border-bottom:2px solid #eee;padding-bottom:8px;'>⚠️ Needs Attention</h2>
-        {"<p style='color:#c0392b;'>🔴 <strong>" + str(stale_count) + " items</strong> sitting 60+ days.</p>" if stale_count > 0 else "<p style='color:#27ae60;'>✅ No stale inventory.</p>"}
-        <div style='background:#f8f9fa;padding:15px;border-radius:8px;margin-top:30px;text-align:center;'>
-            <p style='margin:0;color:#666;font-size:12px;'>Powered by <strong>HexGuard</strong> | <a href='https://hexguard-app.onrender.com'>View Dashboard</a></p>
+
+        <!-- Greeting -->
+        <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
+          <p style='color:#333;font-size:16px;margin:0 0 4px;'>Good Friday, <strong>{business_name}</strong> 👋</p>
+          <p style='color:#888;font-size:13px;margin:0;'>Week of {week} — here's how your business performed</p>
         </div>
-    </body></html>
+
+        <!-- This Month KPIs -->
+        <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
+          <h2 style='color:#333;font-size:16px;margin:0 0 16px;border-bottom:2px solid #f4f4f4;padding-bottom:8px;'>📊 This Month at a Glance</h2>
+          <table style='width:100%;border-collapse:collapse;'>
+            <tr>
+              <td style='padding:10px;background:#f9f9f9;border-radius:8px;text-align:center;width:30%;'>
+                <p style='color:#888;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Sales</p>
+                <p style='color:#333;font-size:24px;font-weight:bold;margin:0;'>{deals}</p>
+                <p style='color:#888;font-size:11px;margin:0;'>deals</p>
+              </td>
+              <td style='width:5%;'></td>
+              <td style='padding:10px;background:#f0fff4;border-radius:8px;text-align:center;width:30%;'>
+                <p style='color:#888;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Gross</p>
+                <p style='color:#27ae60;font-size:24px;font-weight:bold;margin:0;'>${total_gross:,}</p>
+                <p style='color:#888;font-size:11px;margin:0;'>profit</p>
+              </td>
+              <td style='width:5%;'></td>
+              <td style='padding:10px;background:#f9f9f9;border-radius:8px;text-align:center;width:30%;'>
+                <p style='color:#888;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Avg Per Deal</p>
+                <p style='color:#333;font-size:24px;font-weight:bold;margin:0;'>${avg_gross:,}</p>
+                <p style='color:#888;font-size:11px;margin:0;'>gross</p>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Top Performer -->
+        <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
+          <h2 style='color:#333;font-size:16px;margin:0 0 12px;'>🏆 Top Performer</h2>
+          {top_sp_html}
+        </div>
+
+        <!-- Reviews -->
+        <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
+          <h2 style='color:#333;font-size:16px;margin:0 0 12px;'>⭐ Reputation</h2>
+          <p style='color:#333;margin:0;font-size:15px;'>Average Rating: <strong style='color:#f39c12;'>{"⭐" * int(float(avg_rating)) if avg_rating != "N/A" else "N/A"} {avg_rating}</strong> ({total_rev} total reviews)</p>
+        </div>
+
+        <!-- Inventory Alert -->
+        {"<div style='background:#fff5f5;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #ffcccc;'><h2 style='color:#c0392b;font-size:16px;margin:0 0 12px;'>📦 Inventory Alert</h2><p style='color:#c0392b;margin:0;font-size:15px;'>🔴 <strong>" + str(stale_count) + " items</strong> have been sitting 60+ days. Consider price reductions or promotions to move them faster.</p></div>" if stale_count > 0 else "<div style='background:#f0fff4;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #c3e6cb;'><h2 style='color:#27ae60;font-size:16px;margin:0 0 12px;'>📦 Inventory</h2><p style='color:#27ae60;margin:0;'>✅ No stale inventory — great job keeping stock moving!</p></div>"}
+
+        <!-- CTA -->
+        <div style='text-align:center;margin-bottom:20px;'>
+          <a href='https://hexguard-app.onrender.com' style='background:#0A0A0A;color:#C0C0C0;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;'>
+            View Full Dashboard →
+          </a>
+        </div>
+
+        <!-- Footer -->
+        <div style='text-align:center;padding:16px;'>
+          <p style='color:#aaa;font-size:12px;margin:0;'>
+            Powered by <strong>HexGuard</strong> — Business Intelligence Platform<br>
+            <a href='https://hexguard-app.onrender.com' style='color:#aaa;'>Unsubscribe from weekly reports</a>
+          </p>
+        </div>
+
+      </div>
+    </body>
+    </html>
     """
 
     msg = MIMEMultipart("alternative")
