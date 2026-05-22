@@ -42,7 +42,7 @@ export default function Login({ onLogin }) {
   const ImagePanel = ({ position }) => (
     <div style={{
       flex: 1,
-      backgroundImage: position === 'left' ? 'url(/login-left.png)' : 'url(/login-right.png)',
+      backgroundImage: position === 'left' ? 'url(/molecule.png)' : 'url(/hexsentry_logo.png)',
       backgroundSize: 'cover',
       backgroundPosition: position === 'left' ? 'center 70%' : 'center 70%',
       minHeight: '100vh',
