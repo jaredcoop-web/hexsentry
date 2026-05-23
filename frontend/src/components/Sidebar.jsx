@@ -3,6 +3,7 @@ export default function Sidebar({ user, currentPage, setPage, onLogout }) {
     { id: 'dashboard', label: '🏠 Dashboard' },
     { id: 'sales',     label: '🚗 Sales' },
     { id: 'add-sale',  label: '➕ Add Sale' },
+    { id: 'fi', label: '💼 F&I' },
     { id: 'reviews',   label: '⭐ Reviews' },
     { id: 'inventory', label: '🚙 Inventory' },
     { id: 'upload',    label: '📤 Upload Data' },

@@ -527,20 +527,27 @@ from pydantic import BaseModel
 from typing import Optional
 
 class ManualSale(BaseModel):
-    date:         str
-    description:  str
-    sale_price:   float
-    cost:         float = 0
-    gross_profit: float
-    salesperson:  str
-    payment_type: str = "Cash"
-    lead_source:  str = "Walk-in"
-    notes:        Optional[str] = ""
+    date:            str
+    description:     str
+    sale_price:      float
+    cost:            float = 0
+    gross_profit:    float
+    salesperson:     str
+    payment_type:    str = "Cash"
+    lead_source:     str = "Walk-in"
+    notes:           Optional[str] = ""
+    finance_reserve: float = 0
+    warranty:        float = 0
+    gap_insurance:   float = 0
+    addons:          float = 0
 
 @app.post("/sales/manual")
 def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
-    client_id = user["client_id"]
-    table     = ct(client_id, "sales")
+    client_id  = user["client_id"]
+    table      = ct(client_id, "sales")
+    fi_table   = ct(client_id, "fi")
+    total_backend = sale.finance_reserve + sale.warranty + sale.gap_insurance + sale.addons
+
     try:
         with engine.connect() as conn:
             conn.execute(text(f"""
@@ -549,32 +556,56 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                  lead_source, finance_income, total_income, month, year,
                  days_on_lot, gross_margin_pct)
                 VALUES (:date, :model, :sale_price, :cost, :gross_profit, :salesperson,
-                        :lead_source, 0, :total_income, :month, :year, 0, :margin)
+                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin)
             """), {
-                "date":         sale.date,
-                "model":        sale.description,
-                "sale_price":   sale.sale_price,
-                "cost":         sale.cost,
-                "gross_profit": sale.gross_profit,
-                "salesperson":  sale.salesperson,
-                "lead_source":  sale.lead_source,
-                "total_income": sale.gross_profit,
-                "month":        sale.date[:7],
-                "year":         sale.date[:4],
-                "margin":       round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
+                "date":           sale.date,
+                "model":          sale.description,
+                "sale_price":     sale.sale_price,
+                "cost":           sale.cost,
+                "gross_profit":   sale.gross_profit,
+                "salesperson":    sale.salesperson,
+                "lead_source":    sale.lead_source,
+                "finance_income": total_backend,
+                "total_income":   sale.gross_profit + total_backend,
+                "month":          sale.date[:7],
+                "year":           sale.date[:4],
+                "margin":         round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
             })
             conn.commit()
-            
+
+        # Save F&I data if any backend income
+        if total_backend > 0:
+            with engine.connect() as conn:
+                conn.execute(text(f"""
+                    INSERT INTO {fi_table}
+                    (date, salesperson, model, finance_reserve, warranty,
+                     gap_insurance, addons, total_backend, month, year)
+                    VALUES (:date, :salesperson, :model, :finance_reserve, :warranty,
+                            :gap_insurance, :addons, :total_backend, :month, :year)
+                """), {
+                    "date":            sale.date,
+                    "salesperson":     sale.salesperson,
+                    "model":           sale.description,
+                    "finance_reserve": sale.finance_reserve,
+                    "warranty":        sale.warranty,
+                    "gap_insurance":   sale.gap_insurance,
+                    "addons":          sale.addons,
+                    "total_backend":   total_backend,
+                    "month":           sale.date[:7],
+                    "year":            sale.date[:4],
+                })
+                conn.commit()
+
         # Auto-mark matching inventory item as sold
         try:
             inv_table = ct(client_id, "inventory")
             with engine.connect() as inv_conn:
                 inv_conn.execute(text(f"""
-                    UPDATE {inv_table} 
-                    SET status='Sold' 
+                    UPDATE {inv_table}
+                    SET status='Sold'
                     WHERE id = (
                         SELECT id FROM {inv_table}
-                        WHERE LOWER(model) = LOWER(:name) 
+                        WHERE LOWER(model) = LOWER(:name)
                         AND status='Available'
                         LIMIT 1
                     )
@@ -582,11 +613,55 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 inv_conn.commit()
         except:
             pass
-        
-        return {"message": "Sale recorded successfully"}    
-        
+
+        return {"message": "Sale recorded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+    
+@app.get("/fi")
+def get_fi(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    fi_table  = ct(client_id, "fi")
+    sal_table = ct(client_id, "sales")
+    try:
+        summary = q(f"""
+            SELECT
+                ROUND(CAST(SUM(total_backend) AS numeric), 0) as total_backend,
+                ROUND(CAST(AVG(total_backend) AS numeric), 0) as avg_backend,
+                COUNT(*) as fi_deals,
+                ROUND(CAST(SUM(finance_reserve) AS numeric), 0) as total_finance,
+                ROUND(CAST(SUM(warranty) AS numeric), 0) as total_warranty,
+                ROUND(CAST(SUM(gap_insurance) AS numeric), 0) as total_gap,
+                ROUND(CAST(SUM(addons) AS numeric), 0) as total_addons
+            FROM {fi_table}
+        """)
+        by_salesperson = q(f"""
+            SELECT salesperson,
+                   COUNT(*) as deals,
+                   ROUND(CAST(SUM(total_backend) AS numeric), 0) as total,
+                   ROUND(CAST(AVG(total_backend) AS numeric), 0) as avg_bpu
+            FROM {fi_table}
+            GROUP BY salesperson ORDER BY total DESC
+        """)
+        monthly = q(f"""
+            SELECT month,
+                   ROUND(CAST(SUM(total_backend) AS numeric), 0) as total_backend
+            FROM {fi_table}
+            GROUP BY month ORDER BY month
+        """)
+        total_deals = q(f"SELECT COUNT(*) as count FROM {sal_table}")[0].get("count", 0)
+        fi_deals    = summary[0].get("fi_deals", 0) if summary else 0
+        penetration = round(fi_deals / total_deals * 100) if total_deals > 0 else 0
+
+        return {
+            "summary":        summary[0] if summary else {},
+            "by_salesperson": by_salesperson,
+            "monthly":        monthly,
+            "penetration":    penetration,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 # ── Square webhook ────────────────────────────────────────────────────────────
 import hmac
 import hashlib
