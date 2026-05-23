@@ -12,16 +12,18 @@ export default function AddSale({ user }) {
   const [loading, setLoading] = useState(false)
 
   const [form, setForm] = useState({
-    date: today, description: '', sale_price: '', cost: '',
-    salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
-    finance_reserve: '', warranty: '', gap_insurance: '', addons: '',
-  })
+  date: today, description: '', sale_price: '', cost: '',
+  recon: '', pack: '',
+  salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
+  finance_reserve: '', warranty: '', gap_insurance: '', addons: '',
+})
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
 
-  const frontGross = () => (parseFloat(form.sale_price) || 0) - (parseFloat(form.cost) || 0)
+  const totalCost    = () => (parseFloat(form.cost) || 0) + (parseFloat(form.recon) || 0) + (parseFloat(form.pack) || 0)
+  const frontGross   = () => (parseFloat(form.sale_price) || 0) - totalCost()
   const totalBackend = () => (parseFloat(form.finance_reserve) || 0) + (parseFloat(form.warranty) || 0) + (parseFloat(form.gap_insurance) || 0) + (parseFloat(form.addons) || 0)
-  const totalProfit = () => frontGross() + totalBackend()
+  const totalProfit  = () => frontGross() + totalBackend()
 
   const handleSubmit = async () => {
     if (!form.description || !form.sale_price || !form.salesperson) {
@@ -35,8 +37,8 @@ export default function AddSale({ user }) {
         date:            form.date,
         description:     form.description,
         sale_price:      parseFloat(form.sale_price),
-        cost:            parseFloat(form.cost) || 0,
-        gross_profit:    frontGross(),
+        gross_profit: frontGross(),
+        cost:         totalCost(),
         salesperson:     form.salesperson,
         payment_type:    form.payment_type,
         lead_source:     form.lead_source,
@@ -47,7 +49,22 @@ export default function AddSale({ user }) {
         addons:          parseFloat(form.addons) || 0,
       })
       setStatus({ type: 'success', msg: 'Sale recorded successfully!' })
-      setForm({ date: today, description: '', sale_price: '', cost: '', salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '', finance_reserve: '', warranty: '', gap_insurance: '', addons: '' })
+      setForm({ 
+        date: today, 
+        description: '', 
+        sale_price: '', 
+        cost: '', 
+        recon: '', 
+        pack: '', 
+        salesperson: '', 
+        payment_type: 'Cash', 
+        lead_source: 'Walk-in', 
+        notes: '', 
+        finance_reserve: '', 
+        warranty: '', 
+        gap_insurance: '', 
+        addons: '' 
+      })
       setShowFI(false)
     } catch {
       setStatus({ type: 'error', msg: 'Failed to save sale. Please try again.' })
@@ -85,15 +102,41 @@ export default function AddSale({ user }) {
             <input type="number" value={form.sale_price} onChange={e => update('sale_price', e.target.value)} placeholder="0.00" style={INPUT} />
           </div>
           <div>
-            <label style={LABEL}>Cost / expense ($) <span style={{ color: '#555' }}>optional</span></label>
+            <label style={LABEL}>Acquisition cost ($)</label>
             <input type="number" value={form.cost} onChange={e => update('cost', e.target.value)} placeholder="0.00" style={INPUT} />
+          </div>
+          <div>
+            <label style={LABEL}>Reconditioning / Recon ($) <span style={{ color: '#555' }}>optional</span></label>
+            <input type="number" value={form.recon} onChange={e => update('recon', e.target.value)} placeholder="0.00" style={INPUT} />
+          </div>
+          <div>
+            <label style={LABEL}>Pack ($) <span style={{ color: '#555' }}>optional</span></label>
+            <input type="number" value={form.pack} onChange={e => update('pack', e.target.value)} placeholder="e.g. 600" style={INPUT} />
           </div>
         </div>
 
         {/* Front end gross preview */}
         {form.sale_price && (
-          <div style={{ background: frontGross() >= 0 ? '#0d2d15' : '#2d1515', border: `1px solid ${frontGross() >= 0 ? '#27ae60' : '#c0392b'}`, borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: frontGross() >= 0 ? '#2ecc71' : '#e74c3c' }}>
-            Front end gross: <strong>${frontGross().toLocaleString()}</strong>
+          <div style={{ background: frontGross() >= 0 ? '#0d2d15' : '#2d1515', border: `1px solid ${frontGross() >= 0 ? '#27ae60' : '#c0392b'}`, borderRadius: '6px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px' }}>
+           {(form.recon || form.pack) && (
+              <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #1a3a1a' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '4px' }}>
+                  <span>Acquisition cost:</span><span>${(parseFloat(form.cost) || 0).toLocaleString()}</span>
+                </div>
+                {form.recon && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '4px' }}>
+                  <span>Reconditioning:</span><span>${(parseFloat(form.recon) || 0).toLocaleString()}</span>
+                </div>}
+                {form.pack && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '4px' }}>
+                  <span>Pack:</span><span>${(parseFloat(form.pack) || 0).toLocaleString()}</span>
+                </div>}
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#999' }}>
+                  <span>Total cost:</span><span>${totalCost().toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: frontGross() >= 0 ? '#2ecc71' : '#e74c3c', fontWeight: 'bold' }}>
+              <span>Front end gross:</span><span>${frontGross().toLocaleString()}</span>
+            </div>
           </div>
         )}
 
