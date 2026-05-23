@@ -26,6 +26,14 @@ import base64
 import json
 from pipeline.auth import init_auth_db, login as auth_login, get_client_table
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app = FastAPI(title="HexGuard API", version="1.0.0")
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -44,7 +52,7 @@ app = FastAPI(title="HexGuard API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://hex-guard.onrender.com", "https://hexguard-app.onrender.com",],
+    allow_origins=["https://hexguard-app.onrender.com","http://localhost:5173",],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -220,7 +228,8 @@ def fetch_and_save_reviews(client_id, access_token):
 
 # ── Auth endpoints ────────────────────────────────────────────────────────────
 @app.post("/token")
-def login(form: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("5/minute")
+def login(request: Request, form: OAuth2PasswordRequestForm = Depends()):
     user = auth_login(form.username, form.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -375,19 +384,7 @@ def clear_all_sales(user=Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.get("/debug")
-def debug(user=Depends(get_current_user)):
-    client_id = user["client_id"]
-    table = ct(client_id, "sales")
-    return {"table_name": table, "client_id": client_id}
 
-@app.get("/debug2")
-def debug2(user=Depends(get_current_user)):
-    try:
-        result = q("SELECT COUNT(*) as count FROM client_admin_sales")
-        return {"count": result, "database": "neon" if DATABASE_URL else "sqlite"}
-    except Exception as e:
-        return {"error": str(e)}
 
 @app.get("/reviews")
 def get_reviews(user=Depends(get_current_user)):
@@ -400,18 +397,6 @@ def get_reviews(user=Depends(get_current_user)):
     except Exception as e:
         return {"error": str(e)}
 
-@app.get("/debug/google")
-def debug_google(user=Depends(get_current_user)):
-    client_id = user["client_id"]
-    access_token, refresh = load_google_tokens(client_id)
-    if not access_token:
-        return {"error": "not connected"}
-    new_token = refresh_google_token(refresh)
-    if new_token:
-        access_token = new_token
-    headers = {"Authorization": f"Bearer {access_token}"}
-    accounts = requests.get("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", headers=headers).json()
-    return {"accounts": accounts}
 
 @app.get("/inventory")
 def get_inventory(user=Depends(get_current_user)):
