@@ -6,7 +6,6 @@ export default function Sidebar({ user, currentPage, setPage, onLogout }) {
     { id: 'fi', label: '💼 F&I' },
     { id: 'reviews',   label: '⭐ Reviews' },
     { id: 'inventory', label: '🚙 Inventory' },
-    { id: 'upload',    label: '📤 Upload Data' },
     { id: 'email',     label: '📧 Email Report' },
     { id: 'ai',        label: '🤖 AI Chat' },
     { id: 'payments', label: '💳 Payments' },

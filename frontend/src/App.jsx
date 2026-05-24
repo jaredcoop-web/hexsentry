@@ -74,7 +74,6 @@ export default function App() {
       case 'add-sale':  return <AddSale user={user} />
       case 'reviews':   return <Reviews />
       case 'inventory': return <Inventory />
-      case 'upload':    return <Placeholder title="📤 Upload Data" />
       case 'email': return <EmailReport user={user} />
       case 'ai': return <AIChat user={user} />
       case 'admin': return <Admin user={user} />
