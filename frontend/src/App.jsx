@@ -12,6 +12,7 @@ import EmailReport from './pages/EmailReport'
 import Admin from './pages/Admin'
 import Finances from './pages/Finances'
 import FI from './pages/FI'
+import Landing from './pages/Landing'
 
 // Mobile warning component
 const MobileWarning = () => (
@@ -63,7 +64,8 @@ export default function App() {
     setPage('dashboard')
   }
 
-  if (!user) return <Login onLogin={handleLogin} />
+  if (!user) return <Landing onGetStarted={() => setShowLogin(true)} />
+  if (showLogin || !user) return <Login onLogin={handleLogin} />
   // Show mobile warning for logged in users
   if (window.innerWidth < 768 && user) return <MobileWarning />
 
