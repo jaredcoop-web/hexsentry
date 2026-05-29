@@ -50,16 +50,10 @@ export default function Landing({ onGetStarted }) {
     if (!form.name || !form.email || !form.business) return
     setSubmitting(true)
     try {
-      await fetch('https://formsubmit.co/ajax/hexguard.reportss@gmail.com', {
+      await fetch('https://hex-guard.onrender.com/trial-request', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-          name:     form.name,
-          email:    form.email,
-          business: form.business,
-          type:     form.type,
-          _subject: `New HexGuard Trial Request — ${form.business}`,
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
       })
     } catch {}
     setSubmitted(true)

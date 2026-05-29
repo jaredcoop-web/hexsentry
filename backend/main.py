@@ -1421,3 +1421,30 @@ def process_recurring(api_key: str):
         except Exception as e:
             print(f"Error {client_id}: {e}")
     return {"processed": processed}
+
+class TrialRequest(BaseModel):
+    name:     str
+    email:    str
+    business: str
+    type:     str = ""
+
+@app.post("/trial-request")
+def trial_request(req: TrialRequest):
+    try:
+        import resend
+        resend.api_key = os.getenv("RESEND_API_KEY")
+        resend.Emails.send({
+            "from":    "HexGuard <onboarding@resend.dev>",
+            "to":      os.getenv("ADMIN_EMAIL"),
+            "subject": f"New Trial Request — {req.business}",
+            "html":    f"""
+                <h2>New HexGuard Trial Request</h2>
+                <p><strong>Name:</strong> {req.name}</p>
+                <p><strong>Email:</strong> {req.email}</p>
+                <p><strong>Business:</strong> {req.business}</p>
+                <p><strong>Type:</strong> {req.type}</p>
+            """
+        })
+        return {"message": "Request received"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
