@@ -1430,10 +1430,14 @@ class TrialRequest(BaseModel):
 
 @app.post("/trial-request")
 def trial_request(req: TrialRequest):
+    import traceback
     try:
+        print(f"Trial request received: {req.name} {req.email} {req.business}")
         import resend
         resend.api_key = os.getenv("RESEND_API_KEY")
-        resend.Emails.send({
+        print(f"Resend key: {os.getenv('RESEND_API_KEY')[:10] if os.getenv('RESEND_API_KEY') else 'NOT SET'}")
+        print(f"Admin email: {os.getenv('ADMIN_EMAIL')}")
+        result = resend.Emails.send({
             "from":    "HexGuard <onboarding@resend.dev>",
             "to":      os.getenv("ADMIN_EMAIL"),
             "subject": f"New Trial Request — {req.business}",
@@ -1445,8 +1449,9 @@ def trial_request(req: TrialRequest):
                 <p><strong>Type:</strong> {req.type}</p>
             """
         })
+        print(f"Resend result: {result}")
         return {"message": "Request received"}
     except Exception as e:
-        import traceback
+        print(f"TRIAL REQUEST ERROR: {e}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
