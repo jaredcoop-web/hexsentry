@@ -48,6 +48,7 @@ const Placeholder = ({ title }) => (
 export default function App() {
   const [user, setUser]        = useState(null)
   const [currentPage, setPage] = useState('dashboard')
+  const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('user')
@@ -64,11 +65,9 @@ export default function App() {
     setPage('dashboard')
   }
 
-  if (!user) return <Landing onGetStarted={() => setShowLogin(true)} />
-  if (showLogin || !user) return <Login onLogin={handleLogin} />
-  // Show mobile warning for logged in users
+  if (!user && !showLogin) return <Landing onGetStarted={() => setShowLogin(true)} />
+  if (!user && showLogin) return <Login onLogin={handleLogin} />
   if (window.innerWidth < 768 && user) return <MobileWarning />
-
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard': return <Dashboard user={user} />

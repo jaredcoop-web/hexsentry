@@ -9,7 +9,7 @@ export default function Login({ onLogin }) {
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  const [showLogin, setShowLogin] = useState(false)
+  
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
