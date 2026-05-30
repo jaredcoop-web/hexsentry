@@ -13,6 +13,7 @@ import Admin from './pages/Admin'
 import Finances from './pages/Finances'
 import FI from './pages/FI'
 import Landing from './pages/Landing'
+import Home from './pages/Home'
 
 // Mobile warning component
 const MobileWarning = () => (
@@ -47,7 +48,7 @@ const Placeholder = ({ title }) => (
 
 export default function App() {
   const [user, setUser]        = useState(null)
-  const [currentPage, setPage] = useState('dashboard')
+  const [currentPage, setCurrentPage] = useState('home')
   const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
@@ -81,6 +82,7 @@ export default function App() {
       case 'payments': return <Payments user={user} />
       case 'finances': return <Finances />
       case 'fi': return <FI />
+      case 'home': return <Home user={user} setPage={setPage} />
       default:          return <Dashboard user={user} />
     }
   }

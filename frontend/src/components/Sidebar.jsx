@@ -1,15 +1,15 @@
 export default function Sidebar({ user, currentPage, setPage, onLogout }) {
   const pages = [
-    { id: 'dashboard', label: '🏠 Dashboard' },
-    { id: 'sales',     label: '🚗 Sales' },
-    { id: 'add-sale',  label: '➕ Add Sale' },
-    { id: 'fi', label: '💼 F&I' },
-    { id: 'reviews',   label: '⭐ Reviews' },
-    { id: 'inventory', label: '🚙 Inventory' },
-    { id: 'email',     label: '📧 Email Report' },
-    { id: 'ai',        label: '🤖 AI Chat' },
-    { id: 'payments', label: '💳 Payments' },
-    { id: 'finances', label: '💰 Finances' },
+    { id: 'home', label: 'Home' },
+    { id: 'sales',     label: 'Sales' },
+    { id: 'add-sale',  label: 'Add Sale' },
+    { id: 'fi', label: 'F&I' },
+    { id: 'reviews',   label: 'Reviews' },
+    { id: 'inventory', label: 'Inventory' },
+    { id: 'email',     label: 'Email Report' },
+    { id: 'ai',        label: 'AI Chat' },
+    { id: 'payments', label: 'Payments' },
+    { id: 'finances', label: 'Finances' },
   ]
   if (user?.role === 'admin') pages.push({ id: 'admin', label: '⚙️ Admin' })
   return (
