@@ -121,8 +121,7 @@ export default function Sidebar({ user, currentPage, setCurrentPage, onLogout })
         </div>
       </div>
 
-      {/* Main content offset */}
-      <div style={{ marginLeft: width, transition: 'margin-left 0.2s ease', width: `calc(100vw - ${width})` }} />
+    
     </>
   )
 }
