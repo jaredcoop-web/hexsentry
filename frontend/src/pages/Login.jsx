@@ -3,7 +3,7 @@ import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onBack }) {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
@@ -157,9 +157,11 @@ export default function Login({ onLogin }) {
           </button>
         </form>
 
-        <p style={{ color: '#333', fontSize: '12px', textAlign: 'center', marginTop: '24px' }}>
-          Don't have an account? Contact HexGuard to get set up.
-        </p>
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#4a9eff', cursor: 'pointer', fontSize: '13px', textDecoration: 'underline' }}>
+            ← Back to HexGuard
+          </button>
+        </div>
 
         {/* Mobile tagline */}
         {isMobile && (

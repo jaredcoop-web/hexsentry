@@ -66,7 +66,7 @@ export default function App() {
   }
 
   if (!user && !showLogin) return <Landing onGetStarted={() => setShowLogin(true)} />
-  if (!user && showLogin) return <Login onLogin={handleLogin} />
+  if (!user && showLogin) return <Login onLogin={handleLogin} onBack={() => setShowLogin(false)} />
   if (window.innerWidth < 768 && user) return <MobileWarning />
   const renderPage = () => {
     switch (currentPage) {
