@@ -55,16 +55,16 @@ export default function App() {
     const stored = localStorage.getItem('user')
     if (stored) setUser(JSON.parse(stored))
     const params = new URLSearchParams(window.location.search)
-    if (params.get('connected') || params.get('error')) setPage('reviews')
+    if (params.get('connected') || params.get('error')) setCurrentPage('reviews')
   }, [])
 
-  const handleLogin = (userData) => { setUser(userData); setPage('dashboard') }
+  const handleLogin = (userData) => { setUser(userData); setCurrentPage('dashboard') }
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setUser(null)
-    setPage('dashboard')
-  }
+    setCurrentPage('dashboard')
+}
 
   if (!user && !showLogin) return <Landing onGetStarted={() => setShowLogin(true)} />
   if (!user && showLogin) return <Login onLogin={handleLogin} onBack={() => setShowLogin(false)} />
@@ -82,14 +82,14 @@ export default function App() {
       case 'payments': return <Payments user={user} />
       case 'finances': return <Finances />
       case 'fi': return <FI />
-      case 'home': return <Home user={user} setPage={setPage} />
+      case 'home': return <Home user={user} setCurrentPage={setCurrentPage} />
       default:          return <Dashboard user={user} />
     }
   }
 
   return (
     <div style={{ display: 'flex', background: '#0d0d1a', minHeight: '100vh' }}>
-      <Sidebar user={user} currentPage={currentPage} setPage={setPage} onLogout={handleLogout} />
+      <Sidebar user={user} currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleLogout} />
       <main style={{ marginLeft: '220px', flex: 1, padding: '32px', color: '#C0C0C0' }}>
         {renderPage()}
       </main>
