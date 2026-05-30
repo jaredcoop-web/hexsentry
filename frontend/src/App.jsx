@@ -47,7 +47,10 @@ const Placeholder = ({ title }) => (
 )
 
 export default function App() {
-  const [user, setUser]        = useState(null)
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('user')
+    return stored ? JSON.parse(stored) : null
+  })
   const [currentPage, setCurrentPage] = useState('home')
   const [showLogin, setShowLogin] = useState(false)
 
@@ -90,7 +93,7 @@ export default function App() {
   return (
     <div style={{ display: 'flex', background: '#0d0d1a', minHeight: '100vh' }}>
       <Sidebar user={user} currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleLogout} />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '32px', color: '#C0C0C0' }}>
+      <main style={{ marginLeft: '220px', flex: 1, padding: '32px', color: '#C0C0C0', transition: 'margin-left 0.2s ease' }}>
         {renderPage()}
       </main>
     </div>
