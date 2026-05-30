@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import api from '../api'
 
 const PAGES = [
-  { id: 'dashboard',  icon: '📊', label: 'Dashboard',     desc: 'KPIs and alerts' },
   { id: 'sales',      icon: '🚗', label: 'Sales',         desc: 'Track your deals' },
   { id: 'add-sale',   icon: '➕', label: 'Add Sale',      desc: 'Log a new sale' },
   { id: 'inventory',  icon: '📦', label: 'Inventory',     desc: 'Stock and age tracking' },
@@ -14,7 +13,7 @@ const PAGES = [
   { id: 'payments',   icon: '💳', label: 'Payments',      desc: 'Square & Stripe' },
 ]
 
-export default function Home({ user, setPage }) {
+export default function Home({ user, setCurrentPage }) {
   const [kpis, setKpis]     = useState(null)
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -77,7 +76,7 @@ export default function Home({ user, setPage }) {
           {PAGES.map((p, i) => (
             <button
               key={i}
-              onClick={() => setPage(p.id)}
+              onClick={() => setCurrentPage(p.id)}
               style={{
                 background: '#1A1A2E',
                 border: '1px solid #333',
