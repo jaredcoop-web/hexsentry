@@ -69,7 +69,7 @@ def get_locations(access_token, account_id):
 
 
 def get_reviews(access_token, account_id, location_id):
-    url = f"https://mybusiness.googleapis.com/v4/{account_id}/{location_id}/reviews"
+    url = f"https://mybusinessaccountmanagement.googleapis.com/v1/accounts/{account_id}/locations/{location_id}/reviews"
     headers = {"Authorization": f"Bearer {access_token}"}
     resp = requests.get(url, headers=headers)
     return resp.json()

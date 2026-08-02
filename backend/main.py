@@ -1455,3 +1455,20 @@ def trial_request(req: TrialRequest):
         print(f"TRIAL REQUEST ERROR: {e}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+    
+    
+@app.get("/debug/google-temp")
+def debug_google_temp(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    access_token, refresh = load_google_tokens(client_id)
+    if not access_token:
+        return {"error": "not connected"}
+    new_token = refresh_google_token(refresh)
+    if new_token:
+        access_token = new_token
+    headers = {"Authorization": f"Bearer {access_token}"}
+    accounts = requests.get(
+        "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+        headers=headers
+    ).json()
+    return {"accounts": accounts}
