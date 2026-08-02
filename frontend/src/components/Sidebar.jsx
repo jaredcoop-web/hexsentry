@@ -1,29 +1,30 @@
+
 import { useState } from 'react'
+import { Home, Car, Plus, Briefcase, Star, Package, Mail, Bot, CreditCard, DollarSign, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const PAGES = [
-  { id: 'home',      label: '🏠 Home' },
-  { id: 'sales',     label: '🚗 Sales' },
-  { id: 'add-sale',  label: '➕ Add Sale' },
-  { id: 'fi',        label: '💼 F&I' },
-  { id: 'reviews',   label: '⭐ Reviews' },
-  { id: 'inventory', label: '📦 Inventory' },
-  { id: 'email',     label: '📧 Email Report' },
-  { id: 'ai',        label: '🤖 AI Chat' },
-  { id: 'payments',  label: '💳 Payments' },
-  { id: 'finances',  label: '💰 Finances' },
+  { id: 'home',      label: 'Home',         icon: <Home size={18} /> },
+  { id: 'sales',     label: 'Sales',        icon: <Car size={18} /> },
+  { id: 'add-sale',  label: 'Add Sale',     icon: <Plus size={18} /> },
+  { id: 'fi',        label: 'F&I',          icon: <Briefcase size={18} /> },
+  { id: 'reviews',   label: 'Reviews',      icon: <Star size={18} /> },
+  { id: 'inventory', label: 'Inventory',    icon: <Package size={18} /> },
+  { id: 'email',     label: 'Email Report', icon: <Mail size={18} /> },
+  { id: 'ai',        label: 'AI Chat',      icon: <Bot size={18} /> },
+  { id: 'payments',  label: 'Payments',     icon: <CreditCard size={18} /> },
+  { id: 'finances',  label: 'Finances',     icon: <DollarSign size={18} /> },
 ]
 
 export default function Sidebar({ user, currentPage, setCurrentPage, onLogout }) {
   const [collapsed, setCollapsed] = useState(false)
 
   const pages = [...PAGES]
-  if (user?.role === 'admin') pages.push({ id: 'admin', label: '⚙️ Admin' })
+  if (user?.role === 'admin') pages.push({ id: 'admin', label: 'Admin', icon: <Settings size={18} /> })
 
   const width = collapsed ? '60px' : '220px'
 
   return (
     <>
-      {/* Sidebar */}
       <div style={{
         width,
         minHeight: '100vh',
@@ -61,13 +62,14 @@ export default function Sidebar({ user, currentPage, setCurrentPage, onLogout })
               border: 'none',
               color: '#555',
               cursor: 'pointer',
-              fontSize: '16px',
               padding: '4px',
               marginLeft: collapsed ? '0' : '8px',
               flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            {collapsed ? '→' : '←'}
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
         </div>
 
@@ -87,12 +89,17 @@ export default function Sidebar({ user, currentPage, setCurrentPage, onLogout })
                 borderLeft: currentPage === page.id ? '3px solid #C0C0C0' : '3px solid transparent',
                 textAlign: collapsed ? 'center' : 'left',
                 cursor: 'pointer',
-                fontSize: collapsed ? '18px' : '13px',
+                fontSize: '13px',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                justifyContent: collapsed ? 'center' : 'flex-start',
               }}
             >
-              {collapsed ? page.label.split(' ')[0] : page.label}
+              {page.icon}
+              {!collapsed && <span>{page.label}</span>}
             </button>
           ))}
         </nav>
@@ -113,15 +120,18 @@ export default function Sidebar({ user, currentPage, setCurrentPage, onLogout })
               border: '1px solid #333',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: collapsed ? '14px' : '13px',
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
             }}
           >
-            {collapsed ? '↩' : 'Log out'}
+            <LogOut size={16} />
+            {!collapsed && <span>Log out</span>}
           </button>
         </div>
       </div>
-
-    
     </>
   )
 }
