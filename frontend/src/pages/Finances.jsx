@@ -1,11 +1,20 @@
+
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts'
+import { DollarSign, Plus, Minus, Bot, Lightbulb } from 'lucide-react'
 import api from '../api'
 
 const INPUT  = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
 const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
 const SELECT = { ...INPUT, cursor: 'pointer' }
 const CARD   = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px', marginBottom: '24px' }
+
+const DATE_RANGES = [
+  { label: 'This Month', value: '30' },
+  { label: 'Last 90 Days', value: '90' },
+  { label: 'This Year', value: '365' },
+  { label: 'All Time', value: 'all' },
+]
 
 const EXPENSE_CATEGORIES = ['Rent', 'Payroll', 'Marketing', 'Utilities', 'Insurance', 'Supplies', 'Equipment', 'Software', 'Taxes', 'Other']
 const INCOME_CATEGORIES  = ['Owner Contribution', 'Business Loan', 'Tax Refund', 'Insurance Payout', 'Grant', 'Investment', 'Other Income']
@@ -34,9 +43,10 @@ export default function Finances() {
   const [data, setData]         = useState(null)
   const [cashflow, setCashflow] = useState(null)
   const [loading, setLoading]   = useState(true)
-  const [showAdd, setShowAdd]   = useState(null) // 'expense' | 'income' | null
+  const [showAdd, setShowAdd]   = useState(null)
   const [saving, setSaving]     = useState(false)
   const [msg, setMsg]           = useState(null)
+  const [range, setRange]       = useState('30')
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -66,6 +76,26 @@ export default function Finances() {
   }
 
   useEffect(() => { load() }, [])
+
+  // Filter transactions by date range
+  const filterByRange = (items) => {
+    if (range === 'all') return items
+    const days = parseInt(range)
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - days)
+    return items.filter(t => new Date(t.date) >= cutoff)
+  }
+
+  const filteredExpenses = filterByRange(data?.recent || [])
+  const filteredIncome   = filterByRange(data?.recent_income || [])
+  const filteredAll      = [
+    ...filteredIncome.map(i => ({ ...i, type: 'income' })),
+    ...filteredExpenses.map(e => ({ ...e, type: 'expense' })),
+  ].sort((a, b) => b.date.localeCompare(a.date))
+
+  const filteredTotalExpenses = filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)
+  const filteredTotalIncome   = filteredIncome.reduce((sum, i) => sum + Number(i.amount || 0), 0)
+  const filteredNet           = filteredTotalIncome - filteredTotalExpenses
 
   const handleAddExpense = async () => {
     if (!expenseForm.description || !expenseForm.amount) {
@@ -115,30 +145,52 @@ export default function Finances() {
     } catch { setMsg({ type: 'error', text: 'Failed to delete' }) }
   }
 
-  const suggestions    = SUGGESTIONS({ summary: data?.summary, cashflow })
-  const thisMonth      = cashflow?.cashflow?.slice(-1)[0]
-  const totalIncome    = thisMonth?.income || 0
-  const totalExpenses  = parseInt(data?.summary?.total_expenses || 0)
-  const totalOtherInc  = parseInt(data?.summary?.total_other_income || 0)
-  const netCashflow    = (totalIncome + totalOtherInc) - totalExpenses
+  const suggestions = SUGGESTIONS({ summary: data?.summary, cashflow })
 
   if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading finances...</p>
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
+
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: '24px' }}>💰 Finances</h1>
+          <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <DollarSign size={24} /> Finances
+          </h1>
           <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Track income, expenses, and real cash flow</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => setShowAdd(showAdd === 'income' ? null : 'income')} style={{ padding: '10px 16px', background: showAdd === 'income' ? '#27ae60' : 'transparent', color: showAdd === 'income' ? '#fff' : '#2ecc71', border: '1px solid #27ae60', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
-            ➕ Add Income
+          <button onClick={() => setShowAdd(showAdd === 'income' ? null : 'income')} style={{ padding: '10px 16px', background: showAdd === 'income' ? '#27ae60' : 'transparent', color: showAdd === 'income' ? '#fff' : '#2ecc71', border: '1px solid #27ae60', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Plus size={16} /> Add Income
           </button>
-          <button onClick={() => setShowAdd(showAdd === 'expense' ? null : 'expense')} style={{ padding: '10px 16px', background: showAdd === 'expense' ? '#c0392b' : 'transparent', color: showAdd === 'expense' ? '#fff' : '#e74c3c', border: '1px solid #c0392b', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
-            ➖ Add Expense
+          <button onClick={() => setShowAdd(showAdd === 'expense' ? null : 'expense')} style={{ padding: '10px 16px', background: showAdd === 'expense' ? '#c0392b' : 'transparent', color: showAdd === 'expense' ? '#fff' : '#e74c3c', border: '1px solid #c0392b', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Minus size={16} /> Add Expense
           </button>
         </div>
+      </div>
+
+      {/* Date Range Filter */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        {DATE_RANGES.map(r => (
+          <button
+            key={r.value}
+            onClick={() => setRange(r.value)}
+            style={{
+              padding: '6px 14px',
+              background: range === r.value ? '#C0C0C0' : 'transparent',
+              color: range === r.value ? '#0A0A0A' : '#666',
+              border: '1px solid',
+              borderColor: range === r.value ? '#C0C0C0' : '#333',
+              borderRadius: '20px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: range === r.value ? 'bold' : 'normal',
+            }}
+          >
+            {r.label}
+          </button>
+        ))}
       </div>
 
       {msg && (
@@ -233,17 +285,16 @@ export default function Finances() {
         </div>
       )}
 
-      {/* KPIs */}
+      {/* KPIs — filtered */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
         {[
-          { label: 'Sales Income',    value: `$${totalIncome.toLocaleString()}`,     color: '#2ecc71' },
-          { label: 'Other Income',    value: `$${totalOtherInc.toLocaleString()}`,   color: '#3498db' },
-          { label: 'Total Expenses',  value: `$${totalExpenses.toLocaleString()}`,   color: '#e74c3c' },
-          { label: 'Net Cash Flow',   value: `$${netCashflow.toLocaleString()}`,     color: netCashflow >= 0 ? '#2ecc71' : '#e74c3c' },
+          { label: 'Sales Income',   value: `$${filteredTotalIncome.toLocaleString()}`,   color: '#2ecc71' },
+          { label: 'Total Expenses', value: `$${filteredTotalExpenses.toLocaleString()}`, color: '#e74c3c' },
+          { label: 'Net Cash Flow',  value: `$${filteredNet.toLocaleString()}`,           color: filteredNet >= 0 ? '#2ecc71' : '#e74c3c' },
         ].map((k, i) => (
           <div key={i} style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '20px', flex: 1, minWidth: '140px' }}>
             <p style={{ color: '#666', fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase' }}>{k.label}</p>
-            <p style={{ color: k.color || '#C0C0C0', fontSize: '24px', fontWeight: 'bold', margin: 0 }}>{k.value}</p>
+            <p style={{ color: k.color, fontSize: '24px', fontWeight: 'bold', margin: 0 }}>{k.value}</p>
           </div>
         ))}
       </div>
@@ -251,18 +302,20 @@ export default function Finances() {
       {/* Suggestions */}
       {suggestions.length > 0 && (
         <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '12px' }}>🤖 HexGuard Suggestions</h2>
+          <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Bot size={16} /> HexGuard Suggestions
+          </h2>
           {suggestions.map((s, i) => {
             const colors = {
-              critical: { bg: '#2d1515', border: '#c0392b', text: '#e74c3c', icon: '🔴' },
-              warning:  { bg: '#2d2010', border: '#e67e22', text: '#f39c12', icon: '🟡' },
-              positive: { bg: '#0d2d15', border: '#27ae60', text: '#2ecc71', icon: '🟢' },
-              info:     { bg: '#0d1a2d', border: '#2980b9', text: '#3498db', icon: '💡' },
+              critical: { bg: '#2d1515', border: '#c0392b', text: '#e74c3c' },
+              warning:  { bg: '#2d2010', border: '#e67e22', text: '#f39c12' },
+              positive: { bg: '#0d2d15', border: '#27ae60', text: '#2ecc71' },
+              info:     { bg: '#0d1a2d', border: '#2980b9', text: '#3498db' },
             }
             const c = colors[s.type]
             return (
               <div key={i} style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: '8px', padding: '12px 16px', marginBottom: '8px' }}>
-                <p style={{ color: c.text, margin: 0, fontSize: '13px' }}>{c.icon} {s.text}</p>
+                <p style={{ color: c.text, margin: 0, fontSize: '13px' }}>{s.text}</p>
               </div>
             )
           })}
@@ -290,7 +343,7 @@ export default function Finances() {
       {/* Expenses by category */}
       {data?.by_category?.length > 0 && (
         <div style={CARD}>
-          <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '16px' }}>Expenses by Category This Month</h2>
+          <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '16px' }}>Expenses by Category</h2>
           {data.by_category.map((c, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
               <span style={{ color: '#999', fontSize: '14px' }}>{c.category}</span>
@@ -303,8 +356,8 @@ export default function Finances() {
       {/* Recent transactions */}
       <div style={CARD}>
         <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '16px' }}>Recent Transactions</h2>
-        {!data?.recent?.length && !data?.recent_income?.length ? (
-          <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No transactions yet. Add income or expenses above.</p>
+        {filteredAll.length === 0 ? (
+          <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No transactions found for the selected period.</p>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -315,10 +368,7 @@ export default function Finances() {
               </tr>
             </thead>
             <tbody>
-              {[
-                ...(data?.recent_income || []).map(i => ({ ...i, type: 'income' })),
-                ...(data?.recent || []).map(e => ({ ...e, type: 'expense' })),
-              ].sort((a, b) => b.date.localeCompare(a.date)).map((t, i) => (
+              {filteredAll.map((t, i) => (
                 <tr key={i}>
                   <td style={{ color: '#999', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{t.date}</td>
                   <td style={{ padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>
