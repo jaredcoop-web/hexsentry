@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { Star, RefreshCw, Link, Link2Off } from 'lucide-react'
 import api from '../api'
+
+const DATE_RANGES = [
+  { label: 'Last 30 Days', value: '30' },
+  { label: 'Last 90 Days', value: '90' },
+  { label: 'This Year',    value: '365' },
+  { label: 'All Time',     value: 'all' },
+]
 
 export default function Reviews() {
   const [data, setData]           = useState(null)
@@ -8,9 +16,9 @@ export default function Reviews() {
   const [syncing, setSyncing]     = useState(false)
   const [syncMsg, setSyncMsg]     = useState('')
   const [loading, setLoading]     = useState(true)
+  const [range, setRange]         = useState('all')
 
   useEffect(() => {
-    // Check if Google redirected back with connected=true
     const params = new URLSearchParams(window.location.search)
     if (params.get('connected') === 'true') {
       setSyncMsg('Google Business connected successfully!')
@@ -38,30 +46,50 @@ export default function Reviews() {
     load()
   }, [])
 
-  const handleConnect = async () => {
-    const res = await api.get('/auth/google')
-    window.location.href = res.data.url
-  }
-
-  const handleSync = async () => {
-    setSyncing(true)
-    setSyncMsg('')
+  const handleConnect    = async () => { const res = await api.get('/auth/google'); window.location.href = res.data.url }
+  const handleDisconnect = async () => { await api.delete('/auth/google'); setConnected(false); setSyncMsg('Google disconnected.') }
+  const handleSync       = async () => {
+    setSyncing(true); setSyncMsg('')
     try {
       const res = await api.post('/auth/google/sync')
-      setSyncMsg(`✅ Synced ${res.data.saved} new reviews!`)
+      setSyncMsg(`Synced ${res.data.saved} new reviews!`)
       const reviewRes = await api.get('/reviews')
       setData(reviewRes.data)
-    } catch (e) {
-      setSyncMsg('Sync failed. Try reconnecting Google.')
-    } finally {
-      setSyncing(false)
-    }
+    } catch { setSyncMsg('Sync failed. Try reconnecting Google.') }
+    finally { setSyncing(false) }
   }
 
-  const handleDisconnect = async () => {
-    await api.delete('/auth/google')
-    setConnected(false)
-    setSyncMsg('Google disconnected.')
+  // Filter reviews by date range
+  const filterByRange = (items) => {
+    if (range === 'all') return items
+    const days = parseInt(range)
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - days)
+    return items.filter(r => new Date(r.date) >= cutoff)
+  }
+
+  // Filter monthly data by range
+  const filterMonthly = (monthly) => {
+    if (range === 'all') return monthly
+    const days = parseInt(range)
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - days)
+    return monthly.filter(m => {
+      const [year, month] = m.month.split('-')
+      return new Date(parseInt(year), parseInt(month) - 1, 1) >= cutoff
+    })
+  }
+
+  const filteredReviews = filterByRange(data?.recent || [])
+  const filteredMonthly = filterMonthly(data?.monthly || [])
+
+  // Recalculate stats from filtered reviews
+  const filteredStats = {
+    total:    filteredReviews.length,
+    negative: filteredReviews.filter(r => r.sentiment === 'negative').length,
+    avg_rating: filteredReviews.length
+      ? (filteredReviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / filteredReviews.length).toFixed(1)
+      : 'N/A'
   }
 
   const sentimentColor = (s) => s === 'positive' ? '#2ecc71' : s === 'negative' ? '#e74c3c' : '#f39c12'
@@ -70,7 +98,11 @@ export default function Reviews() {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
-      <h1 style={{ color: '#C0C0C0', marginBottom: '8px' }}>⭐ Customer Reviews</h1>
+
+      {/* Header */}
+      <h1 style={{ color: '#C0C0C0', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Star size={24} /> Customer Reviews
+      </h1>
       <p style={{ color: '#555', marginBottom: '24px', fontSize: '13px' }}>
         Ratings, sentiment, and reputation tracking
       </p>
@@ -89,13 +121,11 @@ export default function Reviews() {
         gap: '12px',
       }}>
         <div>
-          <p style={{ color: connected ? '#2ecc71' : '#C0C0C0', margin: '0 0 4px', fontWeight: 'bold' }}>
-            {connected ? '✅ Google Business Connected' : '🔗 Connect Google Business'}
+          <p style={{ color: connected ? '#2ecc71' : '#C0C0C0', margin: '0 0 4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {connected ? <><Link size={14} /> Google Business Connected</> : <><Link size={14} /> Connect Google Business</>}
           </p>
           <p style={{ color: '#666', margin: 0, fontSize: '13px' }}>
-            {connected
-              ? 'Reviews sync automatically every 2 hours'
-              : 'Connect to auto-sync reviews — no manual uploads needed'}
+            {connected ? 'Reviews sync automatically every 2 hours' : 'Connect to auto-sync reviews — no manual uploads needed'}
           </p>
           {syncMsg && <p style={{ color: '#2ecc71', margin: '8px 0 0', fontSize: '13px' }}>{syncMsg}</p>}
         </div>
@@ -106,47 +136,21 @@ export default function Reviews() {
               <button
                 onClick={handleSync}
                 disabled={syncing}
-                style={{
-                  padding: '8px 16px',
-                  background: '#C0C0C0',
-                  color: '#0A0A0A',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: syncing ? 'not-allowed' : 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '13px',
-                }}
+                style={{ padding: '8px 16px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: syncing ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                {syncing ? 'Syncing...' : '🔄 Sync Now'}
+                <RefreshCw size={14} /> {syncing ? 'Syncing...' : 'Sync Now'}
               </button>
               <button
                 onClick={handleDisconnect}
-                style={{
-                  padding: '8px 16px',
-                  background: 'transparent',
-                  color: '#666',
-                  border: '1px solid #333',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                }}
+                style={{ padding: '8px 16px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                Disconnect
+                <Link2Off size={14} /> Disconnect
               </button>
             </>
           ) : (
             <button
               onClick={handleConnect}
-              style={{
-                padding: '10px 20px',
-                background: '#C0C0C0',
-                color: '#0A0A0A',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '14px',
-              }}
+              style={{ padding: '10px 20px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
             >
               Connect Google Business
             </button>
@@ -154,19 +158,39 @@ export default function Reviews() {
         </div>
       </div>
 
-      {/* KPIs */}
       {data && !data.error && (
         <>
+          {/* Date Range Filter */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+            {DATE_RANGES.map(r => (
+              <button
+                key={r.value}
+                onClick={() => setRange(r.value)}
+                style={{
+                  padding: '6px 14px',
+                  background: range === r.value ? '#C0C0C0' : 'transparent',
+                  color: range === r.value ? '#0A0A0A' : '#666',
+                  border: '1px solid',
+                  borderColor: range === r.value ? '#C0C0C0' : '#333',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: range === r.value ? 'bold' : 'normal',
+                }}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          {/* KPIs */}
           <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
             {[
-              { label: 'Avg Rating',       value: `⭐ ${data.summary?.avg_rating || 'N/A'}` },
-              { label: 'Total Reviews',    value: data.summary?.total || 0 },
-              { label: 'Negative Reviews', value: data.summary?.negative || 0, color: '#e74c3c' },
+              { label: 'Avg Rating',       value: filteredStats.avg_rating !== 'N/A' ? `${filteredStats.avg_rating} / 5` : 'N/A' },
+              { label: 'Total Reviews',    value: filteredStats.total },
+              { label: 'Negative Reviews', value: filteredStats.negative, color: '#e74c3c' },
             ].map((k, i) => (
-              <div key={i} style={{
-                background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px',
-                padding: '20px', flex: 1, minWidth: '140px',
-              }}>
+              <div key={i} style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '20px', flex: 1, minWidth: '140px' }}>
                 <p style={{ color: '#666', fontSize: '12px', margin: '0 0 8px', textTransform: 'uppercase' }}>{k.label}</p>
                 <p style={{ color: k.color || '#C0C0C0', fontSize: '24px', fontWeight: 'bold', margin: 0 }}>{k.value}</p>
               </div>
@@ -174,11 +198,11 @@ export default function Reviews() {
           </div>
 
           {/* Rating trend */}
-          {data.monthly?.length > 0 && (
+          {filteredMonthly.length > 0 && (
             <div style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px', marginBottom: '24px' }}>
               <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '16px' }}>Monthly Average Rating</h2>
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={data.monthly}>
+                <LineChart data={filteredMonthly}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#222" />
                   <XAxis dataKey="month" stroke="#666" tick={{ fontSize: 12 }} />
                   <YAxis domain={[1, 5]} stroke="#666" tick={{ fontSize: 12 }} />
@@ -192,21 +216,19 @@ export default function Reviews() {
           {/* Recent reviews */}
           <div style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px' }}>
             <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '16px' }}>Recent Reviews</h2>
-            {data.recent?.length > 0 ? data.recent.map((r, i) => (
-              <div key={i} style={{
-                borderBottom: '1px solid #222',
-                padding: '14px 0',
-              }}>
+            {filteredReviews.length > 0 ? filteredReviews.map((r, i) => (
+              <div key={i} style={{ borderBottom: '1px solid #222', padding: '14px 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ color: sentimentColor(r.sentiment), fontSize: '13px', fontWeight: 'bold' }}>
-                    {'⭐'.repeat(r.rating)} {r.platform}
+                  <span style={{ color: sentimentColor(r.sentiment), fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Star size={13} fill={sentimentColor(r.sentiment)} />
+                    {r.rating}/5 — {r.platform}
                   </span>
                   <span style={{ color: '#555', fontSize: '12px' }}>{r.date?.slice(0, 10)}</span>
                 </div>
                 <p style={{ color: '#999', margin: 0, fontSize: '13px' }}>{r.text || 'No comment left.'}</p>
               </div>
             )) : (
-              <p style={{ color: '#555' }}>No reviews yet. Connect Google Business to start syncing.</p>
+              <p style={{ color: '#555' }}>No reviews found for the selected period.</p>
             )}
           </div>
         </>
