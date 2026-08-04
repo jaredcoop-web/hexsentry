@@ -1473,11 +1473,20 @@ def debug_google_temp(user=Depends(get_current_user)):
     ).json()
     return {"accounts": accounts}
 
-@app.get("/debug-auth")
-def debug_auth():
-    from pipeline.auth import get_auth_connection
+@app.get("/admin/reset-temp")
+def reset_admin():
+    from pipeline.auth import create_user, get_auth_connection
+    import os
     conn = get_auth_connection()
-    cursor = conn.execute("SELECT email, role FROM users")
-    users = cursor.fetchall()
+    conn.execute("DELETE FROM users WHERE role='admin'")
+    conn.commit()
     conn.close()
-    return {"users": [{"email": u[0], "role": u[1]} for u in users]}
+    create_user(
+        email=os.getenv("ADMIN_EMAIL", "admin@hexguard.com"),
+        password=os.getenv("ADMIN_PASSWORD", "hexguard_admin_2024"),
+        business_name="HexGuard Admin",
+        client_id="admin",
+        role="admin",
+        plan="pro"
+    )
+    return {"message": "Admin reset successfully"}
