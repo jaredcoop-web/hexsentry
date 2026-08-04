@@ -1472,3 +1472,20 @@ def debug_google_temp(user=Depends(get_current_user)):
         headers=headers
     ).json()
     return {"accounts": accounts}
+
+@app.get("/reset-admin")
+def reset_admin():
+    from pipeline.auth import get_auth_connection, create_user
+    import os
+    conn = get_auth_connection()
+    conn.execute("DELETE FROM users WHERE role='admin'")
+    conn.commit()
+    conn.close()
+    create_user(
+        email=os.getenv("ADMIN_EMAIL", "admin@hexguard.com"),
+        password=os.getenv("ADMIN_PASSWORD", "hexguard_admin_2024"),
+        business_name="HexGuard Admin",
+        client_id="admin",
+        role="admin"
+    )
+    return {"message": "Admin reset successfully"}
