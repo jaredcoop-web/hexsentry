@@ -230,7 +230,7 @@ def fetch_and_save_reviews(client_id, access_token):
 
 # ── Auth endpoints ────────────────────────────────────────────────────────────
 @app.post("/token")
-@limiter.limit("5/minute")
+@limiter.limit("100/minute")
 def login(request: Request, form: OAuth2PasswordRequestForm = Depends()):
     user = auth_login(form.username, form.password)
     if not user:
