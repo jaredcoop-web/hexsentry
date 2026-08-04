@@ -1,15 +1,18 @@
+
+
 import { useState, useEffect } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 export default function Login({ onLogin, onBack }) {
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  
+  const [email, setEmail]           = useState('')
+  const [password, setPassword]     = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError]           = useState('')
+  const [loading, setLoading]       = useState(false)
+  const [isMobile, setIsMobile]     = useState(window.innerWidth < 768)
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
@@ -45,7 +48,7 @@ export default function Login({ onLogin, onBack }) {
       flex: 1,
       backgroundImage: position === 'left' ? 'url(/molecule.png)' : 'url(/hexsentry_logo.png)',
       backgroundSize: 'cover',
-      backgroundPosition: position === 'left' ? 'center 70%' : 'center 70%',
+      backgroundPosition: 'center 70%',
       minHeight: '100vh',
       position: 'relative',
     }}>
@@ -56,8 +59,6 @@ export default function Login({ onLogin, onBack }) {
           ? 'linear-gradient(to right, rgba(0,0,0,0.3), rgba(0,0,0,0.7))'
           : 'linear-gradient(to left, rgba(0,0,0,0.3), rgba(0,0,0,0.7))',
       }} />
-
-      {/* Tagline on right panel */}
       {position === 'right' && (
         <div style={{
           position: 'absolute',
@@ -69,7 +70,6 @@ export default function Login({ onLogin, onBack }) {
           <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', fontWeight: 'bold', margin: '0 0 4px', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
             24/7 Business monitor platform
           </p>
-          
         </div>
       )}
     </div>
@@ -86,10 +86,8 @@ export default function Login({ onLogin, onBack }) {
       top: 0,
       left: 0,
     }}>
-      {/* Left image panel — hidden on mobile */}
       {!isMobile && <ImagePanel position="left" />}
 
-      {/* Center login panel */}
       <div style={{
         width: isMobile ? '100%' : '600px',
         minWidth: isMobile ? 'unset' : '600px',
@@ -103,7 +101,6 @@ export default function Login({ onLogin, onBack }) {
         zIndex: 1,
         borderLeft: isMobile ? 'none' : '1px solid #1a1a1a',
         borderRight: isMobile ? 'none' : '1px solid #1a1a1a',
-        justifyContent: 'center',
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '48px' }}>
@@ -118,6 +115,7 @@ export default function Login({ onLogin, onBack }) {
         <p style={{ color: '#555', margin: '0 0 32px', fontSize: '13px' }}>Sign in to your account</p>
 
         <form onSubmit={handleSubmit}>
+          {/* Email */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ color: '#666', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Email address</label>
             <input
@@ -130,16 +128,38 @@ export default function Login({ onLogin, onBack }) {
             />
           </div>
 
+          {/* Password with show/hide toggle */}
           <div style={{ marginBottom: '24px' }}>
             <label style={{ color: '#666', fontSize: '12px', display: 'block', marginBottom: '6px' }}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              style={{ width: '100%', padding: '12px 14px', background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                style={{ width: '100%', padding: '12px 44px 12px 14px', background: '#111', border: '1px solid #222', borderRadius: '8px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#555',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 0,
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -163,7 +183,6 @@ export default function Login({ onLogin, onBack }) {
           </button>
         </div>
 
-        {/* Mobile tagline */}
         {isMobile && (
           <p style={{ color: '#333', fontSize: '12px', textAlign: 'center', marginTop: '48px' }}>
             Guarding your business 24/7
@@ -171,7 +190,6 @@ export default function Login({ onLogin, onBack }) {
         )}
       </div>
 
-      {/* Right image panel — hidden on mobile */}
       {!isMobile && <ImagePanel position="right" />}
     </div>
   )
