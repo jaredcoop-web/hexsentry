@@ -24,7 +24,7 @@ import hmac
 import hashlib
 import base64
 import json
-from pipeline.auth import init_auth_db, login as auth_login, get_client_table
+from pipeline.auth import init_auth_db, auth_login, get_client_table
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
