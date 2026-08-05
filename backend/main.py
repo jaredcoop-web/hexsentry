@@ -424,21 +424,20 @@ def get_anomalies(user=Depends(get_current_user)):
     try:
         # Stale inventory check
         try:
-            
             inv = q(f"""SELECT COUNT(*) as total, SUM(CASE WHEN CURRENT_DATE - CAST(arrival_date AS date) > 60 THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')} WHERE status='Available'""")
-                stale     = inv[0]["stale"] or 0
-                total     = inv[0]["total"]
-                pct       = round(stale / total * 100)
+            if inv and inv[0]["total"] and inv[0]["total"] > 0:
+                stale = inv[0]["stale"] or 0
+                total = inv[0]["total"]
+                pct = round(stale / total * 100)
                 if stale > 0:
                     level = "critical" if pct > 50 else "warning"
                     alerts.append({
-                        "level":    level,
+                        "level": level,
                         "category": "Inventory",
-                        "title":    f"High stale inventory" if pct > 50 else "Stale inventory warning",
-                        "detail":   f"{stale} of {total} items ({pct}%) have been sitting 60+ days. Consider price reductions."
+                        "title": "High stale inventory" if pct > 50 else "Stale inventory warning",
+                        "detail": f"{stale} of {total} items ({pct}%) have been sitting 60+ days. Consider price reductions."
                     })
         except: pass
-
         # Sales performance check
         try:
             sales = q(f"""
