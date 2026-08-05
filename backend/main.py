@@ -1073,11 +1073,8 @@ def _send_report(user: dict, recipient_email: str):
         
 @app.delete("/settings/report-email")
 def cancel_report_email(user=Depends(get_current_user)):
-    from pipeline.auth import get_auth_connection
-    conn = get_auth_connection()
-    conn.execute("UPDATE users SET report_email='' WHERE email=?", (user["sub"],))
-    conn.commit()
-    conn.close()
+    from pipeline.auth import update_report_email
+    update_report_email(user["sub"], "")
     return {"message": "Weekly reports cancelled"}
 
 @app.post("/email/send")
@@ -1359,11 +1356,8 @@ class ReportEmailUpdate(BaseModel):
 
 @app.post("/settings/report-email")
 def update_report_email(req: ReportEmailUpdate, user=Depends(get_current_user)):
-    from pipeline.auth import get_auth_connection
-    conn = get_auth_connection()
-    conn.execute("UPDATE users SET report_email=? WHERE email=?", (req.report_email, user["sub"]))
-    conn.commit()
-    conn.close()
+    from pipeline.auth import update_report_email
+    update_report_email(user["sub"], req.report_email)
     return {"message": "Report email saved"}
 
 @app.get("/email/send-all")
