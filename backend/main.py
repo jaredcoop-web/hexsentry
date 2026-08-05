@@ -1022,28 +1022,44 @@ def _send_report(user: dict, recipient_email: str):
           <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 16px;border-bottom:2px solid #2a2a4a;padding-bottom:8px;'>📊 This Month at a Glance</h2>
           <table style='width:100%;border-collapse:collapse;'>
             <tr>
-              <td style='padding:12px;background:#0d1a2d;border-radius:8px;text-align:center;display:block;margin-bottom:8px;'>
-                <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Sales</p>
-                <p style='color:#C0C0C0;font-size:28px;font-weight:bold;margin:0;'>{deals}</p>
-                <p style='color:#666;font-size:11px;margin:0;'>deals</p>
-                <p style='color:{deals_color};font-size:12px;margin:4px 0 0;'>{deals_arrow} {abs(deals_diff)} from last week</p>
+              <td style='padding:0 0 8px 0;'>
+                <table style='width:100%;border-collapse:collapse;background:#0d1a2d;border-radius:8px;'>
+                  <tr>
+                    <td style='padding:16px;text-align:center;'>
+                      <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Sales</p>
+                      <p style='color:#C0C0C0;font-size:28px;font-weight:bold;margin:0;'>{deals}</p>
+                      <p style='color:#666;font-size:11px;margin:0;'>deals</p>
+                      <p style='color:{deals_color};font-size:12px;margin:4px 0 0;'>{deals_arrow} {abs(deals_diff)} from last week</p>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
-            <tr><td style='height:8px;'></td></tr>
             <tr>
-              <td style='padding:12px;background:#0d2d15;border-radius:8px;text-align:center;display:block;margin-bottom:8px;'>
-                <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Gross</p>
-                <p style='color:#27ae60;font-size:28px;font-weight:bold;margin:0;'>${total_gross:,}</p>
-                <p style='color:#666;font-size:11px;margin:0;'>profit</p>
-                <p style='color:{gross_color};font-size:12px;margin:4px 0 0;'>{gross_arrow} ${abs(gross_diff):,} from last week</p>
+              <td style='padding:0 0 8px 0;'>
+                <table style='width:100%;border-collapse:collapse;background:#0d2d15;border-radius:8px;'>
+                  <tr>
+                    <td style='padding:16px;text-align:center;'>
+                      <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Gross</p>
+                      <p style='color:#27ae60;font-size:28px;font-weight:bold;margin:0;'>${total_gross:,}</p>
+                      <p style='color:#666;font-size:11px;margin:0;'>profit</p>
+                      <p style='color:{gross_color};font-size:12px;margin:4px 0 0;'>{gross_arrow} ${abs(gross_diff):,} from last week</p>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
-            <tr><td style='height:8px;'></td></tr>
             <tr>
-              <td style='padding:12px;background:#0d1a2d;border-radius:8px;text-align:center;display:block;'>
-                <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Avg Per Deal</p>
-                <p style='color:#C0C0C0;font-size:28px;font-weight:bold;margin:0;'>${avg_gross:,}</p>
-                <p style='color:#666;font-size:11px;margin:0;'>gross</p>
+              <td style='padding:0;'>
+                <table style='width:100%;border-collapse:collapse;background:#0d1a2d;border-radius:8px;'>
+                  <tr>
+                    <td style='padding:16px;text-align:center;'>
+                      <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Avg Per Deal</p>
+                      <p style='color:#C0C0C0;font-size:28px;font-weight:bold;margin:0;'>${avg_gross:,}</p>
+                      <p style='color:#666;font-size:11px;margin:0;'>gross</p>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>
