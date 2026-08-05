@@ -1001,7 +1001,7 @@ def _send_report(user: dict, recipient_email: str):
     deals_color = "#27ae60" if deals_diff >= 0 else "#c0392b"
     gross_color = "#27ae60" if gross_diff >= 0 else "#c0392b"
 
-    top_sp_html = f"<p style='color:#C0C0C0;margin:0;'">🏆 <strong>{top_sp['salesperson']}</strong> — {int(top_sp['deals'])} deals, ${int(top_sp['gross'] or 0):,} gross</p>" if top_sp.get("salesperson") else "<p style='color:#666;margin:0;'>No sales data this period.</p>"
+    top_sp_html = f"<p style='color:#C0C0C0;margin:0;'>🏆 <strong style='color:#fff;'>{top_sp['salesperson']}</strong> — {int(top_sp['deals'])} deals, ${int(top_sp['gross'] or 0):,} gross</p>" if top_sp.get("salesperson") else "<p style='color:#666;margin:0;'>No sales data this period.</p>"
 
     html = f"""
     <html>
@@ -1052,7 +1052,7 @@ def _send_report(user: dict, recipient_email: str):
           <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 12px;'>⭐ Reputation</h2>
           <p style='color:#C0C0C0;margin:0;font-size:15px;'>Average Rating: <strong style='color:#f39c12;'>{"⭐" * int(float(avg_rating)) if avg_rating != "N/A" else "N/A"} {avg_rating}</strong> ({total_rev} total reviews)</p>
         </div>
-        {"<div style='background:#2d1515;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #c0392b;'><h2 style='color:#c0392b;font-size:16px;margin:0 0 12px;'>📦 Inventory Alert</h2><p style='color:#c0392b;margin:0;font-size:15px;'>🔴 <strong>" + str(stale_count) + " items</strong> have been sitting 60+ days. Consider price reductions or promotions.</p></div>" if stale_count > 0 else "<div style='background:#f0fff4;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #c3e6cb;'><h2 style='color:#27ae60;font-size:16px;margin:0 0 12px;'>📦 Inventory</h2><p style='color:#27ae60;margin:0;'>✅ No stale inventory — great job keeping stock moving!</p></div>"}
+        {"<div style='background:#2d1515;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #c0392b;'><h2 style='color:#c0392b;font-size:16px;margin:0 0 12px;'>📦 Inventory Alert</h2><p style='color:#c0392b;margin:0;font-size:15px;'>🔴 <strong>" + str(stale_count) + " items</strong> have been sitting 60+ days. Consider price reductions or promotions.</p></div>" if stale_count > 0 else "<div style='background:#0d2d15;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #27ae60;'><h2 style='color:#27ae60;font-size:16px;margin:0 0 12px;'>📦 Inventory</h2><p style='color:#27ae60;margin:0;'>✅ No stale inventory — great job keeping stock moving!</p></div>"}
         <div style='text-align:center;margin-bottom:20px;'>
           <a href='https://hexguardapp.com' style='background:#0A0A0A;color:#C0C0C0;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;'>
             View Full Dashboard →
