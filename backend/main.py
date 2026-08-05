@@ -952,6 +952,16 @@ def _send_report(user: dict, recipient_email: str):
     except: sales = {}
 
     try:
+        last_week = q(f"""
+            SELECT COUNT(*) as deals,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as total_gross
+            FROM {ct(client_id, 'sales')}
+            WHERE date >= TO_CHAR(CURRENT_DATE - INTERVAL '14 days', 'YYYY-MM-DD')
+            AND date < TO_CHAR(CURRENT_DATE - INTERVAL '7 days', 'YYYY-MM-DD')
+        """)[0]
+    except: last_week = {}
+
+    try:
         top_sp = q(f"""
             SELECT salesperson, COUNT(*) as deals,
                    ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross
@@ -981,6 +991,16 @@ def _send_report(user: dict, recipient_email: str):
     stale_count = int(stale.get("count") or 0)
     avg_rating  = reviews.get("avg_rating") or "N/A"
     total_rev   = int(reviews.get("total") or 0)
+
+    last_deals  = int(last_week.get("deals") or 0)
+    last_gross  = int(last_week.get("total_gross") or 0)
+    deals_diff  = deals - last_deals
+    gross_diff  = total_gross - last_gross
+    deals_arrow = "↑" if deals_diff >= 0 else "↓"
+    gross_arrow = "↑" if gross_diff >= 0 else "↓"
+    deals_color = "#27ae60" if deals_diff >= 0 else "#c0392b"
+    gross_color = "#27ae60" if gross_diff >= 0 else "#c0392b"
+
     top_sp_html = f"<p>🏆 <strong>{top_sp['salesperson']}</strong> — {int(top_sp['deals'])} deals, ${int(top_sp['gross'] or 0):,} gross</p>" if top_sp.get("salesperson") else "<p>No sales data this period.</p>"
 
     html = f"""
@@ -1003,12 +1023,14 @@ def _send_report(user: dict, recipient_email: str):
                 <p style='color:#888;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Sales</p>
                 <p style='color:#333;font-size:24px;font-weight:bold;margin:0;'>{deals}</p>
                 <p style='color:#888;font-size:11px;margin:0;'>deals</p>
+                <p style='color:{deals_color};font-size:11px;margin:4px 0 0;'>{deals_arrow} {abs(deals_diff)} from last week</p>
               </td>
               <td style='width:5%;'></td>
               <td style='padding:10px;background:#f0fff4;border-radius:8px;text-align:center;width:30%;'>
                 <p style='color:#888;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Gross</p>
                 <p style='color:#27ae60;font-size:24px;font-weight:bold;margin:0;'>${total_gross:,}</p>
                 <p style='color:#888;font-size:11px;margin:0;'>profit</p>
+                <p style='color:{gross_color};font-size:11px;margin:4px 0 0;'>{gross_arrow} ${abs(gross_diff):,} from last week</p>
               </td>
               <td style='width:5%;'></td>
               <td style='padding:10px;background:#f9f9f9;border-radius:8px;text-align:center;width:30%;'>
@@ -1044,16 +1066,6 @@ def _send_report(user: dict, recipient_email: str):
     </html>
     """
 
-    resend.Emails.send({
-        "from":    "HexGuard <reports@hexguardapp.com>",
-        "to":      recipient_email,
-        "subject": f"HexGuard Weekly Report — {business_name} — {week}",
-        "html":    html,
-    })
-
-
-    import resend
-    resend.api_key = os.getenv("RESEND_API_KEY")
     resend.Emails.send({
         "from":    "HexGuard <reports@hexguardapp.com>",
         "to":      recipient_email,
