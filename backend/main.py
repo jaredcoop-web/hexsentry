@@ -1005,49 +1005,52 @@ def _send_report(user: dict, recipient_email: str):
 
     html = f"""
     <html>
-    <body style='margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;'>
+    <body style='margin:0;padding:0;background:#0a0a14;font-family:Arial,sans-serif;'>
       <div style='max-width:600px;margin:0 auto;padding:20px;'>
-        <div style='background:#0A0A0A;border-radius:12px;padding:24px;margin-bottom:20px;text-align:center;'>
-          <h1 style='color:#C0C0C0;margin:0 0 4px;font-size:28px;'>🛡️ HexGuard</h1>
+        <div style='background:#0d0d1a;border-radius:12px;padding:24px;margin-bottom:20px;text-align:center;border:1px solid #1a1a3a;'>
+          <div style='display:inline-block;background:#1a1a2e;border:2px solid #4a9eff;border-radius:10px;padding:8px 16px;margin-bottom:12px;'>
+            <span style='color:#4a9eff;font-size:20px;font-weight:bold;letter-spacing:2px;'>HEX</span>
+            <span style='color:#C0C0C0;font-size:20px;font-weight:bold;'>GUARD</span>
+          </div>
           <p style='color:#555;margin:0;font-size:13px;'>Weekly Business Intelligence Report</p>
         </div>
-        <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
-          <p style='color:#333;font-size:16px;margin:0 0 4px;'>Good Friday, <strong>{business_name}</strong> 👋</p>
-          <p style='color:#888;font-size:13px;margin:0;'>Week of {week} — here's how your business performed</p>
+        <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
+          <p style='color:#C0C0C0;font-size:16px;margin:0 0 4px;'>Good Friday, <strong>{business_name}</strong> 👋</p>
+          <p style='color:#666;font-size:13px;margin:0;'>Week of {week} — here's how your business performed</p>
         </div>
-        <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
-          <h2 style='color:#333;font-size:16px;margin:0 0 16px;border-bottom:2px solid #f4f4f4;padding-bottom:8px;'>📊 This Month at a Glance</h2>
+        <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
+          <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 16px;border-bottom:2px solid #f4f4f4;padding-bottom:8px;'>📊 This Month at a Glance</h2>
           <table style='width:100%;border-collapse:collapse;'>
             <tr>
               <td style='padding:10px;background:#f9f9f9;border-radius:8px;text-align:center;width:30%;'>
-                <p style='color:#888;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Sales</p>
-                <p style='color:#333;font-size:24px;font-weight:bold;margin:0;'>{deals}</p>
-                <p style='color:#888;font-size:11px;margin:0;'>deals</p>
+                <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Sales</p>
+                <p style='color:#C0C0C0;font-size:24px;font-weight:bold;margin:0;'>{deals}</p>
+                <p style='color:#666;font-size:11px;margin:0;'>deals</p>
                 <p style='color:{deals_color};font-size:11px;margin:4px 0 0;'>{deals_arrow} {abs(deals_diff)} from last week</p>
               </td>
               <td style='width:5%;'></td>
               <td style='padding:10px;background:#f0fff4;border-radius:8px;text-align:center;width:30%;'>
-                <p style='color:#888;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Gross</p>
+                <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Gross</p>
                 <p style='color:#27ae60;font-size:24px;font-weight:bold;margin:0;'>${total_gross:,}</p>
-                <p style='color:#888;font-size:11px;margin:0;'>profit</p>
+                <p style='color:#666;font-size:11px;margin:0;'>profit</p>
                 <p style='color:{gross_color};font-size:11px;margin:4px 0 0;'>{gross_arrow} ${abs(gross_diff):,} from last week</p>
               </td>
               <td style='width:5%;'></td>
               <td style='padding:10px;background:#f9f9f9;border-radius:8px;text-align:center;width:30%;'>
-                <p style='color:#888;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Avg Per Deal</p>
-                <p style='color:#333;font-size:24px;font-weight:bold;margin:0;'>${avg_gross:,}</p>
-                <p style='color:#888;font-size:11px;margin:0;'>gross</p>
+                <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Avg Per Deal</p>
+                <p style='color:#C0C0C0;font-size:24px;font-weight:bold;margin:0;'>${avg_gross:,}</p>
+                <p style='color:#666;font-size:11px;margin:0;'>gross</p>
               </td>
             </tr>
           </table>
         </div>
-        <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
-          <h2 style='color:#333;font-size:16px;margin:0 0 12px;'>🏆 Top Performer</h2>
+        <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
+          <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 12px;'>🏆 Top Performer</h2>
           {top_sp_html}
         </div>
-        <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
-          <h2 style='color:#333;font-size:16px;margin:0 0 12px;'>⭐ Reputation</h2>
-          <p style='color:#333;margin:0;font-size:15px;'>Average Rating: <strong style='color:#f39c12;'>{"⭐" * int(float(avg_rating)) if avg_rating != "N/A" else "N/A"} {avg_rating}</strong> ({total_rev} total reviews)</p>
+        <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
+          <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 12px;'>⭐ Reputation</h2>
+          <p style='color:#C0C0C0;margin:0;font-size:15px;'>Average Rating: <strong style='color:#f39c12;'>{"⭐" * int(float(avg_rating)) if avg_rating != "N/A" else "N/A"} {avg_rating}</strong> ({total_rev} total reviews)</p>
         </div>
         {"<div style='background:#fff5f5;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #ffcccc;'><h2 style='color:#c0392b;font-size:16px;margin:0 0 12px;'>📦 Inventory Alert</h2><p style='color:#c0392b;margin:0;font-size:15px;'>🔴 <strong>" + str(stale_count) + " items</strong> have been sitting 60+ days. Consider price reductions or promotions.</p></div>" if stale_count > 0 else "<div style='background:#f0fff4;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #c3e6cb;'><h2 style='color:#27ae60;font-size:16px;margin:0 0 12px;'>📦 Inventory</h2><p style='color:#27ae60;margin:0;'>✅ No stale inventory — great job keeping stock moving!</p></div>"}
         <div style='text-align:center;margin-bottom:20px;'>
