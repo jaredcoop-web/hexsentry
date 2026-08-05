@@ -45,7 +45,7 @@ def init_auth_db():
 def get_user(email: str):
     with engine.connect() as conn:
         result = conn.execute(
-            text("SELECT * FROM users WHERE email=:email"),
+            text("SELECT id, email, password_hash, business_name, client_id, role, plan, report_email FROM users WHERE email=:email"),
             {"email": email.lower().strip()}
         )
         row = result.fetchone()
