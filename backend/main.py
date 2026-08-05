@@ -424,8 +424,8 @@ def get_anomalies(user=Depends(get_current_user)):
     try:
         # Stale inventory check
         try:
-            inv = q(f"SELECT COUNT(*) as total, SUM(CASE WHEN is_stale=true THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')} WHERE status='Available'")
-            if inv and inv[0]["total"] and inv[0]["total"] > 0:
+            
+            inv = q(f"""SELECT COUNT(*) as total, SUM(CASE WHEN CURRENT_DATE - CAST(arrival_date AS date) > 60 THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')} WHERE status='Available'""")
                 stale     = inv[0]["stale"] or 0
                 total     = inv[0]["total"]
                 pct       = round(stale / total * 100)
@@ -964,7 +964,11 @@ def _send_report(user: dict, recipient_email: str):
     except: top_sp = {}
 
     try:
-        stale = q(f"SELECT COUNT(*) as count FROM {ct(client_id, 'inventory')} WHERE is_stale=true AND status='Available'")[0]
+        stale = q(f"""
+            SELECT COUNT(*) as count FROM {ct(client_id, 'inventory')}
+            WHERE status='Available'
+            AND CURRENT_DATE - CAST(arrival_date AS date) > 60
+        """)[0]
     except: stale = {}
 
     try:
