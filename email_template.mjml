@@ -1,0 +1,149 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-body background-color="#0a0a14" />
+    </mj-attributes>
+    <mj-style>
+      .dark-card { background-color: #1a1a2e !important; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#0a0a14">
+
+    <!-- Header -->
+    <mj-section background-color="#0d0d1a" border-radius="12px" padding="24px" border="1px solid #1a1a3a">
+      <mj-column>
+        <mj-text align="center" font-size="28px" font-weight="bold" color="#C0C0C0" padding="0">
+          🛡️ HexGuard
+        </mj-text>
+        <mj-text align="center" font-size="13px" color="#555" padding="4px 0 0 0">
+          Weekly Business Intelligence Report
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Spacer -->
+    <mj-section padding="8px 0" background-color="#0a0a14">
+      <mj-column><mj-text> </mj-text></mj-column>
+    </mj-section>
+
+    <!-- Greeting -->
+    <mj-section background-color="#1a1a2e" border-radius="12px" padding="24px" border="1px solid #2a2a4a">
+      <mj-column>
+        <mj-text font-size="16px" color="#C0C0C0" padding="0 0 4px 0">
+          Good Friday, <strong>{{business_name}}</strong> 👋
+        </mj-text>
+        <mj-text font-size="13px" color="#666" padding="0">
+          Week of {{week}} — here's how your business performed
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Spacer -->
+    <mj-section padding="8px 0" background-color="#0a0a14">
+      <mj-column><mj-text> </mj-text></mj-column>
+    </mj-section>
+
+    <!-- KPIs header -->
+    <mj-section background-color="#1a1a2e" border-radius="12px 12px 0 0" padding="24px 24px 8px 24px" border="1px solid #2a2a4a">
+      <mj-column>
+        <mj-text font-size="16px" color="#C0C0C0" font-weight="bold" padding="0">
+          📊 This Month at a Glance
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Total Sales KPI -->
+    <mj-section background-color="#1a1a2e" padding="8px 24px" border="1px solid #2a2a4a">
+      <mj-column background-color="#0d1a2d" border-radius="8px" padding="16px">
+        <mj-text align="center" font-size="11px" color="#666" text-transform="uppercase" padding="0 0 4px 0">Total Sales</mj-text>
+        <mj-text align="center" font-size="28px" font-weight="bold" color="#C0C0C0" padding="0">{{deals}}</mj-text>
+        <mj-text align="center" font-size="11px" color="#666" padding="0">deals</mj-text>
+        <mj-text align="center" font-size="12px" color="{{deals_color}}" padding="4px 0 0 0">{{deals_arrow}} {{deals_diff_abs}} from last week</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Total Gross KPI -->
+    <mj-section background-color="#1a1a2e" padding="8px 24px" border="1px solid #2a2a4a">
+      <mj-column background-color="#0d2d15" border-radius="8px" padding="16px">
+        <mj-text align="center" font-size="11px" color="#666" text-transform="uppercase" padding="0 0 4px 0">Total Gross</mj-text>
+        <mj-text align="center" font-size="28px" font-weight="bold" color="#27ae60" padding="0">${{total_gross}}</mj-text>
+        <mj-text align="center" font-size="11px" color="#666" padding="0">profit</mj-text>
+        <mj-text align="center" font-size="12px" color="{{gross_color}}" padding="4px 0 0 0">{{gross_arrow}} ${{gross_diff_abs}} from last week</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Avg Per Deal KPI -->
+    <mj-section background-color="#1a1a2e" border-radius="0 0 12px 12px" padding="8px 24px 24px 24px" border="1px solid #2a2a4a">
+      <mj-column background-color="#0d1a2d" border-radius="8px" padding="16px">
+        <mj-text align="center" font-size="11px" color="#666" text-transform="uppercase" padding="0 0 4px 0">Avg Per Deal</mj-text>
+        <mj-text align="center" font-size="28px" font-weight="bold" color="#C0C0C0" padding="0">${{avg_gross}}</mj-text>
+        <mj-text align="center" font-size="11px" color="#666" padding="0">gross</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Spacer -->
+    <mj-section padding="8px 0" background-color="#0a0a14">
+      <mj-column><mj-text> </mj-text></mj-column>
+    </mj-section>
+
+    <!-- Top Performer -->
+    <mj-section background-color="#1a1a2e" border-radius="12px" padding="24px" border="1px solid #2a2a4a">
+      <mj-column>
+        <mj-text font-size="16px" color="#C0C0C0" font-weight="bold" padding="0 0 12px 0">🏆 Top Performer</mj-text>
+        <mj-text font-size="14px" color="#C0C0C0" padding="0">{{top_sp_html}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Spacer -->
+    <mj-section padding="8px 0" background-color="#0a0a14">
+      <mj-column><mj-text> </mj-text></mj-column>
+    </mj-section>
+
+    <!-- Reputation -->
+    <mj-section background-color="#1a1a2e" border-radius="12px" padding="24px" border="1px solid #2a2a4a">
+      <mj-column>
+        <mj-text font-size="16px" color="#C0C0C0" font-weight="bold" padding="0 0 12px 0">⭐ Reputation</mj-text>
+        <mj-text font-size="15px" color="#C0C0C0" padding="0">Average Rating: <strong style="color:#f39c12;">{{avg_rating_stars}} {{avg_rating}}</strong> ({{total_rev}} total reviews)</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Spacer -->
+    <mj-section padding="8px 0" background-color="#0a0a14">
+      <mj-column><mj-text> </mj-text></mj-column>
+    </mj-section>
+
+    <!-- Inventory Alert -->
+    <mj-section background-color="{{inv_bg}}" border-radius="12px" padding="24px" border="1px solid {{inv_border}}">
+      <mj-column>
+        <mj-text font-size="16px" color="{{inv_title_color}}" font-weight="bold" padding="0 0 12px 0">📦 {{inv_title}}</mj-text>
+        <mj-text font-size="15px" color="{{inv_text_color}}" padding="0">{{inv_message}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Spacer -->
+    <mj-section padding="16px 0" background-color="#0a0a14">
+      <mj-column><mj-text> </mj-text></mj-column>
+    </mj-section>
+
+    <!-- CTA -->
+    <mj-section background-color="#0a0a14" padding="0 0 16px 0">
+      <mj-column>
+        <mj-button background-color="#4a9eff" color="#ffffff" font-size="15px" font-weight="bold" border-radius="8px" padding="14px 32px" href="https://hexguardapp.com">
+          View Full Dashboard →
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#0a0a14" padding="0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#555" padding="0">
+          Powered by <strong>HexGuard</strong> — Business Intelligence Platform<br/>
+          <a href="https://hexguardapp.com" style="color:#555;">Unsubscribe from weekly reports</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+  </mj-body>
+</mjml>

@@ -936,6 +936,7 @@ class EmailReportRequest(BaseModel):
 
 def _send_report(user: dict, recipient_email: str):
     import resend
+    import os
     resend.api_key = os.getenv("RESEND_API_KEY")
 
     client_id     = user["client_id"]
@@ -992,102 +993,59 @@ def _send_report(user: dict, recipient_email: str):
     avg_rating  = reviews.get("avg_rating") or "N/A"
     total_rev   = int(reviews.get("total") or 0)
 
-    last_deals  = int(last_week.get("deals") or 0)
-    last_gross  = int(last_week.get("total_gross") or 0)
-    deals_diff  = deals - last_deals
-    gross_diff  = total_gross - last_gross
-    deals_arrow = "↑" if deals_diff >= 0 else "↓"
-    gross_arrow = "↑" if gross_diff >= 0 else "↓"
-    deals_color = "#27ae60" if deals_diff >= 0 else "#c0392b"
-    gross_color = "#27ae60" if gross_diff >= 0 else "#c0392b"
+    last_deals     = int(last_week.get("deals") or 0)
+    last_gross     = int(last_week.get("total_gross") or 0)
+    deals_diff     = deals - last_deals
+    gross_diff     = total_gross - last_gross
+    deals_arrow    = "↑" if deals_diff >= 0 else "↓"
+    gross_arrow    = "↑" if gross_diff >= 0 else "↓"
+    deals_color    = "#27ae60" if deals_diff >= 0 else "#c0392b"
+    gross_color    = "#27ae60" if gross_diff >= 0 else "#c0392b"
+    deals_diff_abs = abs(deals_diff)
+    gross_diff_abs = abs(gross_diff)
 
-    top_sp_html = f"<p style='color:#C0C0C0;margin:0;'>🏆 <strong style='color:#fff;'>{top_sp['salesperson']}</strong> — {int(top_sp['deals'])} deals, ${int(top_sp['gross'] or 0):,} gross</p>" if top_sp.get("salesperson") else "<p style='color:#666;margin:0;'>No sales data this period.</p>"
+    top_sp_html = f"{top_sp['salesperson']} — {int(top_sp['deals'])} deals, ${int(top_sp['gross'] or 0):,} gross" if top_sp.get("salesperson") else "No sales data this period."
 
-    html = f"""
-    <html>
-    <body style='margin:0;padding:0;background:#0a0a14;font-family:Arial,sans-serif;'>
-      <div style='max-width:600px;margin:0 auto;padding:20px;'>
-        <div style='background:#0d0d1a;border-radius:12px;padding:24px;margin-bottom:20px;text-align:center;border:1px solid #1a1a3a;'>
-          <div style='display:inline-block;background:#1a1a2e;border:2px solid #4a9eff;border-radius:10px;padding:8px 16px;margin-bottom:12px;'>
-            <span style='color:#4a9eff;font-size:20px;font-weight:bold;letter-spacing:2px;'>HEX</span>
-            <span style='color:#C0C0C0;font-size:20px;font-weight:bold;'>GUARD</span>
-          </div>
-          <p style='color:#555;margin:0;font-size:13px;'>Weekly Business Intelligence Report</p>
-        </div>
-        <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
-          <p style='color:#C0C0C0;font-size:16px;margin:0 0 4px;'>Good Friday, <strong>{business_name}</strong> 👋</p>
-          <p style='color:#666;font-size:13px;margin:0;'>Week of {week} — here's how your business performed</p>
-        </div>
-        <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
-          <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 16px;border-bottom:2px solid #2a2a4a;padding-bottom:8px;'>📊 This Month at a Glance</h2>
-          <table style='width:100%;border-collapse:collapse;'>
-            <tr>
-              <td style='padding:0 0 8px 0;'>
-                <table style='width:100%;border-collapse:collapse;background:#0d1a2d;border-radius:8px;'>
-                  <tr>
-                    <td style='padding:16px;text-align:center;'>
-                      <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Sales</p>
-                      <p style='color:#C0C0C0;font-size:28px;font-weight:bold;margin:0;'>{deals}</p>
-                      <p style='color:#666;font-size:11px;margin:0;'>deals</p>
-                      <p style='color:{deals_color};font-size:12px;margin:4px 0 0;'>{deals_arrow} {abs(deals_diff)} from last week</p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style='padding:0 0 8px 0;'>
-                <table style='width:100%;border-collapse:collapse;background:#0d2d15;border-radius:8px;'>
-                  <tr>
-                    <td style='padding:16px;text-align:center;'>
-                      <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Gross</p>
-                      <p style='color:#27ae60;font-size:28px;font-weight:bold;margin:0;'>${total_gross:,}</p>
-                      <p style='color:#666;font-size:11px;margin:0;'>profit</p>
-                      <p style='color:{gross_color};font-size:12px;margin:4px 0 0;'>{gross_arrow} ${abs(gross_diff):,} from last week</p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style='padding:0;'>
-                <table style='width:100%;border-collapse:collapse;background:#0d1a2d;border-radius:8px;'>
-                  <tr>
-                    <td style='padding:16px;text-align:center;'>
-                      <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Avg Per Deal</p>
-                      <p style='color:#C0C0C0;font-size:28px;font-weight:bold;margin:0;'>${avg_gross:,}</p>
-                      <p style='color:#666;font-size:11px;margin:0;'>gross</p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </div>
-        <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
-          <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 12px;'>🏆 Top Performer</h2>
-          {top_sp_html}
-        </div>
-        <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
-          <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 12px;'>⭐ Reputation</h2>
-          <p style='color:#C0C0C0;margin:0;font-size:15px;'>Average Rating: <strong style='color:#f39c12;'>{"⭐" * int(float(avg_rating)) if avg_rating != "N/A" else "N/A"} {avg_rating}</strong> ({total_rev} total reviews)</p>
-        </div>
-        {"<div style='background:#2d1515;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #c0392b;'><h2 style='color:#c0392b;font-size:16px;margin:0 0 12px;'>📦 Inventory Alert</h2><p style='color:#c0392b;margin:0;font-size:15px;'>🔴 <strong>" + str(stale_count) + " items</strong> have been sitting 60+ days. Consider price reductions or promotions.</p></div>" if stale_count > 0 else "<div style='background:#0d2d15;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #27ae60;'><h2 style='color:#27ae60;font-size:16px;margin:0 0 12px;'>📦 Inventory</h2><p style='color:#27ae60;margin:0;'>✅ No stale inventory — great job keeping stock moving!</p></div>"}
-        <div style='text-align:center;margin-bottom:20px;'>
-          <a href='https://hexguardapp.com' style='background:#0A0A0A;color:#C0C0C0;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;'>
-            View Full Dashboard →
-          </a>
-        </div>
-        <div style='text-align:center;padding:16px;'>
-          <p style='color:#aaa;font-size:12px;margin:0;'>
-            Powered by <strong>HexGuard</strong> — Business Intelligence Platform<br>
-            <a href='https://hexguardapp.com' style='color:#aaa;'>Unsubscribe from weekly reports</a>
-          </p>
-        </div>
-      </div>
-    </body>
-    </html>
-    """
+    avg_rating_stars = "⭐" * int(float(avg_rating)) if avg_rating != "N/A" else ""
+
+    if stale_count > 0:
+        inv_bg          = "#2d1515"
+        inv_border      = "#c0392b"
+        inv_title_color = "#e74c3c"
+        inv_text_color  = "#e74c3c"
+        inv_title       = "Inventory Alert"
+        inv_message     = f"🔴 {stale_count} items have been sitting 60+ days. Consider price reductions or promotions."
+    else:
+        inv_bg          = "#0d2d15"
+        inv_border      = "#27ae60"
+        inv_title_color = "#2ecc71"
+        inv_text_color  = "#2ecc71"
+        inv_title       = "Inventory"
+        inv_message     = "✅ No stale inventory — great job keeping stock moving!"
+
+    template_path = os.path.join(os.path.dirname(__file__), 'email_template.html')
+    html = open(template_path).read()
+    html = html.replace('{{business_name}}', business_name)
+    html = html.replace('{{week}}', week)
+    html = html.replace('{{deals}}', str(deals))
+    html = html.replace('{{total_gross}}', f'{total_gross:,}')
+    html = html.replace('{{avg_gross}}', f'{avg_gross:,}')
+    html = html.replace('{{deals_color}}', deals_color)
+    html = html.replace('{{deals_arrow}}', deals_arrow)
+    html = html.replace('{{deals_diff_abs}}', str(deals_diff_abs))
+    html = html.replace('{{gross_color}}', gross_color)
+    html = html.replace('{{gross_arrow}}', gross_arrow)
+    html = html.replace('{{gross_diff_abs}}', f'{gross_diff_abs:,}')
+    html = html.replace('{{top_sp_html}}', top_sp_html)
+    html = html.replace('{{avg_rating_stars}}', avg_rating_stars)
+    html = html.replace('{{avg_rating}}', str(avg_rating))
+    html = html.replace('{{total_rev}}', str(total_rev))
+    html = html.replace('{{inv_bg}}', inv_bg)
+    html = html.replace('{{inv_border}}', inv_border)
+    html = html.replace('{{inv_title_color}}', inv_title_color)
+    html = html.replace('{{inv_text_color}}', inv_text_color)
+    html = html.replace('{{inv_title}}', inv_title)
+    html = html.replace('{{inv_message}}', inv_message)
 
     resend.Emails.send({
         "from":    "HexGuard <reports@hexguardapp.com>",
