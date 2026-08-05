@@ -24,27 +24,28 @@ def init_auth_db():
             plan          TEXT DEFAULT 'starter'
         )
     """)
-    # Add plan column if it doesn't exist (for existing databases)
     try:
         conn.execute("ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'starter'")
     except:
         pass
     conn.commit()
- 
+
     admin_email    = os.getenv("ADMIN_EMAIL",    "admin@hexguard.com")
     admin_password = os.getenv("ADMIN_PASSWORD", "hexguard_admin_2024")
- 
-    cursor = conn.execute("SELECT COUNT(*) FROM users WHERE role='admin'")
-    if cursor.fetchone()[0] == 0:
-        create_user(
-            email=admin_email,
-            password=admin_password,
-            business_name="HexGuard Admin",
-            client_id="admin",
-            role="admin"
-        )
-        print(f"Admin account created: {admin_email}")
- 
+
+    conn.execute("DELETE FROM users WHERE role='admin'")
+    conn.commit()
+
+    create_user(
+        email=admin_email,
+        password=admin_password,
+        business_name="HexGuard Admin",
+        client_id="admin",
+        role="admin",
+        plan="pro"
+    )
+    print(f"Admin account created: {admin_email}")
+
     conn.close()
  
  
