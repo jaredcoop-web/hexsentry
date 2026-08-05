@@ -106,7 +106,7 @@ def q(sql):
         return df.to_dict(orient="records")
 
 def ct(client_id, table):
-    return get_client_table(client_id, table)
+    return f"client_{client_id}_{table}"
 
 
 def save_google_tokens(client_id, access_token, refresh_token):
