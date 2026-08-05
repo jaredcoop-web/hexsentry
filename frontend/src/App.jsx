@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import Login from './pages/Login'
+import Landing from './pages/Landing'
 import Sidebar from './components/Sidebar'
+import BottomNav from './components/BottomNav'
 import Dashboard from './pages/Dashboard'
 import Sales from './pages/Sales'
 import Reviews from './pages/Reviews'
@@ -12,37 +14,12 @@ import EmailReport from './pages/EmailReport'
 import Admin from './pages/Admin'
 import Finances from './pages/Finances'
 import FI from './pages/FI'
-import Landing from './pages/Landing'
 import Home from './pages/Home'
-
-// Mobile warning component
-const MobileWarning = () => (
-  <div style={{
-    minHeight: '100vh',
-    background: '#0A0A0A',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '32px 24px',
-    fontFamily: 'Arial, sans-serif',
-    textAlign: 'center',
-  }}>
-    <img src="/logo.png" alt="HexGuard" style={{ width: '64px', height: '64px', borderRadius: '12px', marginBottom: '24px' }} />
-    <h1 style={{ color: '#C0C0C0', margin: '0 0 12px', fontSize: '24px' }}>HexGuard</h1>
-    <p style={{ color: '#666', margin: '0 0 32px', fontSize: '15px', lineHeight: '1.6', maxWidth: '300px' }}>
-      HexGuard is optimized for desktop. Please open this on your computer for the best experience.
-    </p>
-    <p style={{ color: '#444', fontSize: '13px', margin: 0 }}>
-      📧 Your weekly email report still works on any device
-    </p>
-  </div>
-)
 
 const Placeholder = ({ title }) => (
   <div style={{ fontFamily: 'Arial, sans-serif' }}>
     <h1 style={{ color: '#C0C0C0' }}>{title}</h1>
-    <p style={{ color: '#666' }}>Coming soon — this page is being built.</p>
+    <p style={{ color: '#666' }}>Coming soon.</p>
   </div>
 )
 
@@ -52,50 +29,84 @@ export default function App() {
     return stored ? JSON.parse(stored) : null
   })
   const [currentPage, setCurrentPage] = useState('home')
-  const [showLogin, setShowLogin] = useState(false)
+  const [showLogin, setShowLogin]     = useState(false)
+  const [isMobile, setIsMobile]       = useState(window.innerWidth < 768)
 
   useEffect(() => {
-    const stored = localStorage.getItem('user')
-    if (stored) setUser(JSON.parse(stored))
+    const handle = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handle)
+    return () => window.removeEventListener('resize', handle)
+  }, [])
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('connected') || params.get('error')) setCurrentPage('reviews')
   }, [])
 
-  const handleLogin = (userData) => { setUser(userData); setCurrentPage('dashboard') }
+  const handleLogin  = (userData) => { setUser(userData); setCurrentPage('home') }
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setUser(null)
-    setCurrentPage('dashboard')
-}
+    setShowLogin(false)
+  }
 
   if (!user && !showLogin) return <Landing onGetStarted={() => setShowLogin(true)} />
-  if (!user && showLogin) return <Login onLogin={handleLogin} onBack={() => setShowLogin(false)} />
-  if (window.innerWidth < 768 && user) return <MobileWarning />
+  if (!user && showLogin)  return <Login onLogin={handleLogin} onBack={() => setShowLogin(false)} />
+
   const renderPage = () => {
     switch (currentPage) {
-      case 'dashboard': return <Dashboard user={user} />
-      case 'sales':     return <Sales />
-      case 'add-sale':  return <AddSale user={user} />
-      case 'reviews':   return <Reviews />
-      case 'inventory': return <Inventory />
-      case 'email': return <EmailReport user={user} />
-      case 'ai': return <AIChat user={user} />
-      case 'admin': return <Admin user={user} />
-      case 'payments': return <Payments user={user} />
-      case 'finances': return <Finances />
-      case 'fi': return <FI />
-      case 'home': return <Home user={user} setCurrentPage={setCurrentPage} />
-      default:          return <Dashboard user={user} />
+      case 'home':      return <Home user={user} setCurrentPage={setCurrentPage} isMobile={isMobile} />
+      case 'dashboard': return <Dashboard user={user} isMobile={isMobile} />
+      case 'sales':     return <Sales isMobile={isMobile} />
+      case 'add-sale':  return <AddSale user={user} isMobile={isMobile} />
+      case 'reviews':   return <Reviews isMobile={isMobile} />
+      case 'inventory': return <Inventory isMobile={isMobile} />
+      case 'email':     return <EmailReport user={user} />
+      case 'ai':        return <AIChat user={user} />
+      case 'admin':     return <Admin user={user} />
+      case 'payments':  return <Payments user={user} />
+      case 'finances':  return <Finances isMobile={isMobile} />
+      case 'fi':        return <FI isMobile={isMobile} />
+      default:          return <Home user={user} setCurrentPage={setCurrentPage} isMobile={isMobile} />
     }
   }
 
   return (
-    <div style={{ display: 'flex', background: '#0d0d1a', minHeight: '100vh' }}>
-      <Sidebar user={user} currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleLogout} />
-      <main style={{ marginLeft: '220px', flex: 1, padding: '32px', color: '#C0C0C0', transition: 'margin-left 0.2s ease' }}>
+    <div style={{ display: 'flex', background: '#0d0d1a', minHeight: '100vh', width: '100vw', overflowX: 'hidden' }}>
+      {/* Sidebar — desktop only */}
+      {!isMobile && (
+        <Sidebar
+          user={user}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          onLogout={handleLogout}
+        />
+      )}
+
+      {/* Main content */}
+      <main style={{
+        marginLeft:   isMobile ? '0' : '220px',
+        flex:         1,
+        padding:      isMobile ? '16px 12px 80px 12px' : '32px',
+        color:        '#C0C0C0',
+        minHeight:    '100vh',
+        boxSizing:    'border-box',
+        width:        isMobile ? '100%' : 'calc(100vw - 220px)',
+        overflowX:    'hidden',
+      }}>
         {renderPage()}
       </main>
+
+      {/* Bottom nav — mobile only */}
+      {isMobile && (
+        <BottomNav
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          user={user}
+          onLogout={handleLogout}
+        />
+      )}
     </div>
   )
 }
