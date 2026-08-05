@@ -1019,24 +1019,24 @@ def _send_report(user: dict, recipient_email: str):
           <p style='color:#666;font-size:13px;margin:0;'>Week of {week} — here's how your business performed</p>
         </div>
         <div style='background:#1a1a2e;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #2a2a4a;'>
-          <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 16px;border-bottom:2px solid #f4f4f4;padding-bottom:8px;'>📊 This Month at a Glance</h2>
+          <h2 style='color:#C0C0C0;font-size:16px;margin:0 0 16px;border-bottom:2px solid #2a2a4a;padding-bottom:8px;'>📊 This Month at a Glance</h2>
           <table style='width:100%;border-collapse:collapse;'>
             <tr>
-              <td style='padding:10px;background:#f9f9f9;border-radius:8px;text-align:center;width:30%;'>
+              <td style='padding:10px;background:#0d1a2d;border-radius:8px;text-align:center;width:30%;'>
                 <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Sales</p>
                 <p style='color:#C0C0C0;font-size:24px;font-weight:bold;margin:0;'>{deals}</p>
                 <p style='color:#666;font-size:11px;margin:0;'>deals</p>
                 <p style='color:{deals_color};font-size:11px;margin:4px 0 0;'>{deals_arrow} {abs(deals_diff)} from last week</p>
               </td>
               <td style='width:5%;'></td>
-              <td style='padding:10px;background:#f0fff4;border-radius:8px;text-align:center;width:30%;'>
+              <td style='padding:10px;background:#0d2d15;border-radius:8px;text-align:center;width:30%;'>
                 <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Total Gross</p>
                 <p style='color:#27ae60;font-size:24px;font-weight:bold;margin:0;'>${total_gross:,}</p>
                 <p style='color:#666;font-size:11px;margin:0;'>profit</p>
                 <p style='color:{gross_color};font-size:11px;margin:4px 0 0;'>{gross_arrow} ${abs(gross_diff):,} from last week</p>
               </td>
               <td style='width:5%;'></td>
-              <td style='padding:10px;background:#f9f9f9;border-radius:8px;text-align:center;width:30%;'>
+              <td style='padding:10px;background:#0d1a2d;border-radius:8px;text-align:center;width:30%;'>
                 <p style='color:#666;font-size:11px;margin:0 0 4px;text-transform:uppercase;'>Avg Per Deal</p>
                 <p style='color:#C0C0C0;font-size:24px;font-weight:bold;margin:0;'>${avg_gross:,}</p>
                 <p style='color:#666;font-size:11px;margin:0;'>gross</p>
