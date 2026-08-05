@@ -1048,11 +1048,6 @@ def _send_report(user: dict, recipient_email: str):
         "html":    html,
     })
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"HexGuard Weekly Report — {business_name} — {week}"
-    msg["From"]    = sender_email
-    msg["To"]      = recipient_email
-    msg.attach(MIMEText(html, "html"))
 
     import resend
     resend.api_key = os.getenv("RESEND_API_KEY")
