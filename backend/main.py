@@ -1023,7 +1023,7 @@ def _send_report(user: dict, recipient_email: str):
         inv_title       = "Inventory"
         inv_message     = "✅ No stale inventory — great job keeping stock moving!"
 
-    template_path = os.path.join(os.path.dirname(__file__), 'email_template.html')
+    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'email_template.html')
     html = open(template_path).read()
     html = html.replace('{{business_name}}', business_name)
     html = html.replace('{{week}}', week)
