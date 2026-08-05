@@ -1055,7 +1055,7 @@ def _send_report(user: dict, recipient_email: str):
     import resend
     resend.api_key = os.getenv("RESEND_API_KEY")
     resend.Emails.send({
-        "from":    "HexGuard <onboarding@resend.dev>",
+        "from":    "HexGuard <reports@hexguardapp.com>",
         "to":      recipient_email,
         "subject": f"HexGuard Weekly Report — {business_name} — {week}",
         "html":    html,
@@ -1422,7 +1422,7 @@ def trial_request(req: TrialRequest):
         print(f"Resend key: {os.getenv('RESEND_API_KEY')[:10] if os.getenv('RESEND_API_KEY') else 'NOT SET'}")
         print(f"Admin email: {os.getenv('ADMIN_EMAIL')}")
         result = resend.Emails.send({
-            "from":    "HexGuard <onboarding@resend.dev>",
+            "from":    "HexGuard <reports@hexguardapp.com>",
             "to":      os.getenv("ADMIN_EMAIL"),
             "subject": f"New Trial Request — {req.business}",
             "html":    f"""
