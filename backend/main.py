@@ -936,14 +936,11 @@ class EmailReportRequest(BaseModel):
     business_name:   Optional[str] = ""
 
 def _send_report(user: dict, recipient_email: str):
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
+    import resend
+    resend.api_key = os.getenv("RESEND_API_KEY")
 
-    sender_email    = os.getenv("EMAIL_ADDRESS")
-    sender_password = os.getenv("EMAIL_APP_PASSWORD")
-    client_id       = user["client_id"]
-    business_name   = user["business_name"]
+    client_id     = user["client_id"]
+    business_name = user["business_name"]
 
     try:
         sales = q(f"""
@@ -987,20 +984,14 @@ def _send_report(user: dict, recipient_email: str):
     <html>
     <body style='margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;'>
       <div style='max-width:600px;margin:0 auto;padding:20px;'>
-
-        <!-- Header -->
         <div style='background:#0A0A0A;border-radius:12px;padding:24px;margin-bottom:20px;text-align:center;'>
           <h1 style='color:#C0C0C0;margin:0 0 4px;font-size:28px;'>🛡️ HexGuard</h1>
           <p style='color:#555;margin:0;font-size:13px;'>Weekly Business Intelligence Report</p>
         </div>
-
-        <!-- Greeting -->
         <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
           <p style='color:#333;font-size:16px;margin:0 0 4px;'>Good Friday, <strong>{business_name}</strong> 👋</p>
           <p style='color:#888;font-size:13px;margin:0;'>Week of {week} — here's how your business performed</p>
         </div>
-
-        <!-- This Month KPIs -->
         <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
           <h2 style='color:#333;font-size:16px;margin:0 0 16px;border-bottom:2px solid #f4f4f4;padding-bottom:8px;'>📊 This Month at a Glance</h2>
           <table style='width:100%;border-collapse:collapse;'>
@@ -1025,41 +1016,37 @@ def _send_report(user: dict, recipient_email: str):
             </tr>
           </table>
         </div>
-
-        <!-- Top Performer -->
         <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
           <h2 style='color:#333;font-size:16px;margin:0 0 12px;'>🏆 Top Performer</h2>
           {top_sp_html}
         </div>
-
-        <!-- Reviews -->
         <div style='background:#fff;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #e0e0e0;'>
           <h2 style='color:#333;font-size:16px;margin:0 0 12px;'>⭐ Reputation</h2>
           <p style='color:#333;margin:0;font-size:15px;'>Average Rating: <strong style='color:#f39c12;'>{"⭐" * int(float(avg_rating)) if avg_rating != "N/A" else "N/A"} {avg_rating}</strong> ({total_rev} total reviews)</p>
         </div>
-
-        <!-- Inventory Alert -->
-        {"<div style='background:#fff5f5;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #ffcccc;'><h2 style='color:#c0392b;font-size:16px;margin:0 0 12px;'>📦 Inventory Alert</h2><p style='color:#c0392b;margin:0;font-size:15px;'>🔴 <strong>" + str(stale_count) + " items</strong> have been sitting 60+ days. Consider price reductions or promotions to move them faster.</p></div>" if stale_count > 0 else "<div style='background:#f0fff4;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #c3e6cb;'><h2 style='color:#27ae60;font-size:16px;margin:0 0 12px;'>📦 Inventory</h2><p style='color:#27ae60;margin:0;'>✅ No stale inventory — great job keeping stock moving!</p></div>"}
-
-        <!-- CTA -->
+        {"<div style='background:#fff5f5;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #ffcccc;'><h2 style='color:#c0392b;font-size:16px;margin:0 0 12px;'>📦 Inventory Alert</h2><p style='color:#c0392b;margin:0;font-size:15px;'>🔴 <strong>" + str(stale_count) + " items</strong> have been sitting 60+ days. Consider price reductions or promotions.</p></div>" if stale_count > 0 else "<div style='background:#f0fff4;border-radius:12px;padding:24px;margin-bottom:16px;border:1px solid #c3e6cb;'><h2 style='color:#27ae60;font-size:16px;margin:0 0 12px;'>📦 Inventory</h2><p style='color:#27ae60;margin:0;'>✅ No stale inventory — great job keeping stock moving!</p></div>"}
         <div style='text-align:center;margin-bottom:20px;'>
-          <a href='https://hexguard-app.onrender.com' style='background:#0A0A0A;color:#C0C0C0;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;'>
+          <a href='https://hexguardapp.com' style='background:#0A0A0A;color:#C0C0C0;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;display:inline-block;'>
             View Full Dashboard →
           </a>
         </div>
-
-        <!-- Footer -->
         <div style='text-align:center;padding:16px;'>
           <p style='color:#aaa;font-size:12px;margin:0;'>
             Powered by <strong>HexGuard</strong> — Business Intelligence Platform<br>
-            <a href='https://hexguard-app.onrender.com' style='color:#aaa;'>Unsubscribe from weekly reports</a>
+            <a href='https://hexguardapp.com' style='color:#aaa;'>Unsubscribe from weekly reports</a>
           </p>
         </div>
-
       </div>
     </body>
     </html>
     """
+
+    resend.Emails.send({
+        "from":    "HexGuard <reports@hexguardapp.com>",
+        "to":      recipient_email,
+        "subject": f"HexGuard Weekly Report — {business_name} — {week}",
+        "html":    html,
+    })
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"HexGuard Weekly Report — {business_name} — {week}"
