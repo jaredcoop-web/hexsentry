@@ -343,11 +343,38 @@ def get_kpis(user=Depends(get_current_user)):
 @app.get("/sales")
 def get_sales(user=Depends(get_current_user)):
     client_id = user["client_id"]
+    table     = ct(client_id, "sales")
     try:
-        monthly = q(f"SELECT month, COUNT(*) as units, ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross FROM {ct(client_id, 'sales')} GROUP BY month ORDER BY month")
-        top_sp  = q(f"SELECT salesperson, COUNT(*) as deals, ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross FROM {ct(client_id, 'sales')} GROUP BY salesperson ORDER BY gross DESC")
-        models  = q(f"SELECT model, COUNT(*) as units FROM {ct(client_id, 'sales')} GROUP BY model ORDER BY units DESC LIMIT 10")
-        return {"monthly": monthly, "top_salespeople": top_sp, "top_models": models}
+        summary = q(f"""
+            SELECT COUNT(*) as total_sales,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as total_gross,
+                   ROUND(CAST(AVG(gross_profit) AS numeric), 0) as avg_gross,
+                   SUM(CASE WHEN month = TO_CHAR(CURRENT_DATE, 'YYYY-MM') THEN 1 ELSE 0 END) as this_month
+            FROM {table}
+        """)[0]
+        monthly = q(f"""
+            SELECT month, COUNT(*) as units,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross
+            FROM {table} GROUP BY month ORDER BY month
+        """)
+        top_salespeople = q(f"""
+            SELECT salesperson, COUNT(*) as deals,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross
+            FROM {table} GROUP BY salesperson ORDER BY gross DESC LIMIT 5
+        """)
+        top_models = q(f"""
+            SELECT model, COUNT(*) as units
+            FROM {table} GROUP BY model ORDER BY units DESC LIMIT 5
+        """)
+        return {
+            "total_sales":  summary.get("total_sales") or 0,
+            "total_gross":  summary.get("total_gross"),
+            "avg_gross":    summary.get("avg_gross"),
+            "this_month":   summary.get("this_month") or 0,
+            "monthly":      monthly,
+            "leaderboard":  top_salespeople,
+            "top_models":   top_models,
+        }
     except Exception as e:
         return {"error": str(e)}
     
