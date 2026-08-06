@@ -1,15 +1,33 @@
 import { useEffect, useState } from 'react'
 import api from '../api'
 
-const INPUT = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
-const LABEL = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
+const INPUT  = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
+const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
 const SELECT = { ...INPUT, cursor: 'pointer' }
-const CARD  = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px', marginBottom: '24px' }
+const CARD   = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px', marginBottom: '24px' }
+
+const BUSINESS_TYPES = {
+  general:     'General Business',
+  dealership:  'Auto Dealership',
+  repair_shop: 'Repair Shop',
+}
 
 const PLANS = {
-  starter: { label: 'Starter — $49/mo',  color: '#666',    pages: ['Dashboard', 'Sales', 'Add Sale', 'Email Report'] },
-  growth:  { label: 'Growth — $99/mo',   color: '#f39c12', pages: ['Everything in Starter', 'Reviews', 'Inventory', 'Payments'] },
-  pro:     { label: 'Pro — $199/mo',     color: '#2ecc71', pages: ['Everything in Growth', 'AI Chat', 'Advanced Analytics'] },
+  core: {
+    label: 'Core — $99.99/mo',
+    color: '#4a9eff',
+    pages: ['Dashboard', 'Sales', 'Add Sale', 'Finances', 'Payments', 'Email Report', 'Anomaly Alerts'],
+  },
+  full: {
+    label: 'Full — $199.99/mo',
+    color: '#2ecc71',
+    pages: ['Everything in Core', 'AI Chat', 'Google Reviews', 'Inventory', 'F&I Tracking'],
+  },
+  custom: {
+    label: 'Custom',
+    color: '#C0C0C0',
+    pages: ['Core features', 'Add individual modules', 'Flexible pricing'],
+  },
 }
 
 export default function Admin({ user }) {
@@ -20,7 +38,8 @@ export default function Admin({ user }) {
   const [confirm, setConfirm]   = useState(null)
 
   const [form, setForm] = useState({
-    email: '', password: '', business_name: '', client_id: '', plan: 'starter'
+    email: '', password: '', business_name: '', client_id: '',
+    plan: 'core', business_type: 'general'
   })
 
   const update = (k, v) => {
@@ -54,7 +73,7 @@ export default function Admin({ user }) {
     try {
       await api.post('/admin/clients', form)
       setMsg({ type: 'success', text: `Account created for ${form.business_name}!` })
-      setForm({ email: '', password: '', business_name: '', client_id: '', plan: 'starter' })
+      setForm({ email: '', password: '', business_name: '', client_id: '', plan: 'core', business_type: 'general' })
       load()
     } catch (e) {
       setMsg({ type: 'error', text: e.response?.data?.detail || 'Failed to create account' })
@@ -65,7 +84,7 @@ export default function Admin({ user }) {
   const handleDelete = async (email) => {
     try {
       await api.delete(`/admin/clients/${encodeURIComponent(email)}`)
-      setMsg({ type: 'success', text: `Account deleted` })
+      setMsg({ type: 'success', text: 'Account deleted' })
       setConfirm(null)
       load()
     } catch {
@@ -109,24 +128,39 @@ export default function Admin({ user }) {
             <label style={LABEL}>Temporary password</label>
             <input type="text" value={form.password} onChange={e => update('password', e.target.value)} placeholder="they can change this later" style={INPUT} />
           </div>
+
+          {/* Business Type */}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={LABEL}>Business Type</label>
+            <select value={form.business_type} onChange={e => update('business_type', e.target.value)} style={SELECT}>
+              <option value="general">General Business</option>
+              <option value="dealership">Auto Dealership</option>
+              <option value="repair_shop">Repair Shop</option>
+            </select>
+          </div>
+
+          {/* Plan */}
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={LABEL}>Plan</label>
             <select value={form.plan} onChange={e => update('plan', e.target.value)} style={SELECT}>
-              {Object.entries(PLANS).map(([key, val]) => (
-                <option key={key} value={key}>{val.label}</option>
-              ))}
+              <option value="core">Core — $99.99/mo</option>
+              <option value="full">Full — $199.99/mo</option>
+              <option value="custom">Custom</option>
             </select>
           </div>
         </div>
 
         {/* Plan preview */}
         <div style={{ background: '#0A0A0A', border: '1px solid #222', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px' }}>
-          <p style={{ color: PLANS[form.plan].color, fontSize: '13px', margin: '0 0 6px', fontWeight: 'bold' }}>
-            {PLANS[form.plan].label} — Pages included:
+          <p style={{ color: PLANS[form.plan]?.color || '#666', fontSize: '13px', margin: '0 0 6px', fontWeight: 'bold' }}>
+            {PLANS[form.plan]?.label} — Pages included:
           </p>
-          {PLANS[form.plan].pages.map((p, i) => (
+          {PLANS[form.plan]?.pages.map((p, i) => (
             <p key={i} style={{ color: '#666', fontSize: '12px', margin: '2px 0' }}>✓ {p}</p>
           ))}
+          <p style={{ color: '#555', fontSize: '12px', margin: '8px 0 0', borderTop: '1px solid #1a1a1a', paddingTop: '8px' }}>
+            Business type: <span style={{ color: '#999' }}>{BUSINESS_TYPES[form.business_type]}</span>
+          </p>
         </div>
 
         <button onClick={handleCreate} disabled={creating} style={{ padding: '12px 24px', background: creating ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: creating ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
@@ -145,45 +179,50 @@ export default function Admin({ user }) {
         ) : clients.length === 0 ? (
           <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No clients yet. Create your first one above.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                {['Business', 'Email', 'Client ID', 'Plan', ''].map(h => (
-                  <th key={h} style={{ color: '#666', fontSize: '12px', textAlign: 'left', padding: '8px 0', borderBottom: '1px solid #333' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((c, i) => (
-                <tr key={i}>
-                  <td style={{ color: '#C0C0C0', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '14px' }}>{c.business_name}</td>
-                  <td style={{ color: '#999', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{c.email}</td>
-                  <td style={{ color: '#555', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px', fontFamily: 'monospace' }}>{c.client_id}</td>
-                  <td style={{ padding: '12px 0', borderBottom: '1px solid #1a1a1a' }}>
-                    <span style={{ color: PLANS[c.plan]?.color || '#666', fontSize: '12px', padding: '3px 8px', border: `1px solid ${PLANS[c.plan]?.color || '#666'}`, borderRadius: '12px' }}>
-                      {c.plan || 'starter'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 0', borderBottom: '1px solid #1a1a1a' }}>
-                    {confirm === c.email ? (
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button onClick={() => handleDelete(c.email)} style={{ padding: '4px 10px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                          Confirm
-                        </button>
-                        <button onClick={() => setConfirm(null)} style={{ padding: '4px 10px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <button onClick={() => setConfirm(c.email)} style={{ padding: '4px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                        Delete
-                      </button>
-                    )}
-                  </td>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ minWidth: '700px', width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  {['Business', 'Email', 'Client ID', 'Type', 'Plan', ''].map(h => (
+                    <th key={h} style={{ color: '#666', fontSize: '12px', textAlign: 'left', padding: '8px 0', borderBottom: '1px solid #333' }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {clients.map((c, i) => (
+                  <tr key={i}>
+                    <td style={{ color: '#C0C0C0', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '14px' }}>{c.business_name}</td>
+                    <td style={{ color: '#999', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{c.email}</td>
+                    <td style={{ color: '#555', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px', fontFamily: 'monospace' }}>{c.client_id}</td>
+                    <td style={{ color: '#999', padding: '12px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>
+                      {BUSINESS_TYPES[c.business_type] || 'General'}
+                    </td>
+                    <td style={{ padding: '12px 0', borderBottom: '1px solid #1a1a1a' }}>
+                      <span style={{ color: PLANS[c.plan]?.color || '#666', fontSize: '12px', padding: '3px 8px', border: `1px solid ${PLANS[c.plan]?.color || '#666'}`, borderRadius: '12px' }}>
+                        {c.plan || 'core'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 0', borderBottom: '1px solid #1a1a1a' }}>
+                      {confirm === c.email ? (
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button onClick={() => handleDelete(c.email)} style={{ padding: '4px 10px', background: '#c0392b', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                            Confirm
+                          </button>
+                          <button onClick={() => setConfirm(null)} style={{ padding: '4px 10px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setConfirm(c.email)} style={{ padding: '4px 10px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                          Delete
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
