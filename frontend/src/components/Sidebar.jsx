@@ -1,6 +1,6 @@
 
 import { useState } from 'react'
-import { Home, Car, Plus, Briefcase, Star, Package, Mail, Bot, CreditCard, DollarSign, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Home, Car, Plus, Briefcase, Star, Package, Mail, Bot, CreditCard, DollarSign, Settings, LogOut, ChevronLeft, ChevronRight, Truck } from 'lucide-react'
 
 const PAGES = [
   { id: 'home',      label: 'Home',         icon: <Home size={18} /> },
@@ -9,7 +9,7 @@ const PAGES = [
   { id: 'fi',        label: 'F&I',          icon: <Briefcase size={18} /> },
   { id: 'reviews',   label: 'Reviews',      icon: <Star size={18} /> },
   { id: 'inventory', label: 'Inventory',    icon: <Package size={18} /> },
-  { id: 'dealer-inventory', label: '🚗 Lot Inventory' },
+  { id: 'dealer-inventory', icon: <Truck size={18} />, label: 'Lot Inventory' },
   { id: 'email',     label: 'Email Report', icon: <Mail size={18} /> },
   { id: 'ai',        label: 'AI Chat',      icon: <Bot size={18} /> },
   { id: 'payments',  label: 'Payments',     icon: <CreditCard size={18} /> },

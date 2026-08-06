@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import api from '../api'
 
@@ -29,16 +29,16 @@ const EMPTY_FORM = {
 }
 
 export default function DealerInventory({ isMobile }) {
-  const [items, setItems]         = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [showAdd, setShowAdd]     = useState(false)
-  const [msg, setMsg]             = useState(null)
-  const [saving, setSaving]       = useState(false)
-  const [filter, setFilter]       = useState('available')
+  const [items, setItems]           = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [showAdd, setShowAdd]       = useState(false)
+  const [msg, setMsg]               = useState(null)
+  const [saving, setSaving]         = useState(false)
+  const [deleting, setDeleting]     = useState(false)
+  const [filter, setFilter]         = useState('available')
   const [vinLoading, setVinLoading] = useState(false)
-  const [vinError, setVinError]   = useState(null)
-  const [form, setForm]           = useState(EMPTY_FORM)
-  const fileRef = useRef()
+  const [vinError, setVinError]     = useState(null)
+  const [form, setForm]             = useState(EMPTY_FORM)
 
   const update = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
@@ -53,61 +53,39 @@ export default function DealerInventory({ isMobile }) {
 
   useEffect(() => { load() }, [])
 
-  // VIN decode using NHTSA free API
   const decodeVIN = async () => {
     const vin = form.vin.trim().toUpperCase()
-    if (vin.length !== 17) {
-      setVinError('VIN must be exactly 17 characters')
-      return
-    }
+    if (vin.length !== 17) { setVinError('VIN must be exactly 17 characters'); return }
     setVinLoading(true)
     setVinError(null)
     try {
-      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
+      const res  = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`)
       const data = await res.json()
       const results = data.Results
-
       const getValue = (variable) => {
         const found = results.find(r => r.Variable === variable)
         return found && found.Value && found.Value !== 'Not Applicable' ? found.Value : ''
       }
-
       const year  = getValue('Model Year')
       const make  = getValue('Make')
       const model = getValue('Model')
       const trim  = getValue('Trim')
-      const body  = getValue('Body Class')
-
       if (!year && !make && !model) {
         setVinError('Could not decode VIN — please check and try again')
         setVinLoading(false)
         return
       }
-
-      setForm(p => ({
-        ...p,
-        year:  year,
-        make:  make,
-        model: `${model}${trim ? ' ' + trim : ''}`,
-        trim:  trim,
-      }))
-
+      setForm(p => ({ ...p, year, make, model: `${model}${trim ? ' ' + trim : ''}`, trim }))
       setVinError(null)
     } catch {
-      setVinError('Failed to decode VIN — check your connection and try again')
+      setVinError('Failed to decode VIN — check your connection')
     }
     setVinLoading(false)
   }
 
   const handleAdd = async () => {
-    if (!form.vin && !form.make) {
-      setMsg({ type: 'error', text: 'Please enter a VIN or vehicle details.' })
-      return
-    }
-    if (!form.asking_price) {
-      setMsg({ type: 'error', text: 'Asking price is required.' })
-      return
-    }
+    if (!form.asking_price) { setMsg({ type: 'error', text: 'Asking price is required.' }); return }
+    if (!form.make && !form.vin) { setMsg({ type: 'error', text: 'Please enter a VIN or vehicle details.' }); return }
     setSaving(true)
     try {
       const vehicleName = `${form.year} ${form.make} ${form.model}`.trim()
@@ -119,9 +97,14 @@ export default function DealerInventory({ isMobile }) {
         date_received: form.date_received,
         condition:     form.condition,
         category:      'Vehicle',
-        notes:         `Stock: ${form.stock_number} | Color: ${form.color} | Mileage: ${form.mileage} | ${form.notes}`.trim(),
+        notes:         [
+          form.stock_number ? `Stock: ${form.stock_number}` : '',
+          form.color ? `Color: ${form.color}` : '',
+          form.mileage ? `Miles: ${parseInt(form.mileage).toLocaleString()}` : '',
+          form.notes || ''
+        ].filter(Boolean).join(' | '),
       })
-      setMsg({ type: 'success', text: `${vehicleName} added to inventory!` })
+      setMsg({ type: 'success', text: `${vehicleName} added to lot!` })
       setForm(EMPTY_FORM)
       setShowAdd(false)
       load()
@@ -129,8 +112,26 @@ export default function DealerInventory({ isMobile }) {
     setSaving(false)
   }
 
-  const handleSell   = async (id) => { try { await api.patch(`/inventory/${id}/sell`); load() } catch {} }
-  const handleDelete = async (id) => { try { await api.delete(`/inventory/${id}`); load() } catch {} }
+  const handleSell = async (id) => {
+    try { await api.patch(`/inventory/${id}/sell`); setMsg({ type: 'success', text: 'Marked as sold!' }); load() }
+    catch { setMsg({ type: 'error', text: 'Failed' }) }
+  }
+
+  const handleDelete = async (id) => {
+    try { await api.delete(`/inventory/${id}`); load() }
+    catch { setMsg({ type: 'error', text: 'Failed to delete' }) }
+  }
+
+  const handleDeleteAll = async () => {
+    if (!window.confirm('Delete ALL vehicles from lot inventory? This cannot be undone.')) return
+    setDeleting(true)
+    try {
+      await api.delete('/inventory')
+      setMsg({ type: 'success', text: 'All inventory cleared' })
+      load()
+    } catch { setMsg({ type: 'error', text: 'Failed to clear inventory' }) }
+    setDeleting(false)
+  }
 
   const available  = items.filter(i => i.status === 'Available')
   const stale      = items.filter(i => i.days_in_stock > 60 && i.status === 'Available')
@@ -151,20 +152,39 @@ export default function DealerInventory({ isMobile }) {
     return true
   })
 
+  // Parse notes to extract stock, color, mileage
+  const parseNotes = (notes) => {
+    const result = { stock: '', color: '', mileage: '' }
+    if (!notes) return result
+    const parts = notes.split(' | ')
+    parts.forEach(p => {
+      if (p.startsWith('Stock:')) result.stock = p.replace('Stock: ', '').replace('Stock:', '').trim()
+      if (p.startsWith('Color:')) result.color = p.replace('Color: ', '').replace('Color:', '').trim()
+      if (p.startsWith('Miles:')) result.mileage = p.replace('Miles: ', '').replace('Miles:', '').trim()
+    })
+    return result
+  }
+
   const gridCols = isMobile ? '1fr' : '1fr 1fr'
 
-  if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading inventory...</p>
+  if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading lot inventory...</p>
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: isMobile ? '20px' : '24px' }}>🚗 Lot Inventory</h1>
-          <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Track vehicles on your lot — age alerts, value, and status</p>
+          <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Track vehicles on your lot — age, value, and status</p>
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '10px 16px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
-          {showAdd ? 'Cancel' : '➕ Add Vehicle'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={handleDeleteAll} disabled={deleting} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+            {deleting ? 'Clearing...' : 'Clear All'}
+          </button>
+          <button onClick={() => setShowAdd(!showAdd)} style={{ padding: '10px 16px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+            {showAdd ? 'Cancel' : '➕ Add Vehicle'}
+          </button>
+        </div>
       </div>
 
       {msg && (
@@ -188,10 +208,13 @@ export default function DealerInventory({ isMobile }) {
                   type="text"
                   value={form.vin}
                   onChange={e => update('vin', e.target.value.toUpperCase())}
-                  placeholder="e.g. 1FTFW1ET2NFA12345"
+                  placeholder="e.g. 1HGBH41JXMN109186"
                   maxLength={17}
                   style={{ ...INPUT, fontFamily: 'monospace', letterSpacing: '2px' }}
                 />
+                <p style={{ color: form.vin.length === 17 ? '#2ecc71' : '#555', fontSize: '11px', margin: '4px 0 0' }}>
+                  {form.vin.length}/17 characters
+                </p>
               </div>
               <button
                 onClick={decodeVIN}
@@ -209,65 +232,27 @@ export default function DealerInventory({ isMobile }) {
                 </p>
               </div>
             )}
-            <p style={{ color: '#555', fontSize: '11px', margin: '8px 0 0' }}>
-              VIN not available? Fill in vehicle details manually below.
-            </p>
+            <p style={{ color: '#555', fontSize: '11px', margin: '8px 0 0' }}>No VIN? Fill in details manually below.</p>
           </div>
 
-          {/* Vehicle Details */}
+          {/* Vehicle fields */}
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '14px', marginBottom: '16px' }}>
-            <div>
-              <label style={LABEL}>Year</label>
-              <input type="text" value={form.year} onChange={e => update('year', e.target.value)} placeholder="2022" style={INPUT} />
-            </div>
-            <div>
-              <label style={LABEL}>Make</label>
-              <input type="text" value={form.make} onChange={e => update('make', e.target.value)} placeholder="Ford" style={INPUT} />
-            </div>
-            <div>
-              <label style={LABEL}>Model / Trim</label>
-              <input type="text" value={form.model} onChange={e => update('model', e.target.value)} placeholder="F-150 XLT" style={INPUT} />
-            </div>
+            <div><label style={LABEL}>Year</label><input type="text" value={form.year} onChange={e => update('year', e.target.value)} placeholder="2022" style={INPUT} /></div>
+            <div><label style={LABEL}>Make</label><input type="text" value={form.make} onChange={e => update('make', e.target.value)} placeholder="Ford" style={INPUT} /></div>
+            <div><label style={LABEL}>Model / Trim</label><input type="text" value={form.model} onChange={e => update('model', e.target.value)} placeholder="F-150 XLT" style={INPUT} /></div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px', marginBottom: '16px' }}>
-            <div>
-              <label style={LABEL}>Stock #</label>
-              <input type="text" value={form.stock_number} onChange={e => update('stock_number', e.target.value)} placeholder="ST001" style={INPUT} />
-            </div>
-            <div>
-              <label style={LABEL}>Color</label>
-              <input type="text" value={form.color} onChange={e => update('color', e.target.value)} placeholder="Silver" style={INPUT} />
-            </div>
-            <div>
-              <label style={LABEL}>Mileage</label>
-              <input type="number" value={form.mileage} onChange={e => update('mileage', e.target.value)} placeholder="0" style={INPUT} />
-            </div>
-            <div>
-              <label style={LABEL}>Condition</label>
-              <select value={form.condition} onChange={e => update('condition', e.target.value)} style={SELECT}>
-                {['New', 'Used', 'Certified Pre-Owned'].map(o => <option key={o}>{o}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={LABEL}>Invoice / Cost ($)</label>
-              <input type="number" value={form.cost} onChange={e => update('cost', e.target.value)} placeholder="0.00" style={INPUT} />
-            </div>
-            <div>
-              <label style={LABEL}>Asking Price ($) *</label>
-              <input type="number" value={form.asking_price} onChange={e => update('asking_price', e.target.value)} placeholder="0.00" style={INPUT} />
-            </div>
-            <div>
-              <label style={LABEL}>Date Received</label>
-              <input type="date" value={form.date_received} onChange={e => update('date_received', e.target.value)} style={INPUT} />
-            </div>
-            <div>
-              <label style={LABEL}>Notes</label>
-              <input type="text" value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="optional" style={INPUT} />
-            </div>
+            <div><label style={LABEL}>Stock #</label><input type="text" value={form.stock_number} onChange={e => update('stock_number', e.target.value)} placeholder="ST001" style={INPUT} /></div>
+            <div><label style={LABEL}>Color</label><input type="text" value={form.color} onChange={e => update('color', e.target.value)} placeholder="Silver" style={INPUT} /></div>
+            <div><label style={LABEL}>Mileage</label><input type="number" value={form.mileage} onChange={e => update('mileage', e.target.value)} placeholder="0" style={INPUT} /></div>
+            <div><label style={LABEL}>Condition</label><select value={form.condition} onChange={e => update('condition', e.target.value)} style={SELECT}>{['New','Used','Certified Pre-Owned'].map(o => <option key={o}>{o}</option>)}</select></div>
+            <div><label style={LABEL}>Invoice / Cost ($)</label><input type="number" value={form.cost} onChange={e => update('cost', e.target.value)} placeholder="0.00" style={INPUT} /></div>
+            <div><label style={LABEL}>Asking Price ($) *</label><input type="number" value={form.asking_price} onChange={e => update('asking_price', e.target.value)} placeholder="0.00" style={INPUT} /></div>
+            <div><label style={LABEL}>Date Acquired</label><input type="date" value={form.date_received} onChange={e => update('date_received', e.target.value)} style={INPUT} /></div>
+            <div><label style={LABEL}>Notes</label><input type="text" value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="optional" style={INPUT} /></div>
           </div>
 
-          {/* Gross preview */}
           {form.asking_price && form.cost && (
             <div style={{ background: '#0d2d15', border: '1px solid #27ae60', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', color: '#2ecc71', fontSize: '13px' }}>
               Potential front end gross: <strong>${(parseFloat(form.asking_price) - parseFloat(form.cost)).toLocaleString()}</strong>
@@ -283,7 +268,7 @@ export default function DealerInventory({ isMobile }) {
       {/* KPIs */}
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
         {[
-          { label: 'Units on Lot',   value: available.length },
+          { label: 'Units on Lot',    value: available.length },
           { label: 'Total Lot Value', value: `$${totalValue.toLocaleString()}`, color: '#2ecc71' },
           { label: 'Avg Days on Lot', value: `${avgDays}d` },
           { label: 'Stale (60d+)',    value: stale.length, color: stale.length > 0 ? '#e74c3c' : '#2ecc71' },
@@ -303,7 +288,7 @@ export default function DealerInventory({ isMobile }) {
           </p>
           {stale.slice(0, 3).map((i, idx) => (
             <p key={idx} style={{ color: '#999', margin: '3px 0', fontSize: '12px' }}>
-              • {i.name} — {i.days_in_stock} days on lot — ${Number(i.asking_price).toLocaleString()}
+              • {i.name} — {i.days_in_stock} days — ${Number(i.asking_price).toLocaleString()}
             </p>
           ))}
           {stale.length > 3 && <p style={{ color: '#666', fontSize: '11px', margin: '4px 0 0' }}>+{stale.length - 3} more...</p>}
@@ -313,7 +298,7 @@ export default function DealerInventory({ isMobile }) {
       {/* Age chart */}
       {available.length > 0 && (
         <div style={CARD}>
-          <h2 style={{ color: '#C0C0C0', fontSize: '15px', marginBottom: '14px' }}>Days on Lot Breakdown</h2>
+          <h2 style={{ color: '#C0C0C0', fontSize: '15px', marginBottom: '14px' }}>Days on Lot</h2>
           <ResponsiveContainer width="100%" height={isMobile ? 160 : 200}>
             <BarChart data={ageBuckets}>
               <CartesianGrid strokeDasharray="3 3" stroke="#222" />
@@ -345,33 +330,40 @@ export default function DealerInventory({ isMobile }) {
           </p>
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table style={{ minWidth: '650px', width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ minWidth: '750px', width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Vehicle', 'VIN/Stock', 'Cost', 'Price', 'Gross', 'Days', 'Status', ''].map(h => (
-                    <th key={h} style={{ color: '#666', fontSize: '11px', textAlign: 'left', padding: '8px 4px', borderBottom: '1px solid #333' }}>{h}</th>
+                  {['Stock #', 'Year', 'Make', 'Model', 'VIN', 'Color', 'Mileage', 'Price', 'Days', 'Status', ''].map(h => (
+                    <th key={h} style={{ color: '#666', fontSize: '11px', textAlign: 'left', padding: '8px 6px', borderBottom: '1px solid #333', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((item, i) => {
-                  const gross = (item.asking_price || 0) - (item.cost || 0)
+                  const parsed = parseNotes(item.notes)
+                  const nameParts = (item.name || '').split(' ')
+                  const year  = nameParts[0] || ''
+                  const make  = nameParts[1] || ''
+                  const model = nameParts.slice(2).join(' ') || ''
                   return (
                     <tr key={i}>
-                      <td style={{ color: '#C0C0C0', padding: '10px 4px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{item.name}</td>
-                      <td style={{ color: '#555', padding: '10px 4px', borderBottom: '1px solid #1a1a1a', fontSize: '11px', fontFamily: 'monospace' }}>{item.sku || '—'}</td>
-                      <td style={{ color: '#999', padding: '10px 4px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>${Number(item.cost || 0).toLocaleString()}</td>
-                      <td style={{ color: '#C0C0C0', padding: '10px 4px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>${Number(item.asking_price || 0).toLocaleString()}</td>
-                      <td style={{ color: gross >= 0 ? '#2ecc71' : '#e74c3c', padding: '10px 4px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>${gross.toLocaleString()}</td>
-                      <td style={{ padding: '10px 4px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>
+                      <td style={{ color: '#4a9eff', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px', fontFamily: 'monospace' }}>{parsed.stock || item.sku?.substring(0, 8) || '—'}</td>
+                      <td style={{ color: '#C0C0C0', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{year}</td>
+                      <td style={{ color: '#C0C0C0', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{make}</td>
+                      <td style={{ color: '#C0C0C0', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{model}</td>
+                      <td style={{ color: '#555', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '11px', fontFamily: 'monospace' }}>{item.sku || '—'}</td>
+                      <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{parsed.color || '—'}</td>
+                      <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{parsed.mileage || '—'}</td>
+                      <td style={{ color: '#2ecc71', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>${Number(item.asking_price || 0).toLocaleString()}</td>
+                      <td style={{ padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>
                         <span style={{ color: dayColor(item.days_in_stock || 0) }}>
                           {dayLabel(item.days_in_stock || 0)} {item.days_in_stock || 0}d
                         </span>
                       </td>
-                      <td style={{ padding: '10px 4px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>
+                      <td style={{ padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>
                         <span style={{ color: item.status === 'Sold' ? '#555' : '#2ecc71' }}>{item.status}</span>
                       </td>
-                      <td style={{ padding: '10px 4px', borderBottom: '1px solid #1a1a1a' }}>
+                      <td style={{ padding: '10px 6px', borderBottom: '1px solid #1a1a1a' }}>
                         <div style={{ display: 'flex', gap: '4px' }}>
                           {item.status === 'Available' && (
                             <button onClick={() => handleSell(item.id)} style={{ padding: '3px 7px', background: '#0d2d15', color: '#2ecc71', border: '1px solid #27ae60', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>Sold</button>

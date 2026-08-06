@@ -456,6 +456,17 @@ def get_inventory(user=Depends(get_current_user)):
         return {"summary": summary[0] if summary else {}, "stale": stale, "age_buckets": age}
     except Exception as e:
         return {"error": str(e)}
+    
+@app.delete("/inventory")
+def clear_all_inventory(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'inventory')}"))
+            conn.commit()
+        return {"message": "All inventory cleared"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/anomalies")
