@@ -366,13 +366,15 @@ def get_all_sales(user=Depends(get_current_user)):
 @app.delete("/sales/{sale_id}")
 def delete_sale(sale_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
-    table     = ct(client_id, "sales")
     try:
         with engine.connect() as conn:
-            conn.execute(
-                text(f"DELETE FROM {table} WHERE id=:id"),
-                {"id": sale_id}
-            )
+            # Get the sale details first to match F&I record
+            sale = conn.execute(text(f"SELECT model, date FROM {ct(client_id, 'sales')} WHERE id=:id"), {"id": sale_id}).fetchone()
+            # Delete the sale
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'sales')} WHERE id=:id"), {"id": sale_id})
+            # Delete matching F&I record
+            if sale:
+                conn.execute(text(f"DELETE FROM {ct(client_id, 'fi')} WHERE model=:model AND date=:date"), {"model": sale[0], "date": sale[1]})
             conn.commit()
         return {"message": "Sale deleted"}
     except Exception as e:
