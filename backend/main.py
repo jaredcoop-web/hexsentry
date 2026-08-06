@@ -883,7 +883,7 @@ def get_inventory_list(user=Depends(get_current_user)):
     try:
         items = q(f"""
             SELECT id, vin as sku, model as name, list_price as asking_price,
-                   cost, arrival_date, status, condition,
+                   cost, arrival_date, status, condition, notes,
                    CURRENT_DATE - CAST(arrival_date AS date) as days_in_stock
             FROM {table}
             ORDER BY arrival_date ASC
