@@ -885,6 +885,24 @@ def get_inventory_list(user=Depends(get_current_user)):
     except Exception as e:
         return []
 
+@app.get("/inventory/search")
+def search_inventory(term: str, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "inventory")
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                SELECT id, model as name, vin as sku, list_price as asking_price, cost
+                FROM {table}
+                WHERE status='Available'
+                AND (LOWER(model) LIKE LOWER(:term) OR LOWER(vin) LIKE LOWER(:term))
+                ORDER BY model
+                LIMIT 8
+            """), {"term": f"%{term}%"})
+            rows = result.fetchall()
+            return [{"id": r[0], "name": r[1], "sku": r[2], "asking_price": r[3], "cost": r[4]} for r in rows]
+    except:
+        return []
 
 @app.patch("/inventory/{item_id}/sell")
 def mark_item_sold(item_id: int, user=Depends(get_current_user)):
