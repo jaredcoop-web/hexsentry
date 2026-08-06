@@ -1,36 +1,73 @@
 import { useState, useEffect } from 'react'
 
 const FEATURES = [
-  { icon: '📊', title: 'Sales Tracking', desc: 'Every deal logged instantly. See who\'s performing, what\'s selling, and where your money is coming from.' },
-  { icon: '⭐', title: 'Review Monitoring', desc: 'Google Reviews synced automatically. Get alerted the moment a negative review appears.' },
-  { icon: '🤖', title: 'AI Assistant', desc: 'Ask anything about your business in plain English. Get instant answers, no spreadsheets needed.' },
-  { icon: '📦', title: 'Inventory Management', desc: 'Know exactly what\'s on your lot or shelf. Get alerts before items sit too long.' },
-  { icon: '💰', title: 'Cash Flow Tracking', desc: 'See your real profit after expenses. Know exactly where your money is going every month.' },
-  { icon: '📧', title: 'Weekly Email Report', desc: 'Every Friday, HexGuard sends you a summary of your week. No login required.' },
-]
-
-const STEPS = [
-  { number: '01', title: 'Request Access', desc: 'Fill out a quick form. We set up your account within 24 hours.' },
-  { number: '02', title: 'Add Your Data', desc: 'Log sales manually or connect Square and Stripe. Takes minutes to get started.' },
-  { number: '03', title: 'Get Insights', desc: 'Your dashboard updates instantly. Every Friday, your report arrives automatically.' },
+  { icon: '📊', title: 'Sales Tracking', desc: 'Log every deal instantly. See gross profit, top performers, and lead sources in real time.' },
+  { icon: '💰', title: 'Cash Flow', desc: 'Track income and expenses. Know your real profit after every bill is paid.' },
+  { icon: '📧', title: 'Weekly Reports', desc: 'Every Friday, HexGuard sends a business summary straight to your inbox. Automatic.' },
+  { icon: '💳', title: 'Payment Sync', desc: 'Square and Stripe payments sync automatically. No manual entry needed.' },
+  { icon: '⭐', title: 'Google Reviews', desc: 'Monitor your reputation automatically. Get alerted the moment a negative review appears.' },
+  { icon: '📦', title: 'Inventory', desc: 'Track every unit on your lot or shelf. Get alerts before items sit too long.' },
+  { icon: '🤖', title: 'AI Assistant', desc: 'Ask anything about your business in plain English and get instant answers.' },
+  { icon: '💼', title: 'F&I Tracking', desc: 'Track backend income — finance reserve, warranty, GAP, and add-ons per deal.' },
+  { icon: '🔍', title: 'Anomaly Alerts', desc: 'HexGuard detects unusual patterns and flags them before they become problems.' },
 ]
 
 const PLANS = [
   {
-    name: 'Starter', price: '$49', color: '#666',
-    features: ['Dashboard & KPIs', 'Sales tracking', 'Manual sale entry', 'Weekly email report'],
+    name:    'Core',
+    price:   '$99.99',
+    color:   '#4a9eff',
+    desc:    'Everything you need to run your business smarter.',
+    features: [
+      'Dashboard with live KPIs',
+      'Sales tracking and gross profit',
+      'Manual sale entry',
+      'Cash flow and expense tracking',
+      'Square and Stripe payment sync',
+      'Weekly automated email report',
+      'Anomaly detection and alerts',
+    ],
     cta: 'Request Free Trial',
+    popular: false,
   },
   {
-    name: 'Business', price: '$99', color: '#4a9eff', popular: true,
-    features: ['Everything in Starter', 'Inventory management', 'Google Reviews sync', 'Cash flow tracking', 'Square & Stripe'],
+    name:    'Full',
+    price:   '$199.99',
+    color:   '#2ecc71',
+    desc:    'Everything in Core plus the tools that give you the edge.',
+    features: [
+      'Everything in Core',
+      'AI Chat — ask anything about your data',
+      'Google Reviews monitoring and sync',
+      'Inventory management with age alerts',
+      'F&I tracking and analytics',
+      'Priority support',
+      'First access to new features',
+    ],
     cta: 'Request Free Trial',
+    popular: true,
   },
   {
-    name: 'Pro', price: '$199', color: '#2ecc71',
-    features: ['Everything in Business', 'AI Chat assistant', 'F&I tracking', 'Advanced alerts', 'Priority support'],
-    cta: 'Request Free Trial',
+    name:    'Custom',
+    price:   'Custom',
+    color:   '#C0C0C0',
+    desc:    'Only pay for what you actually use.',
+    features: [
+      'Start with Core features',
+      'Add individual modules à la carte',
+      'Flexible monthly pricing',
+      'Ideal for businesses with specific needs',
+      'Dedicated onboarding support',
+    ],
+    cta: 'Contact Us',
+    popular: false,
   },
+]
+
+const STEPS = [
+  { number: '01', title: 'Request Access', desc: 'Fill out the form below. We set up your account and walk you through everything within 24 hours.' },
+  { number: '02', title: 'Log Your Business', desc: 'Add sales, upload inventory, and connect Square or Stripe. Takes minutes to get started.' },
+  { number: '03', title: 'HexGuard Takes Over', desc: 'Alerts, reports, and insights run automatically. You focus on the business.' },
 ]
 
 export default function Landing({ onGetStarted }) {
@@ -75,7 +112,6 @@ export default function Landing({ onGetStarted }) {
           <img src="/logo.png" alt="HexGuard" style={{ width: '32px', height: '32px', borderRadius: '6px' }} />
           <span style={{ color: '#C0C0C0', fontSize: '16px', fontWeight: 'bold' }}>HexGuard</span>
         </div>
-
         {isMobile ? (
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button onClick={onGetStarted} style={{ background: 'transparent', border: '1px solid #333', color: '#C0C0C0', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>Sign In</button>
@@ -105,40 +141,43 @@ export default function Landing({ onGetStarted }) {
       {/* Hero */}
       <section style={{ padding: isMobile ? '60px 20px' : '120px 48px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(74,158,255,0.08) 0%, transparent 70%)' }} />
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', maxWidth: '800px', margin: '0 auto' }}>
           <div style={{ display: 'inline-block', background: 'rgba(74,158,255,0.1)', border: '1px solid rgba(74,158,255,0.3)', borderRadius: '20px', padding: '6px 16px', marginBottom: '24px' }}>
             <span style={{ color: '#4a9eff', fontSize: '13px' }}>Now in beta — limited spots available</span>
           </div>
-          <h1 style={{ fontSize: isMobile ? '40px' : '64px', fontWeight: 'bold', margin: '0 0 24px', lineHeight: '1.1', color: '#fff' }}>
-            Your business,<br />
-            <span style={{ color: '#4a9eff' }}>simplified.</span>
+          <h1 style={{ fontSize: isMobile ? '32px' : '58px', fontWeight: 'bold', margin: '0 0 20px', lineHeight: '1.15', color: '#fff' }}>
+            The Intelligence Platform for<br />
+            <span style={{ color: '#4a9eff' }}>Dealers and Repair Shops.</span>
           </h1>
-          <p style={{ color: '#666', fontSize: isMobile ? '16px' : '20px', maxWidth: '540px', margin: '0 auto 48px', lineHeight: '1.6' }}>
-            HexGuard watches your sales, reviews, inventory, and cash flow — then tells you what matters every Friday morning.
+          <p style={{ color: '#666', fontSize: isMobile ? '15px' : '18px', maxWidth: '560px', margin: '0 auto 40px', lineHeight: '1.7' }}>
+            Sales, inventory, reviews, and cash flow — monitored, analyzed, and delivered to your inbox every Friday.
+</p>
+<p style={{ color: '#4a9eff', fontSize: isMobile ? '13px' : '14px', maxWidth: '560px', margin: '0 auto 40px', lineHeight: '1.6', opacity: 0.8 }}>
+  🔧 More automation integrations coming soon — Square, Tekmetric, and direct DMS connections.
           </p>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => scrollTo('trial')} style={{ padding: isMobile ? '12px 24px' : '16px 32px', background: '#4a9eff', color: '#fff', border: 'none', borderRadius: '8px', fontSize: isMobile ? '14px' : '16px', fontWeight: 'bold', cursor: 'pointer', width: isMobile ? '100%' : 'auto' }}>
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={() => scrollTo('trial')} style={{ padding: isMobile ? '12px 24px' : '14px 32px', background: '#4a9eff', color: '#fff', border: 'none', borderRadius: '8px', fontSize: isMobile ? '14px' : '15px', fontWeight: 'bold', cursor: 'pointer', width: isMobile ? '100%' : 'auto' }}>
               Request Free Trial
             </button>
-            <button onClick={() => scrollTo('features')} style={{ padding: isMobile ? '12px 24px' : '16px 32px', background: 'transparent', color: '#C0C0C0', border: '1px solid #333', borderRadius: '8px', fontSize: isMobile ? '14px' : '16px', cursor: 'pointer', width: isMobile ? '100%' : 'auto' }}>
-              See Features →
+            <button onClick={() => scrollTo('features')} style={{ padding: isMobile ? '12px 24px' : '14px 32px', background: 'transparent', color: '#C0C0C0', border: '1px solid #333', borderRadius: '8px', fontSize: isMobile ? '14px' : '15px', cursor: 'pointer', width: isMobile ? '100%' : 'auto' }}>
+              See Current Features →
             </button>
           </div>
-          <p style={{ color: '#444', fontSize: '13px', marginTop: '16px' }}>1 week free • No credit card required • Setup in 24 hours</p>
+          <p style={{ color: '#444', fontSize: '12px', marginTop: '16px' }}>1 week free • No credit card required • Setup in 24 hours</p>
         </div>
       </section>
 
       {/* Features */}
       <section id="features" style={{ padding: isMobile ? '48px 20px' : '80px 48px', borderTop: '1px solid #1a1a1a' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: isMobile ? '28px' : '36px', color: '#fff', margin: '0 0 12px' }}>Everything your business needs</h2>
-          <p style={{ textAlign: 'center', color: '#555', fontSize: '16px', margin: '0 0 48px' }}>One platform. All your business intelligence. Finally simple.</p>
+          <h2 style={{ textAlign: 'center', fontSize: isMobile ? '26px' : '34px', color: '#fff', margin: '0 0 10px' }}>Built for how you actually run your business</h2>
+          <p style={{ textAlign: 'center', color: '#555', fontSize: '15px', margin: '0 0 48px' }}>Every feature built for independent dealers and repair shops — nothing you don't need.</p>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
             {FEATURES.map((f, i) => (
               <div key={i} style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: '12px', padding: '24px' }}>
                 <div style={{ fontSize: '28px', marginBottom: '10px' }}>{f.icon}</div>
                 <h3 style={{ color: '#C0C0C0', fontSize: '16px', margin: '0 0 8px' }}>{f.title}</h3>
-                <p style={{ color: '#555', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{f.desc}</p>
+                <p style={{ color: '#555', fontSize: '13px', margin: 0, lineHeight: '1.6' }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -148,14 +187,14 @@ export default function Landing({ onGetStarted }) {
       {/* How it works */}
       <section id="how-it-works" style={{ padding: isMobile ? '48px 20px' : '80px 48px', borderTop: '1px solid #1a1a1a' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: isMobile ? '28px' : '36px', color: '#fff', margin: '0 0 12px' }}>Up and running in 24 hours</h2>
-          <p style={{ textAlign: 'center', color: '#555', fontSize: '16px', margin: '0 0 48px' }}>No technical setup. No complicated onboarding. We handle everything.</p>
+          <h2 style={{ textAlign: 'center', fontSize: isMobile ? '26px' : '34px', color: '#fff', margin: '0 0 10px' }}>Up and running in 24 hours</h2>
+          <p style={{ textAlign: 'center', color: '#555', fontSize: '15px', margin: '0 0 48px' }}>No technical setup. No complicated onboarding. We handle everything.</p>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '32px' }}>
             {STEPS.map((s, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '40px', fontWeight: 'bold', color: '#1a1a1a', marginBottom: '12px', WebkitTextStroke: '1px #333' }}>{s.number}</div>
-                <h3 style={{ color: '#C0C0C0', fontSize: '18px', margin: '0 0 8px' }}>{s.title}</h3>
-                <p style={{ color: '#555', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>{s.desc}</p>
+                <h3 style={{ color: '#C0C0C0', fontSize: '17px', margin: '0 0 8px' }}>{s.title}</h3>
+                <p style={{ color: '#555', fontSize: '13px', margin: 0, lineHeight: '1.6' }}>{s.desc}</p>
               </div>
             ))}
           </div>
@@ -165,29 +204,33 @@ export default function Landing({ onGetStarted }) {
       {/* Pricing */}
       <section id="pricing" style={{ padding: isMobile ? '48px 20px' : '80px 48px', borderTop: '1px solid #1a1a1a' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: isMobile ? '28px' : '36px', color: '#fff', margin: '0 0 12px' }}>Simple pricing</h2>
-          <p style={{ textAlign: 'center', color: '#555', fontSize: '16px', margin: '0 0 48px' }}>No hidden fees. Cancel anytime. Start free for 1 week.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
+          <h2 style={{ textAlign: 'center', fontSize: isMobile ? '26px' : '34px', color: '#fff', margin: '0 0 10px' }}>Simple pricing</h2>
+          <p style={{ textAlign: 'center', color: '#555', fontSize: '15px', margin: '0 0 48px' }}>No hidden fees. Cancel anytime. Start free for 1 week.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
             {PLANS.map((p, i) => (
               <div key={i} style={{ background: p.popular ? '#0d1a2d' : '#111', border: `1px solid ${p.popular ? '#4a9eff' : '#1a1a1a'}`, borderRadius: '12px', padding: '28px', position: 'relative' }}>
                 {p.popular && (
-                  <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: '#4a9eff', color: '#fff', padding: '4px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
+                  <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: '#4a9eff', color: '#fff', padding: '4px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                     MOST POPULAR
                   </div>
                 )}
-                <h3 style={{ color: p.color, fontSize: '16px', margin: '0 0 8px' }}>{p.name}</h3>
-                <div style={{ marginBottom: '20px' }}>
-                  <span style={{ color: '#fff', fontSize: '36px', fontWeight: 'bold' }}>{p.price}</span>
-                  <span style={{ color: '#555', fontSize: '14px' }}>/month</span>
+                <h3 style={{ color: p.color, fontSize: '15px', margin: '0 0 6px' }}>{p.name}</h3>
+                <div style={{ marginBottom: '8px' }}>
+                  <span style={{ color: '#fff', fontSize: '34px', fontWeight: 'bold' }}>{p.price}</span>
+                  {p.price !== 'Custom' && <span style={{ color: '#555', fontSize: '13px' }}>/month</span>}
                 </div>
+                <p style={{ color: '#555', fontSize: '13px', margin: '0 0 20px', lineHeight: '1.5' }}>{p.desc}</p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
                   {p.features.map((f, j) => (
-                    <li key={j} style={{ color: '#999', fontSize: '14px', padding: '5px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: p.color }}>✓</span> {f}
+                    <li key={j} style={{ color: '#999', fontSize: '13px', padding: '5px 0', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <span style={{ color: p.color, flexShrink: 0 }}>✓</span> {f}
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => scrollTo('trial')} style={{ width: '100%', padding: '12px', background: p.popular ? '#4a9eff' : 'transparent', color: p.popular ? '#fff' : '#C0C0C0', border: `1px solid ${p.popular ? '#4a9eff' : '#333'}`, borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}>
+                <button
+                  onClick={() => p.cta === 'Contact Us' ? window.location.href = 'mailto:support@hexguardapp.com' : scrollTo('trial')}
+                  style={{ width: '100%', padding: '12px', background: p.popular ? '#4a9eff' : 'transparent', color: p.popular ? '#fff' : '#C0C0C0', border: `1px solid ${p.popular ? '#4a9eff' : '#333'}`, borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }}
+                >
                   {p.cta}
                 </button>
               </div>
@@ -199,8 +242,8 @@ export default function Landing({ onGetStarted }) {
       {/* Trial form */}
       <section id="trial" style={{ padding: isMobile ? '48px 20px' : '80px 48px', borderTop: '1px solid #1a1a1a' }}>
         <div style={{ maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{ fontSize: isMobile ? '28px' : '36px', color: '#fff', margin: '0 0 12px' }}>Start your free trial</h2>
-          <p style={{ color: '#555', fontSize: '16px', margin: '0 0 32px' }}>1 week free. We set everything up for you within 24 hours.</p>
+          <h2 style={{ fontSize: isMobile ? '26px' : '34px', color: '#fff', margin: '0 0 10px' }}>Start your free trial</h2>
+          <p style={{ color: '#555', fontSize: '15px', margin: '0 0 32px' }}>1 week free. We set everything up for you within 24 hours.</p>
           {submitted ? (
             <div style={{ background: '#0d2d15', border: '1px solid #27ae60', borderRadius: '12px', padding: '32px' }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
@@ -213,7 +256,7 @@ export default function Landing({ onGetStarted }) {
                 { key: 'name',     label: 'Your name',        placeholder: 'John Smith' },
                 { key: 'email',    label: 'Email address',    placeholder: 'john@yourbusiness.com' },
                 { key: 'business', label: 'Business name',    placeholder: 'Smith Auto Repair' },
-                { key: 'type',     label: 'Type of business', placeholder: 'Auto repair, dealership, retail...' },
+                { key: 'type',     label: 'Type of business', placeholder: 'Dealership, repair shop, other...' },
               ].map(f => (
                 <div key={f.key} style={{ marginBottom: '14px' }}>
                   <label style={{ color: '#666', fontSize: '13px', display: 'block', marginBottom: '6px' }}>{f.label}</label>
@@ -239,9 +282,10 @@ export default function Landing({ onGetStarted }) {
       <footer style={{ padding: isMobile ? '24px 20px' : '40px 48px', borderTop: '1px solid #1a1a1a', display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img src="/logo.png" alt="HexGuard" style={{ width: '28px', height: '28px', borderRadius: '4px' }} />
-          <span style={{ color: '#444', fontSize: '14px' }}>HexGuard — Your business, simplified.</span>
+          <span style={{ color: '#444', fontSize: '13px' }}>HexGuard — The Intelligence Platform for Dealers and Repair Shops.</span>
         </div>
-        <div style={{ display: 'flex', gap: '24px' }}>
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+          <a href="mailto:support@hexguardapp.com" style={{ color: '#444', fontSize: '13px', textDecoration: 'none' }}>Contact</a>
           <button onClick={onGetStarted} style={{ background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: '13px' }}>Sign In</button>
           <span style={{ color: '#333', fontSize: '13px' }}>© 2026 HexGuard</span>
         </div>
