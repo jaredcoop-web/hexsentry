@@ -80,10 +80,13 @@ export default function FI() {
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
 
       {/* Header */}
-      <h1 style={{ color: '#C0C0C0', marginBottom: '8px', fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <Briefcase size={24} /> Finance & Insurance
-      </h1>
-      <p style={{ color: '#555', marginBottom: '24px', fontSize: '13px' }}>Backend income, product penetration, and F&I performance</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: '24px' }}>💼 Finance & Insurance</h1>
+          <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Backend income, product penetration, and F&I performance</p>
+        </div>
+        <button onClick={handleClear} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Clear All</button>
+      </div>
 
       {/* Date Range Filter */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
