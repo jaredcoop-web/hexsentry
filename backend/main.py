@@ -571,6 +571,7 @@ class ManualSale(BaseModel):
     warranty:        float = 0
     gap_insurance:   float = 0
     addons:          float = 0
+    inventory_id:    Optional[int] = None
 
 @app.post("/sales/manual")
 def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
@@ -627,21 +628,15 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 })
                 conn.commit()
 
-        # Auto-mark matching inventory item as sold
+        
+        # Auto-mark specific inventory item as sold if selected
         try:
-            inv_table = ct(client_id, "inventory")
-            with engine.connect() as inv_conn:
-                inv_conn.execute(text(f"""
-                    UPDATE {inv_table}
-                    SET status='Sold'
-                    WHERE id = (
-                        SELECT id FROM {inv_table}
-                        WHERE LOWER(model) = LOWER(:name)
-                        AND status='Available'
-                        LIMIT 1
-                    )
-                """), {"name": sale.description})
-                inv_conn.commit()
+            inv_id = getattr(sale, 'inventory_id', None)
+            if inv_id:
+                inv_table = ct(client_id, "inventory")
+                with engine.connect() as inv_conn:
+                    inv_conn.execute(text(f"UPDATE {inv_table} SET status='Sold' WHERE id=:id"), {"id": inv_id})
+                    inv_conn.commit()
         except:
             pass
 
