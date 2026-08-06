@@ -246,6 +246,7 @@ def login(request: Request, form: OAuth2PasswordRequestForm = Depends()):
         "business_name": user["business_name"],
         "role":          user["role"],
         "plan":          user.get("plan", "starter"),
+        "business_type": user.get("business_type", "general"),
     })
     return {"access_token": token, "token_type": "bearer"}
 
