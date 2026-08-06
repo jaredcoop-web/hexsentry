@@ -391,6 +391,17 @@ def clear_all_sales(user=Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+@app.delete("/fi")
+def clear_fi(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'fi')}"))
+            conn.commit()
+        return {"message": "F&I data cleared"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 
 @app.get("/reviews")
