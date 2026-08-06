@@ -382,10 +382,10 @@ def delete_sale(sale_id: int, user=Depends(get_current_user)):
 @app.delete("/sales")
 def clear_all_sales(user=Depends(get_current_user)):
     client_id = user["client_id"]
-    table     = ct(client_id, "sales")
     try:
         with engine.connect() as conn:
-            conn.execute(text(f"TRUNCATE TABLE {table}"))
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'sales')}"))
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'fi')}"))
             conn.commit()
         return {"message": "All sales cleared"}
     except Exception as e:
