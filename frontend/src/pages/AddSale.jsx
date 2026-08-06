@@ -137,7 +137,7 @@ export default function AddSale({ user, isMobile }) {
 
         {/* What was sold — with autocomplete */}
         <div style={{ marginBottom: '16px', position: 'relative' }}>
-          <label style={LABEL}>What was sold?</label>
+          <label style={LABEL}>Vehicle</label>
 
           {fromInventory ? (
             <div>
@@ -210,11 +210,11 @@ export default function AddSale({ user, isMobile }) {
         {/* Prices */}
         <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '8px' }}>
           <div>
-            <label style={LABEL}>Sale amount ($)</label>
+            <label style={LABEL}>Sale Price ($)</label>
             <input type="number" value={form.sale_price} onChange={e => update('sale_price', e.target.value)} placeholder="0.00" style={INPUT} />
           </div>
           <div>
-            <label style={LABEL}>Acquisition cost ($)</label>
+            <label style={LABEL}>Invoice / Cost ($)</label>
             <input type="number" value={form.cost} onChange={e => update('cost', e.target.value)} placeholder="0.00" style={INPUT} />
           </div>
           <div>
