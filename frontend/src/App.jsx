@@ -15,6 +15,7 @@ import Admin from './pages/Admin'
 import Finances from './pages/Finances'
 import FI from './pages/FI'
 import Home from './pages/Home'
+import DealerInventory from './pages/DealerInventory'
 
 const Placeholder = ({ title }) => (
   <div style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -68,6 +69,7 @@ export default function App() {
       case 'payments':  return <Payments user={user} />
       case 'finances':  return <Finances isMobile={isMobile} />
       case 'fi':        return <FI isMobile={isMobile} />
+      case 'dealer-inventory': return <DealerInventory isMobile={isMobile} />
       default:          return <Home user={user} setCurrentPage={setCurrentPage} isMobile={isMobile} />
     }
   }
