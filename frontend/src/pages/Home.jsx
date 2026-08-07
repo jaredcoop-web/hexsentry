@@ -18,22 +18,25 @@ const PAGES = [
 ]
 
 export default function Home({ user, setCurrentPage, isMobile }) {
-  const [kpis, setKpis]       = useState(null)
-  const [alerts, setAlerts]   = useState([])
-  const [sales, setSales]     = useState(null)
+  const [kpis, setKpis]     = useState(null)
+  const [alerts, setAlerts] = useState([])
+  const [sales, setSales]   = useState(null)
+  const [stats, setStats]   = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [kpiRes, alertRes, salesRes] = await Promise.all([
+        const [kpiRes, alertRes, salesRes, statsRes] = await Promise.all([
           api.get('/kpis'),
           api.get('/anomalies'),
           api.get('/sales'),
+          api.get('/stats'),
         ])
         setKpis(kpiRes.data)
         setAlerts(alertRes.data.alerts || [])
         setSales(salesRes.data)
+        setStats(statsRes.data)
       } catch {}
       setLoading(false)
     }
@@ -42,13 +45,9 @@ export default function Home({ user, setCurrentPage, isMobile }) {
 
   const fmt = (n) => n != null ? `$${Number(n).toLocaleString()}` : 'N/A'
 
-  const hour = new Date().getHours()
+  const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
-  // Calculate quick stats
-  const topPerformer   = sales?.leaderboard?.[0]
-  const topLeadSource  = sales?.leaderboard ? null : null
-  const thisMonthGross = sales?.total_gross || 0
+  const topPerformer = sales?.leaderboard?.[0]
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -87,16 +86,7 @@ export default function Home({ user, setCurrentPage, isMobile }) {
             <button
               key={i}
               onClick={() => setCurrentPage(p.id)}
-              style={{
-                background:   '#1A1A2E',
-                border:       '1px solid #222',
-                borderRadius: '8px',
-                padding:      '8px 12px',
-                cursor:       'pointer',
-                display:      'flex',
-                alignItems:   'center',
-                gap:          '6px',
-              }}
+              style={{ background: '#1A1A2E', border: '1px solid #222', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#4a9eff'}
               onMouseLeave={e => e.currentTarget.style.borderColor = '#222'}
             >
@@ -108,7 +98,7 @@ export default function Home({ user, setCurrentPage, isMobile }) {
       </div>
 
       {/* Quick Stats */}
-      {!loading && sales && (
+      {!loading && stats && !stats.error && (
         <div style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '16px 20px', marginBottom: '20px' }}>
           <p style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', margin: '0 0 12px' }}>📈 This Month at a Glance</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -117,18 +107,19 @@ export default function Home({ user, setCurrentPage, isMobile }) {
                 🏆 <span style={{ color: '#666' }}>Top performer:</span> <strong>{topPerformer.salesperson}</strong> — {fmt(topPerformer.gross)} ({topPerformer.deals} {topPerformer.deals === 1 ? 'deal' : 'deals'})
               </p>
             )}
-            {sales.leaderboard?.length > 0 && (() => {
-              const sources = {}
-              return null // placeholder — lead source comes from list endpoint
-            })()}
-            {thisMonthGross > 0 && (
+            {stats.mom_change !== null && stats.mom_change !== undefined && (
               <p style={{ color: '#C0C0C0', fontSize: '14px', margin: 0 }}>
-                💰 <span style={{ color: '#666' }}>Total gross this month:</span> <strong style={{ color: '#2ecc71' }}>{fmt(thisMonthGross)}</strong>
+                {stats.mom_change >= 0 ? '📈' : '📉'} <span style={{ color: '#666' }}>vs last month:</span> <strong style={{ color: stats.mom_change >= 0 ? '#2ecc71' : '#e74c3c' }}>{stats.mom_change >= 0 ? '+' : ''}{stats.mom_change}%</strong> revenue change
               </p>
             )}
-            {kpis?.sales?.avg_gross && (
+            {stats.best_source && (
               <p style={{ color: '#C0C0C0', fontSize: '14px', margin: 0 }}>
-                📊 <span style={{ color: '#666' }}>Average per deal:</span> <strong>{fmt(kpis.sales.avg_gross)}</strong>
+                📍 <span style={{ color: '#666' }}>Best lead source:</span> <strong>{stats.best_source.lead_source}</strong> — {stats.best_source.deals} deals, {fmt(stats.best_source.gross)}
+              </p>
+            )}
+            {stats.best_day && (
+              <p style={{ color: '#C0C0C0', fontSize: '14px', margin: 0 }}>
+                📅 <span style={{ color: '#666' }}>Busiest day:</span> <strong>{stats.best_day.day_name?.trim()}</strong> — {stats.best_day.deals} deals
               </p>
             )}
             {kpis?.inventory?.stale > 0 && (
