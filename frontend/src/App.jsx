@@ -17,6 +17,7 @@ import FI from './pages/FI'
 import Home from './pages/Home'
 import DealerInventory from './pages/DealerInventory'
 import AddJob from './pages/AddJob'
+import Jobs from './pages/Jobs'
 
 
 const Placeholder = ({ title }) => (
@@ -73,6 +74,7 @@ export default function App() {
       case 'fi':        return <FI isMobile={isMobile} />
       case 'dealer-inventory': return <DealerInventory isMobile={isMobile} />
       case 'add-job': return <AddJob isMobile={isMobile} />
+      case 'jobs': return <Jobs isMobile={isMobile} />
       default:          return <Home user={user} setCurrentPage={setCurrentPage} isMobile={isMobile} />
     }
   }
