@@ -2,32 +2,38 @@ import { useEffect, useState } from 'react'
 import api from '../api'
 
 const PAGES = [
-  { id: 'dashboard',  icon: '📊', label: 'Dashboard',     desc: 'KPIs and alerts' },
-  { id: 'sales',      icon: '🚗', label: 'Sales',         desc: 'Track your deals' },
-  { id: 'add-sale',   icon: '➕', label: 'Add Sale',      desc: 'Log a new sale' },
-  { id: 'inventory',  icon: '📦', label: 'Inventory',     desc: 'Stock and age tracking' },
-  { id: 'reviews',    icon: '⭐', label: 'Reviews',       desc: 'Google reputation' },
-  { id: 'finances',   icon: '💰', label: 'Finances',      desc: 'Cash flow tracking' },
-  { id: 'fi',         icon: '💼', label: 'F&I',           desc: 'Backend income' },
-  { id: 'ai',         icon: '🤖', label: 'AI Chat',       desc: 'Ask anything' },
-  { id: 'email',      icon: '📧', label: 'Email Report',  desc: 'Weekly summary' },
-  { id: 'payments',   icon: '💳', label: 'Payments',      desc: 'Square & Stripe' },
+  { id: 'dashboard',        icon: '📊', label: 'Dashboard' },
+  { id: 'sales',            icon: '🚗', label: 'Sales' },
+  { id: 'add-sale',         icon: '➕', label: 'Add Sale' },
+  { id: 'jobs',             icon: '🔧', label: 'Jobs' },
+  { id: 'add-job',          icon: '🔩', label: 'Add Job' },
+  { id: 'inventory',        icon: '📦', label: 'Inventory' },
+  { id: 'dealer-inventory', icon: '🚙', label: 'Lot' },
+  { id: 'reviews',          icon: '⭐', label: 'Reviews' },
+  { id: 'finances',         icon: '💰', label: 'Finances' },
+  { id: 'fi',               icon: '💼', label: 'F&I' },
+  { id: 'ai',               icon: '🤖', label: 'AI Chat' },
+  { id: 'email',            icon: '📧', label: 'Email' },
+  { id: 'payments',         icon: '💳', label: 'Payments' },
 ]
 
 export default function Home({ user, setCurrentPage, isMobile }) {
   const [kpis, setKpis]       = useState(null)
   const [alerts, setAlerts]   = useState([])
+  const [sales, setSales]     = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [kpiRes, alertRes] = await Promise.all([
+        const [kpiRes, alertRes, salesRes] = await Promise.all([
           api.get('/kpis'),
           api.get('/anomalies'),
+          api.get('/sales'),
         ])
         setKpis(kpiRes.data)
         setAlerts(alertRes.data.alerts || [])
+        setSales(salesRes.data)
       } catch {}
       setLoading(false)
     }
@@ -39,22 +45,25 @@ export default function Home({ user, setCurrentPage, isMobile }) {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
+  // Calculate quick stats
+  const topPerformer   = sales?.leaderboard?.[0]
+  const topLeadSource  = sales?.leaderboard ? null : null
+  const thisMonthGross = sales?.total_gross || 0
+
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
 
       {/* Greeting */}
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: isMobile ? '22px' : '28px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: isMobile ? '20px' : '26px' }}>
           {greeting}, {user?.business_name} 👋
         </h1>
-        <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>
-          Here's your business at a glance
-        </p>
+        <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Here's your business at a glance</p>
       </div>
 
       {/* KPI Row */}
       {!loading && kpis && (
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
           {[
             { label: 'Total Sales',    value: kpis?.sales?.total_sales || 0 },
             { label: 'Total Gross',    value: fmt(kpis?.sales?.total_gross), color: '#2ecc71' },
@@ -70,42 +79,76 @@ export default function Home({ user, setCurrentPage, isMobile }) {
         </div>
       )}
 
-      {/* Quick Access */}
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ color: '#C0C0C0', fontSize: '15px', marginBottom: '12px' }}>Quick Access</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: '10px' }}>
+      {/* Quick Access — compact */}
+      <div style={{ marginBottom: '20px' }}>
+        <p style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', margin: '0 0 8px' }}>Quick Access</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {PAGES.map((p, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(p.id)}
               style={{
                 background:   '#1A1A2E',
-                border:       '1px solid #333',
-                borderRadius: '10px',
-                padding:      isMobile ? '14px 8px' : '20px 12px',
+                border:       '1px solid #222',
+                borderRadius: '8px',
+                padding:      '8px 12px',
                 cursor:       'pointer',
-                textAlign:    'center',
+                display:      'flex',
+                alignItems:   'center',
+                gap:          '6px',
               }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#4a9eff'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = '#333'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = '#222'}
             >
-              <div style={{ fontSize: isMobile ? '22px' : '28px', marginBottom: '6px' }}>{p.icon}</div>
-              <p style={{ color: '#C0C0C0', fontSize: isMobile ? '11px' : '13px', fontWeight: 'bold', margin: '0 0 2px' }}>{p.label}</p>
-              {!isMobile && <p style={{ color: '#555', fontSize: '11px', margin: 0 }}>{p.desc}</p>}
+              <span style={{ fontSize: '14px' }}>{p.icon}</span>
+              <span style={{ color: '#999', fontSize: '12px' }}>{p.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Alerts */}
+      {/* Quick Stats */}
+      {!loading && sales && (
+        <div style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '16px 20px', marginBottom: '20px' }}>
+          <p style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', margin: '0 0 12px' }}>📈 This Month at a Glance</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {topPerformer && (
+              <p style={{ color: '#C0C0C0', fontSize: '14px', margin: 0 }}>
+                🏆 <span style={{ color: '#666' }}>Top performer:</span> <strong>{topPerformer.salesperson}</strong> — {fmt(topPerformer.gross)} ({topPerformer.deals} {topPerformer.deals === 1 ? 'deal' : 'deals'})
+              </p>
+            )}
+            {sales.leaderboard?.length > 0 && (() => {
+              const sources = {}
+              return null // placeholder — lead source comes from list endpoint
+            })()}
+            {thisMonthGross > 0 && (
+              <p style={{ color: '#C0C0C0', fontSize: '14px', margin: 0 }}>
+                💰 <span style={{ color: '#666' }}>Total gross this month:</span> <strong style={{ color: '#2ecc71' }}>{fmt(thisMonthGross)}</strong>
+              </p>
+            )}
+            {kpis?.sales?.avg_gross && (
+              <p style={{ color: '#C0C0C0', fontSize: '14px', margin: 0 }}>
+                📊 <span style={{ color: '#666' }}>Average per deal:</span> <strong>{fmt(kpis.sales.avg_gross)}</strong>
+              </p>
+            )}
+            {kpis?.inventory?.stale > 0 && (
+              <p style={{ color: '#e74c3c', fontSize: '14px', margin: 0 }}>
+                ⚠️ <strong>{kpis.inventory.stale} items</strong> sitting 60+ days — consider price reductions
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Latest Alerts */}
       <div>
-        <h2 style={{ color: '#C0C0C0', fontSize: '15px', marginBottom: '12px' }}>🔍 Latest Alerts</h2>
+        <p style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', margin: '0 0 10px' }}>🔍 Latest Alerts</p>
         {alerts.length === 0 ? (
           <div style={{ background: '#0d2d15', border: '1px solid #27ae60', borderRadius: '8px', padding: '14px 16px' }}>
             <p style={{ color: '#2ecc71', margin: 0, fontSize: '14px' }}>✅ All clear — no anomalies detected.</p>
           </div>
         ) : (
-          alerts.slice(0, 3).map((a, i) => {
+          alerts.slice(0, 4).map((a, i) => {
             const colors = {
               critical: { bg: '#2d1515', border: '#c0392b', text: '#e74c3c', icon: '🔴' },
               warning:  { bg: '#2d2010', border: '#e67e22', text: '#f39c12', icon: '🟡' },
