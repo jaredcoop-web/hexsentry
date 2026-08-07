@@ -1540,3 +1540,58 @@ def reset_admin():
         plan="pro"
     )
     return {"message": "Admin reset successfully"}
+
+@app.get("/stats")
+def get_stats(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "sales")
+    try:
+        # Month over month comparison
+        this_month = q(f"""
+            SELECT COUNT(*) as deals,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 2) as gross
+            FROM {table}
+            WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+        """)[0]
+
+        last_month = q(f"""
+            SELECT COUNT(*) as deals,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 2) as gross
+            FROM {table}
+            WHERE month = TO_CHAR(CURRENT_DATE - INTERVAL '1 month', 'YYYY-MM')
+        """)[0]
+
+        # Best lead source
+        best_source = q(f"""
+            SELECT lead_source, COUNT(*) as deals,
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 2) as gross
+            FROM {table}
+            GROUP BY lead_source
+            ORDER BY deals DESC LIMIT 1
+        """)
+
+        # Best day of week
+        best_day = q(f"""
+            SELECT TO_CHAR(CAST(date AS date), 'Day') as day_name,
+                   COUNT(*) as deals
+            FROM {table}
+            WHERE date IS NOT NULL
+            GROUP BY day_name
+            ORDER BY deals DESC LIMIT 1
+        """)
+
+        this_gross = float(this_month.get("gross") or 0)
+        last_gross = float(last_month.get("gross") or 0)
+        mom_change = round((this_gross - last_gross) / last_gross * 100) if last_gross > 0 else None
+
+        return {
+            "mom_change":   mom_change,
+            "this_gross":   this_gross,
+            "last_gross":   last_gross,
+            "this_deals":   this_month.get("deals") or 0,
+            "last_deals":   last_month.get("deals") or 0,
+            "best_source":  best_source[0] if best_source else None,
+            "best_day":     best_day[0] if best_day else None,
+        }
+    except Exception as e:
+        return {"error": str(e)}
