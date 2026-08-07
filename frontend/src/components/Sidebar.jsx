@@ -1,11 +1,11 @@
 
 import { useState } from 'react'
-import { Home, Car, Plus, Briefcase, Star, Package, Mail, Bot, CreditCard, DollarSign, Settings, LogOut, ChevronLeft, ChevronRight, Truck } from 'lucide-react'
+import { Home, Car, Plus, Briefcase, Star, Package, Mail, Bot, CreditCard, DollarSign, Settings, LogOut, ChevronLeft, ChevronRight, Truck, Wrench} from 'lucide-react'
 
 const PAGES = [
   { id: 'home',      label: 'Home',         icon: <Home size={18} /> },
-  { id: 'sales',     label: 'Sales',        icon: <Car size={18} /> },
   { id: 'add-sale',  label: 'Add Sale',     icon: <Plus size={18} /> },
+  { id: 'sales',     label: 'Sales',        icon: <Car size={18} /> },
   { id: 'fi',        label: 'F&I',          icon: <Briefcase size={18} /> },
   { id: 'reviews',   label: 'Reviews',      icon: <Star size={18} /> },
   { id: 'inventory', label: 'Inventory',    icon: <Package size={18} /> },
@@ -14,6 +14,7 @@ const PAGES = [
   { id: 'ai',        label: 'AI Chat',      icon: <Bot size={18} /> },
   { id: 'payments',  label: 'Payments',     icon: <CreditCard size={18} /> },
   { id: 'finances',  label: 'Finances',     icon: <DollarSign size={18} /> },
+  { id: 'add-job', icon: <Wrench size={18} />, label: 'Add Job' },
 ]
 
 export default function Sidebar({ user, currentPage, setCurrentPage, onLogout }) {

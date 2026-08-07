@@ -69,13 +69,16 @@ export default function DealerInventory({ isMobile }) {
       const year  = getValue('Model Year')
       const make  = getValue('Make')
       const model = getValue('Model')
-      const trim  = getValue('Trim')
+      const trim  = getValue('Series') || getValue('Trim') || ''
+      const body  = getValue('Body Class') || ''
+      const engine = getValue('Displacement (L)') ? `${getValue('Displacement (L)')}L` : ''
+      const drive  = getValue('Drive Type') || ''
       if (!year && !make && !model) {
         setVinError('Could not decode VIN — please check and try again')
         setVinLoading(false)
         return
       }
-      setForm(p => ({ ...p, year, make, model: `${model}${trim ? ' ' + trim : ''}`, trim }))
+      setForm(p => ({...p,year, make, model: `${model}${trim ? ' ' + trim : ''}`.trim(),trim,}))
       setVinError(null)
     } catch {
       setVinError('Failed to decode VIN — check your connection')
