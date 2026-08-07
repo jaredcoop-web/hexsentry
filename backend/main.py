@@ -383,7 +383,15 @@ def get_sales(user=Depends(get_current_user)):
 def get_all_sales(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        sales = q(f"SELECT id, date, model, salesperson, sale_price, gross_profit FROM {ct(client_id, 'sales')} ORDER BY date DESC")
+        sales = q(f"""
+            SELECT id, date, model, salesperson, sale_price, gross_profit, 
+                   lead_source,
+                   CASE WHEN sale_price > 0 
+                        THEN ROUND(CAST(gross_profit / sale_price * 100 AS numeric), 1) 
+                        ELSE 0 END as gross_margin_pct
+            FROM {ct(client_id, 'sales')} 
+            ORDER BY date DESC
+        """)
         return sales
     except Exception as e:
         return []

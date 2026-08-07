@@ -125,7 +125,7 @@ export default function Sales({ isMobile }) {
             <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Date', 'Item', 'Sale Price', 'Gross', 'Salesperson', 'Lead Source', ''].map(h => (
+                  {['Date', 'Vehicle', 'VIN', 'Sale Price', 'Gross', 'Margin %', 'Salesperson', 'Lead Source', ''].map(h => (
                     <th key={h} style={{ color: '#666', fontSize: '11px', textAlign: 'left', padding: '8px 0', borderBottom: '1px solid #333' }}>{h}</th>
                   ))}
                 </tr>
@@ -137,6 +137,7 @@ export default function Sales({ isMobile }) {
                     <td style={{ color: '#C0C0C0', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{s.model}</td>
                     <td style={{ color: '#C0C0C0', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{fmt(s.sale_price)}</td>
                     <td style={{ color: '#2ecc71', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{fmt(s.gross_profit)}</td>
+                    <td style={{ color: '#f39c12', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.gross_margin_pct}%</td>
                     <td style={{ color: '#999', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.salesperson}</td>
                     <td style={{ color: '#999', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.lead_source}</td>
                     <td style={{ padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
