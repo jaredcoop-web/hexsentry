@@ -74,7 +74,7 @@ def auth_login(email: str, password: str):
         return None
     return user
 
-def create_user(email, password, business_name, client_id, role="client", plan="starter"):
+def create_user(email, password, business_name, client_id, role="client", plan="starter", business_type="general", pages=""):
     with engine.connect() as conn:
         try:
             conn.execute(text("""
