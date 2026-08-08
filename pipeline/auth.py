@@ -47,7 +47,7 @@ def init_auth_db():
 def get_user(email: str):
     with engine.connect() as conn:
         result = conn.execute(
-            text("SELECT id, email, password_hash, business_name, client_id, role, plan, report_email FROM users WHERE email=:email"),
+            text("SELECT id, email, password_hash, business_name, client_id, role, plan, report_email, pages FROM users WHERE email=:email"),
             {"email": email.lower().strip()}
         )
         row = result.fetchone()
@@ -62,6 +62,7 @@ def get_user(email: str):
                 "plan":          row[6],
                 "report_email":  row[7],
                 "business_type": row[8] if len(row) > 8 else "general",
+                "pages":         row[9] if len(row) > 9 else "",
             }
     return None
 
@@ -87,6 +88,7 @@ def create_user(email, password, business_name, client_id, role="client", plan="
                 "role":          role,
                 "plan":          plan,
                 "business_type": business_type,
+                "pages":         pages,
             })
             conn.commit()
             return True
@@ -101,7 +103,7 @@ def delete_user(email: str):
 
 def get_all_users():
     with engine.connect() as conn:
-        result = conn.execute(text("SELECT id, email, business_name, client_id, role, plan, report_email, business_type FROM users"))
+        result = conn.execute(text("SELECT id, email, business_name, client_id, role, plan, report_email, business_type, pages FROM users"))
         return result.fetchall()
 
 def update_report_email(email: str, report_email: str):

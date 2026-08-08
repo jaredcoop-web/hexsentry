@@ -247,6 +247,7 @@ def login(request: Request, form: OAuth2PasswordRequestForm = Depends()):
         "role":          user["role"],
         "plan":          user.get("plan", "starter"),
         "business_type": user.get("business_type", "general"),
+        "pages":         user.get("pages", ""),
     })
     return {"access_token": token, "token_type": "bearer"}
 
@@ -1153,6 +1154,8 @@ class NewClient(BaseModel):
     business_name: str
     client_id:     str
     plan:          str = "starter"
+    business_type: str = "general"
+    pages:         str = ""
 
 @app.post("/admin/clients")
 def create_client(client: NewClient, user=Depends(get_current_user)):
