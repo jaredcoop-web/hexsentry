@@ -1169,6 +1169,8 @@ def create_client(client: NewClient, user=Depends(get_current_user)):
         client_id=client.client_id,
         role="client",
         plan=client.plan
+        business_type=client.business_type,
+        pages=client.pages
     )
     if not success:
         raise HTTPException(status_code=400, detail="Email or client ID already exists")
@@ -1204,7 +1206,16 @@ def get_clients(user=Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin only")
     from pipeline.auth import get_all_users
     users = get_all_users()
-    return [{"id": u[0], "email": u[1], "business_name": u[2], "client_id": u[3], "role": u[4], "plan": u[5] if len(u) > 5 else "starter", "created_at": u[6] if len(u) > 6 else ""} for u in users if u[4] != "admin"]
+    return [{
+        "id":            u[0],
+        "email":         u[1],
+        "business_name": u[2],
+        "client_id":     u[3],
+        "role":          u[4],
+        "plan":          u[5] if len(u) > 5 else "core",
+        "business_type": u[7] if len(u) > 7 else "general",
+        "pages":         u[8] if len(u) > 8 else "",
+    } for u in users if u[4] != "admin"]
 
 
 @app.delete("/admin/clients/{email}")
