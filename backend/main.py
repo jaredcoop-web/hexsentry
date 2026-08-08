@@ -1168,7 +1168,7 @@ def create_client(client: NewClient, user=Depends(get_current_user)):
         business_name=client.business_name,
         client_id=client.client_id,
         role="client",
-        plan=client.plan
+        plan=client.plan,
         business_type=client.business_type,
         pages=client.pages
     )
