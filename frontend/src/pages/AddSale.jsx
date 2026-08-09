@@ -113,7 +113,7 @@ export default function AddSale({ user, isMobile }) {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '640px' }}>
-      <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Plus size={22} /> AddSale</h1>
+      <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Plus size={22} /> Add Sale</h1>
       <p style={{ color: '#555', marginBottom: '24px', fontSize: '13px' }}>Log a sale manually — cash, check, financed, or any payment type</p>
 
       <div style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px' }}>
