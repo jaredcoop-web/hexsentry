@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 const FEATURES = [
-  { icon: '📊', title: 'Sales Tracking', desc: 'Log every deal instantly. See gross profit, top performers, and lead sources in real time.' },
+  { icon: '📊', title: 'Sales Tracking', desc: 'Every deal logged instantly. See who\'s performing, what\'s selling, and where your money is coming from.' },
   { icon: '💰', title: 'Cash Flow', desc: 'Track income and expenses. Know your real profit after every bill is paid.' },
   { icon: '📧', title: 'Weekly Reports', desc: 'Every Friday, HexGuard sends a business summary straight to your inbox. Automatic.' },
   { icon: '💳', title: 'Payment Sync', desc: 'Square and Stripe payments sync automatically. No manual entry needed.' },
@@ -15,7 +15,7 @@ const FEATURES = [
 const PLANS = [
   {
     name:    'Core',
-    price:   '$99.99',
+    price:   '$199.99',
     color:   '#4a9eff',
     desc:    'Everything you need to run your business smarter.',
     features: [
@@ -32,7 +32,7 @@ const PLANS = [
   },
   {
     name:    'Full',
-    price:   '$199.99',
+    price:   '$299.99',
     color:   '#2ecc71',
     desc:    'Everything in Core plus the tools that give you the edge.',
     features: [
@@ -149,11 +149,11 @@ export default function Landing({ onGetStarted }) {
             The Intelligence Platform for<br />
             <span style={{ color: '#4a9eff' }}>Dealers and Repair Shops.</span>
           </h1>
-          <p style={{ color: '#666', fontSize: isMobile ? '15px' : '18px', maxWidth: '560px', margin: '0 auto 40px', lineHeight: '1.7' }}>
+          <p style={{ color: '#666', fontSize: isMobile ? '15px' : '18px', maxWidth: '560px', margin: '0 auto 24px', lineHeight: '1.7' }}>
             Sales, inventory, reviews, and cash flow — monitored, analyzed, and delivered to your inbox every Friday.
-</p>
-<p style={{ color: '#4a9eff', fontSize: isMobile ? '13px' : '14px', maxWidth: '560px', margin: '0 auto 40px', lineHeight: '1.6', opacity: 0.8 }}>
-  🔧 More automation integrations coming soon — Square, Tekmetric, and direct DMS connections.
+          </p>
+          <p style={{ color: '#4a9eff', fontSize: isMobile ? '13px' : '14px', maxWidth: '560px', margin: '0 auto 40px', lineHeight: '1.6', opacity: 0.8 }}>
+            🔧 More automation integrations coming soon — Square, Tekmetric, and direct DMS connections.
           </p>
           <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => scrollTo('trial')} style={{ padding: isMobile ? '12px 24px' : '14px 32px', background: '#4a9eff', color: '#fff', border: 'none', borderRadius: '8px', fontSize: isMobile ? '14px' : '15px', fontWeight: 'bold', cursor: 'pointer', width: isMobile ? '100%' : 'auto' }}>
