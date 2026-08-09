@@ -78,8 +78,8 @@ def create_user(email, password, business_name, client_id, role="client", plan="
     with engine.connect() as conn:
         try:
             conn.execute(text("""
-                INSERT INTO users (email, password_hash, business_name, client_id, role, plan)
-                VALUES (:email, :hash, :business_name, :client_id, :role, :plan)
+                INSERT INTO users (email, password_hash, business_name, client_id, role, plan, business_type, pages)
+                VALUES (:email, :hash, :business_name, :client_id, :role, :plan, :business_type, :pages)
             """), {
                 "email":         email.lower().strip(),
                 "hash":          hash_password(password),
