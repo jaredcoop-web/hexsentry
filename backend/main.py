@@ -504,7 +504,7 @@ def get_anomalies(user=Depends(get_current_user)):
             sales = q(f"""
                 SELECT 
                     COUNT(*) as total_deals,
-                    ROUND(CAST(AVG(gross_profit) AS numeric), 2) as avg_gross
+                    ROUND(CAST(AVG(gross_profit) AS numeric), 2) as avg_gross,
                     ROUND(CAST(SUM(gross_profit) AS numeric), 2) as total_gross
                 FROM {ct(client_id, 'sales')}
                 WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
