@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../api'
+import { Mail } from 'lucide-react'
 
 const INPUT = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
 const LABEL = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
@@ -50,7 +51,7 @@ export default function EmailReport({ user }) {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px' }}>
-      <h1 style={{ color: '#C0C0C0', marginBottom: '8px', fontSize: '24px' }}>📧 Weekly Email Report</h1>
+      <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Mail size={22} /> Email Report</h1>
       <p style={{ color: '#555', marginBottom: '24px', fontSize: '13px' }}>
         HexGuard automatically sends your business summary every Friday at 5pm
       </p>

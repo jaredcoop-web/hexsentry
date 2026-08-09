@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CreditCard } from 'lucide-react'
 
 export default function Payments({ user }) {
   const [squareCopied, setSquareCopied]     = useState(false)
@@ -100,7 +101,7 @@ export default function Payments({ user }) {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '700px' }}>
-      <h1 style={{ color: '#C0C0C0', marginBottom: '8px' }}>💳 Payment Integrations</h1>
+      <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><CreditCard size={22} /> Payments</h1>
       <p style={{ color: '#555', marginBottom: '24px', fontSize: '13px' }}>
         Connect your payment systems — sales appear in HexGuard automatically
       </p>
