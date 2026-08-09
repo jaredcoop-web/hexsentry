@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import api from '../api'
+import { Plus } from 'lucide-react'
 
 const INPUT  = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
 const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
@@ -112,7 +113,7 @@ export default function AddSale({ user, isMobile }) {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '640px' }}>
-      <h1 style={{ color: '#C0C0C0', marginBottom: '8px', fontSize: isMobile ? '20px' : '24px' }}>➕ Add Sale</h1>
+      <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Plus size={22} /> AddSale</h1>
       <p style={{ color: '#555', marginBottom: '24px', fontSize: '13px' }}>Log a sale manually — cash, check, financed, or any payment type</p>
 
       <div style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px' }}>

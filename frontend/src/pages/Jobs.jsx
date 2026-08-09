@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import api from '../api'
+import { ClipboardList } from 'lucide-react'
 
 export default function Jobs({ isMobile }) {
   const [summary, setSummary]   = useState(null)
@@ -64,7 +65,7 @@ export default function Jobs({ isMobile }) {
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
-        <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px' }}>🔧 Jobs</h1>
+        <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><ClipboardList size={22} /> Jobs</h1>
         <button onClick={handleDeleteAll} disabled={deleting} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
           {deleting ? 'Clearing...' : 'Clear All'}
         </button>

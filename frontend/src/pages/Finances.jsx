@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts'
 import api from '../api'
+import { DollarSign } from 'lucide-react'
 
 const INPUT  = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
 const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
@@ -87,7 +88,7 @@ export default function Finances({ isMobile }) {
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: isMobile ? '20px' : '24px' }}>💰 Finances</h1>
+          <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><DollarSign size={22} /> Finances</h1>
           <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Track income, expenses, and cash flow</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>

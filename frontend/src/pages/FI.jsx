@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Briefcase } from 'lucide-react'
 import api from '../api'
+import { BriefCase } from 'lucide-react'
 
 const CARD = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px', marginBottom: '24px' }
 
@@ -82,7 +83,7 @@ export default function FI() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: '24px' }}>💼 Finance & Insurance</h1>
+          <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><BriefCase size={22} /> FI</h1>
           <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Backend income, product penetration, and F&I performance</p>
         </div>
         <button onClick={handleClear} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Clear All</button>

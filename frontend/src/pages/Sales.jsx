@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import api from '../api'
 import { Car } from 'lucide-react'
+
 export default function Sales({ isMobile }) {
   const [summary, setSummary]   = useState(null)
   const [sales, setSales]       = useState([])
