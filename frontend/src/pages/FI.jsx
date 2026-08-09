@@ -38,7 +38,7 @@ export default function FI() {
   if (!data || data.error) return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '24px' }}>💼 Finance & Insurance</h1>
+        <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Briefcase size={22} /> Finance & Insurance</h1>
         <button onClick={handleClear} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Clear All</button>
       </div>
       <p style={{ color: '#555' }}>No F&I data yet. Add sales with F&I details using the Add Sale page.</p>
