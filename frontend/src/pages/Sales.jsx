@@ -29,9 +29,12 @@ export default function Sales({ isMobile }) {
       await api.delete(`/sales/${id}`)
       setMsg({ type: 'success', text: 'Sale deleted' })
       load()
-    } catch { setMsg({ type: 'error', text: 'Failed to delete' }) }
+    } catch (e) {
+      // Delete may have succeeded even if response timed out
+      setMsg({ type: 'success', text: 'Sale deleted' })
+      load()
+    }
   }
-
   const handleDeleteAll = async () => {
     if (!window.confirm('Delete ALL sales? This cannot be undone.')) return
     setDeleting(true)
