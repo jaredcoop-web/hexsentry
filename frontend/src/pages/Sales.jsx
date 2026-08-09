@@ -6,7 +6,6 @@ export default function Sales({ isMobile }) {
   const [summary, setSummary]   = useState(null)
   const [sales, setSales]       = useState([])
   const [loading, setLoading]   = useState(true)
-  const [deleting, setDeleting] = useState(false)
   const [msg, setMsg]           = useState(null)
 
   const load = async () => {
@@ -26,39 +25,38 @@ export default function Sales({ isMobile }) {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/sales/${id}`)
-      setMsg({ type: 'success', text: 'Sale deleted' })
-      load()
-    } catch (e) {
-      // Delete may have succeeded even if response timed out
-      setMsg({ type: 'success', text: 'Sale deleted' })
-      load()
+      const res = await api.delete(`/sales/${id}`)
+      if (res.status === 200) {
+        setMsg({ type: 'success', text: 'Sale deleted' })
+        load()
+      }
+    } catch {
+      setMsg({ type: 'error', text: 'Failed to delete' })
     }
   }
+
   const handleDeleteAll = async () => {
     if (!window.confirm('Delete ALL sales? This cannot be undone.')) return
-    setDeleting(true)
     try {
       await api.delete('/sales')
       setMsg({ type: 'success', text: 'All sales cleared' })
       load()
     } catch { setMsg({ type: 'error', text: 'Failed to clear sales' }) }
-    setDeleting(false)
   }
 
   const fmt = (n) => n != null ? `$${Number(n).toLocaleString()}` : 'N/A'
 
   if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading sales...</p>
 
-  const monthlyData = summary?.monthly_gross || []
+  const monthlyData = summary?.monthly || []
   const leaderboard = summary?.leaderboard || []
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
         <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px' }}>🚗 Sales</h1>
-        <button onClick={handleDeleteAll} disabled={deleting} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
-          {deleting ? 'Clearing...' : 'Clear All'}
+        <button onClick={handleDeleteAll} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+          Clear All
         </button>
       </div>
 
@@ -106,7 +104,7 @@ export default function Sales({ isMobile }) {
           {leaderboard.map((sp, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: i === 0 ? '#f39c12' : '#555', fontSize: '16px' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                <span style={{ fontSize: '16px' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
                 <span style={{ color: '#C0C0C0', fontSize: '14px' }}>{sp.salesperson}</span>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -125,25 +123,25 @@ export default function Sales({ isMobile }) {
           <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No sales yet.</p>
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ minWidth: '650px', width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Date', 'Vehicle', 'VIN', 'Sale Price', 'Gross', 'Margin %', 'Salesperson', 'Lead Source', ''].map(h => (
-                    <th key={h} style={{ color: '#666', fontSize: '11px', textAlign: 'left', padding: '8px 0', borderBottom: '1px solid #333' }}>{h}</th>
+                  {['Date', 'Vehicle', 'Sale Price', 'Gross', 'Margin %', 'Salesperson', 'Lead Source', ''].map(h => (
+                    <th key={h} style={{ color: '#666', fontSize: '11px', textAlign: 'left', padding: '8px 6px', borderBottom: '1px solid #333' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {sales.map((s, i) => (
                   <tr key={i}>
-                    <td style={{ color: '#999', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.date}</td>
-                    <td style={{ color: '#C0C0C0', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{s.model}</td>
-                    <td style={{ color: '#C0C0C0', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{fmt(s.sale_price)}</td>
-                    <td style={{ color: '#2ecc71', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{fmt(s.gross_profit)}</td>
-                    <td style={{ color: '#f39c12', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.gross_margin_pct}%</td>
-                    <td style={{ color: '#999', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.salesperson}</td>
-                    <td style={{ color: '#999', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.lead_source}</td>
-                    <td style={{ padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
+                    <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.date}</td>
+                    <td style={{ color: '#C0C0C0', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{s.model}</td>
+                    <td style={{ color: '#C0C0C0', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{fmt(s.sale_price)}</td>
+                    <td style={{ color: '#2ecc71', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{fmt(s.gross_profit)}</td>
+                    <td style={{ color: '#f39c12', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.gross_margin_pct || 0}%</td>
+                    <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.salesperson}</td>
+                    <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.lead_source || '—'}</td>
+                    <td style={{ padding: '10px 6px', borderBottom: '1px solid #1a1a1a' }}>
                       <button onClick={() => handleDelete(s.id)} style={{ padding: '3px 8px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
                         Delete
                       </button>
