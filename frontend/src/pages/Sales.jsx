@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import api from '../api'
-
+import { Car } from 'lucide-react'
 export default function Sales({ isMobile }) {
   const [summary, setSummary]   = useState(null)
   const [sales, setSales]       = useState([])
@@ -54,7 +54,7 @@ export default function Sales({ isMobile }) {
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '10px' }}>
-        <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px' }}>🚗 Sales</h1>
+        <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Car size={22} /> Sales</h1>
         <button onClick={handleDeleteAll} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
           Clear All
         </button>
