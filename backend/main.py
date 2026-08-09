@@ -1193,6 +1193,17 @@ def create_client(client: NewClient, user=Depends(get_current_user)):
                     status TEXT, is_stale BOOLEAN, color TEXT, age_bucket TEXT,
                     cost FLOAT DEFAULT 0, category TEXT DEFAULT 'General',
                     condition TEXT DEFAULT 'Used', notes TEXT DEFAULT ''"""),
+                ("fi", """id SERIAL PRIMARY KEY, date TEXT, salesperson TEXT, model TEXT,
+                    finance_reserve FLOAT DEFAULT 0, warranty FLOAT DEFAULT 0,
+                    gap_insurance FLOAT DEFAULT 0, addons FLOAT DEFAULT 0,
+                    total_backend FLOAT DEFAULT 0, month TEXT, year TEXT"""),
+                ("expenses", """id SERIAL PRIMARY KEY, date TEXT, category TEXT,
+                    description TEXT, amount FLOAT, recurring BOOLEAN DEFAULT false,
+                    frequency TEXT DEFAULT 'one-time', notes TEXT DEFAULT '',
+                    month TEXT, year TEXT"""),
+                ("income", """id SERIAL PRIMARY KEY, date TEXT, category TEXT,
+                    description TEXT, amount FLOAT, notes TEXT DEFAULT '',
+                    month TEXT, year TEXT"""),
             ]:
                 table = f"client_{client.client_id}_{table_suffix}"
                 conn.execute(text(f"CREATE TABLE IF NOT EXISTS {table} ({schema})"))
