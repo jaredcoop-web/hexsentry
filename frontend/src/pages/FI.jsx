@@ -83,7 +83,7 @@ export default function FI() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Briefcase size={22} /> Finance & Insurance</h1>
+          <h1 style={{ color: '#C0C0C0', margin: 0, fontSize: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Briefcase size={22} /> Finance & Insurance</h1>
           <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Backend income, product penetration, and F&I performance</p>
         </div>
         <button onClick={handleClear} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Clear All</button>
