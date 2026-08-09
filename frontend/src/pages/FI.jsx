@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Briefcase } from 'lucide-react'
 import api from '../api'
-import { Briefcase } from 'lucide-react'
+
 
 const CARD = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px', marginBottom: '24px' }
 

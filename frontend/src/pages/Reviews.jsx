@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Star, RefreshCw, Link, Link2Off } from 'lucide-react'
 import api from '../api'
-import { Star } from 'lucide-react'
+
 
 const DATE_RANGES = [
   { label: 'Last 30 Days', value: '30' },
