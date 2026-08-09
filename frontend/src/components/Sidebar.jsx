@@ -21,8 +21,16 @@ const PAGES = [
 export default function Sidebar({ user, currentPage, setCurrentPage, onLogout }) {
   const [collapsed, setCollapsed] = useState(false)
 
-  const pages = [...PAGES]
-  if (user?.role === 'admin') pages.push({ id: 'admin', label: 'Admin', icon: <Settings size={18} /> })
+const allowedPages = user?.pages ? user.pages.split(',') : null
+
+const pages = [
+  ...PAGES.filter(p => {
+    if (p.id === 'home') return true // always show home
+    if (!allowedPages) return true   // admin sees all
+    return allowedPages.includes(p.id)
+  }),
+  ...(user?.role === 'admin' ? [{ id: 'admin', label: 'Admin', icon: <Settings size={18} /> }] : [])
+]
 
   const width = collapsed ? '60px' : '220px'
 
