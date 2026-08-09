@@ -98,6 +98,7 @@ export default function Admin({ user }) {
     setCreating(true)
     setMsg(null)
     try {
+      console.log('pages being sent:', form.pages.join(','))
       await api.post('/admin/clients', {
         ...form,
         pages: form.pages.join(',')
