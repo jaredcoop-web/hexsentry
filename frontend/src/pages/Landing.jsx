@@ -113,4 +113,5 @@ export default function Landing({ onGetStarted }) {
       Sign In
     </button>
   </div>
-)
+  )
+}
