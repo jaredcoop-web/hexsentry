@@ -345,7 +345,7 @@ export default function DealerInventory({ isMobile }) {
             <table style={{ minWidth: '750px', width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Stock #', 'Year', 'Make', 'Model', 'VIN', 'Color', 'Mileage', 'Price', 'Days', 'Status', ''].map(h => (
+                  {['Stock #', 'Year', 'Make', 'Model', 'VIN', 'Color', 'Mileage', 'True Cost', 'Asking Price', 'Gross', 'Days', 'Status', ''].map(h => (
                     <th key={h} style={{ color: '#666', fontSize: '11px', textAlign: 'left', padding: '8px 6px', borderBottom: '1px solid #333', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -366,7 +366,9 @@ export default function DealerInventory({ isMobile }) {
                       <td style={{ color: '#555', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '11px', fontFamily: 'monospace' }}>{item.sku || '—'}</td>
                       <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{parsed.color || '—'}</td>
                       <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{parsed.mileage || '—'}</td>
-                      <td style={{ color: '#2ecc71', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>${Number(item.asking_price || 0).toLocaleString()}</td>
+                      <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>${Number(item.cost || 0).toLocaleString()}</td>
+                      <td style={{ color: '#C0C0C0', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>${Number(item.asking_price || 0).toLocaleString()}</td>
+                      <td style={{ color: '#2ecc71', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>${((item.asking_price || 0) - (item.cost || 0)).toLocaleString()}</td>
                       <td style={{ padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>
                         <span style={{ color: dayColor(item.days_in_stock || 0) }}>
                           {dayLabel(item.days_in_stock || 0)} {item.days_in_stock || 0}d
