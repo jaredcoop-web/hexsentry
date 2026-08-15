@@ -24,7 +24,7 @@ function dayLabel(days) {
 
 const EMPTY_FORM = {
   vin: '', stock_number: '', year: '', make: '', model: '', trim: '',
-  color: '', mileage: '', cost: '', asking_price: '',
+  color: '', mileage: '', cost: '', recon: '', pack: '', asking_price: '',
   date_received: new Date().toISOString().slice(0, 10),
   condition: 'Used', notes: ''
 }
@@ -96,15 +96,17 @@ export default function DealerInventory({ isMobile }) {
       await api.post('/inventory/add', {
         name:          vehicleName,
         sku:           form.vin || form.stock_number,
-        cost:          parseFloat(form.cost) || 0,
+        cost: (parseFloat(form.cost) || 0) + (parseFloat(form.recon) || 0) + (parseFloat(form.pack) || 0),
         asking_price:  parseFloat(form.asking_price) || 0,
         date_received: form.date_received,
         condition:     form.condition,
         category:      'Vehicle',
-        notes:         [
+        notes: [
           form.stock_number ? `Stock: ${form.stock_number}` : '',
           form.color ? `Color: ${form.color}` : '',
           form.mileage ? `Miles: ${parseInt(form.mileage).toLocaleString()}` : '',
+          form.recon ? `Recon: $${parseFloat(form.recon).toLocaleString()}` : '',
+          form.pack ? `Pack: $${parseFloat(form.pack).toLocaleString()}` : '',
           form.notes || ''
         ].filter(Boolean).join(' | '),
       })
@@ -252,14 +254,20 @@ export default function DealerInventory({ isMobile }) {
             <div><label style={LABEL}>Mileage</label><input type="number" value={form.mileage} onChange={e => update('mileage', e.target.value)} placeholder="0" style={INPUT} /></div>
             <div><label style={LABEL}>Condition</label><select value={form.condition} onChange={e => update('condition', e.target.value)} style={SELECT}>{['New','Used','Certified Pre-Owned'].map(o => <option key={o}>{o}</option>)}</select></div>
             <div><label style={LABEL}>Invoice / Cost ($)</label><input type="number" value={form.cost} onChange={e => update('cost', e.target.value)} placeholder="0.00" style={INPUT} /></div>
+            <div><label style={LABEL}>Reconditioning ($) <span style={{ color: '#555' }}>optional</span></label><input type="number" value={form.recon} onChange={e => update('recon', e.target.value)} placeholder="0.00" style={INPUT} /></div>
+            <div><label style={LABEL}>Pack Fee ($) <span style={{ color: '#555' }}>optional</span></label><input type="number" value={form.pack} onChange={e => update('pack', e.target.value)} placeholder="e.g. 600" style={INPUT} /></div>
             <div><label style={LABEL}>Asking Price ($) *</label><input type="number" value={form.asking_price} onChange={e => update('asking_price', e.target.value)} placeholder="0.00" style={INPUT} /></div>
             <div><label style={LABEL}>Date Acquired</label><input type="date" value={form.date_received} onChange={e => update('date_received', e.target.value)} style={INPUT} /></div>
             <div><label style={LABEL}>Notes</label><input type="text" value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="optional" style={INPUT} /></div>
           </div>
 
           {form.asking_price && form.cost && (
-            <div style={{ background: '#0d2d15', border: '1px solid #27ae60', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', color: '#2ecc71', fontSize: '13px' }}>
-              Potential front end gross: <strong>${(parseFloat(form.asking_price) - parseFloat(form.cost)).toLocaleString()}</strong>
+            <div style={{ background: '#0d2d15', border: '1px solid #27ae60', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '4px' }}><span>Invoice:</span><span>${(parseFloat(form.cost)||0).toLocaleString()}</span></div>
+              {form.recon && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '4px' }}><span>Recon:</span><span>${(parseFloat(form.recon)||0).toLocaleString()}</span></div>}
+              {form.pack && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '4px' }}><span>Pack:</span><span>${(parseFloat(form.pack)||0).toLocaleString()}</span></div>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#999', borderTop: '1px solid #1a3a1a', paddingTop: '4px', marginBottom: '4px' }}><span>True cost:</span><span>${((parseFloat(form.cost)||0) + (parseFloat(form.recon)||0) + (parseFloat(form.pack)||0)).toLocaleString()}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#2ecc71', fontWeight: 'bold' }}><span>Potential gross:</span><span>${((parseFloat(form.asking_price)||0) - (parseFloat(form.cost)||0) - (parseFloat(form.recon)||0) - (parseFloat(form.pack)||0)).toLocaleString()}</span></div>
             </div>
           )}
 
