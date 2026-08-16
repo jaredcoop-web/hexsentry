@@ -1204,6 +1204,18 @@ def create_client(client: NewClient, user=Depends(get_current_user)):
                 ("income", """id SERIAL PRIMARY KEY, date TEXT, category TEXT,
                     description TEXT, amount FLOAT, notes TEXT DEFAULT '',
                     month TEXT, year TEXT"""),
+                ("bhph_contracts", """id SERIAL PRIMARY KEY, sale_id INTEGER,
+                    customer_name TEXT, customer_phone TEXT, vehicle TEXT,
+                    sale_price FLOAT, down_payment FLOAT, amount_financed FLOAT,
+                    interest_rate FLOAT, term_months INTEGER, payment_frequency TEXT,
+                    payment_amount FLOAT, total_interest FLOAT, start_date TEXT,
+                    status TEXT DEFAULT 'Active', notes TEXT DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"""),
+                ("bhph_payments", """id SERIAL PRIMARY KEY, contract_id INTEGER,
+                    due_date TEXT, amount_due FLOAT, amount_paid FLOAT DEFAULT 0,
+                    paid_date TEXT, status TEXT DEFAULT 'Upcoming',
+                    notes TEXT DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"""),
             ]:
                 table = f"client_{client.client_id}_{table_suffix}"
                 conn.execute(text(f"CREATE TABLE IF NOT EXISTS {table} ({schema})"))
