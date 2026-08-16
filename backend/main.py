@@ -1635,3 +1635,161 @@ def get_stats(user=Depends(get_current_user)):
         }
     except Exception as e:
         return {"error": str(e)}
+    
+# ── BHPH / Collections endpoints ─────────────────────────────────────────────
+
+@app.post("/bhph/contracts")
+def create_bhph_contract(contract: dict, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "bhph_contracts")
+    pay_table = ct(client_id, "bhph_payments")
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                INSERT INTO {table}
+                (sale_id, customer_name, customer_phone, vehicle, sale_price,
+                 down_payment, amount_financed, interest_rate, term_months,
+                 payment_frequency, payment_amount, total_interest, start_date, notes)
+                VALUES (:sale_id, :customer_name, :customer_phone, :vehicle, :sale_price,
+                        :down_payment, :amount_financed, :interest_rate, :term_months,
+                        :payment_frequency, :payment_amount, :total_interest, :start_date, :notes)
+                RETURNING id
+            """), contract)
+            contract_id = result.fetchone()[0]
+
+            # Auto-generate payment schedule
+            from datetime import datetime, timedelta
+            start = datetime.strptime(contract["start_date"], "%Y-%m-%d")
+            freq  = contract["payment_frequency"]
+            count = contract["term_months"]
+            if freq == "Weekly":    count = contract["term_months"] * 4
+            if freq == "Bi-Weekly": count = contract["term_months"] * 2
+
+            for i in range(count):
+                if freq == "Weekly":    due = start + timedelta(weeks=i+1)
+                if freq == "Bi-Weekly": due = start + timedelta(weeks=(i+1)*2)
+                if freq == "Monthly":   
+                    month = (start.month + i) % 12 or 12
+                    year  = start.year + (start.month + i - 1) // 12
+                    due   = start.replace(month=month, year=year)
+
+                conn.execute(text(f"""
+                    INSERT INTO {pay_table}
+                    (contract_id, due_date, amount_due, status)
+                    VALUES (:contract_id, :due_date, :amount_due, :status)
+                """), {
+                    "contract_id": contract_id,
+                    "due_date":    due.strftime("%Y-%m-%d"),
+                    "amount_due":  contract["payment_amount"],
+                    "status":      "Upcoming"
+                })
+            conn.commit()
+        return {"message": "Contract created", "contract_id": contract_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/bhph/contracts")
+def get_bhph_contracts(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        contracts = q(f"""
+            SELECT c.*,
+                   COUNT(p.id) as total_payments,
+                   SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END) as total_collected,
+                   SUM(CASE WHEN p.status = 'Late' THEN 1 ELSE 0 END) as late_count,
+                   SUM(CASE WHEN p.status = 'Upcoming' AND p.due_date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD') THEN 1 ELSE 0 END) as due_today
+            FROM {ct(client_id, 'bhph_contracts')} c
+            LEFT JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
+            GROUP BY c.id
+            ORDER BY c.created_at DESC
+        """)
+        return contracts
+    except Exception as e:
+        return []
+
+
+@app.get("/bhph/contracts/{contract_id}/payments")
+def get_contract_payments(contract_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        payments = q(f"""
+            SELECT * FROM {ct(client_id, 'bhph_payments')}
+            WHERE contract_id = {contract_id}
+            ORDER BY due_date ASC
+        """)
+        return payments
+    except Exception as e:
+        return []
+
+
+@app.patch("/bhph/payments/{payment_id}/pay")
+def mark_payment_paid(payment_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    today     = datetime.utcnow().strftime("%Y-%m-%d")
+    try:
+        with engine.connect() as conn:
+            payment = conn.execute(text(f"""
+                SELECT amount_due FROM {ct(client_id, 'bhph_payments')}
+                WHERE id = :id
+            """), {"id": payment_id}).fetchone()
+
+            conn.execute(text(f"""
+                UPDATE {ct(client_id, 'bhph_payments')}
+                SET status = 'Paid', paid_date = :today, amount_paid = :amount
+                WHERE id = :id
+            """), {"today": today, "amount": payment[0], "id": payment_id})
+
+            # Add to income
+            conn.execute(text(f"""
+                INSERT INTO {ct(client_id, 'income')}
+                (date, category, description, amount, month, year)
+                VALUES (:date, 'BHPH Payment', :desc, :amount, :month, :year)
+            """), {
+                "date":   today,
+                "desc":   f"BHPH Payment #{payment_id}",
+                "amount": payment[0],
+                "month":  today[:7],
+                "year":   today[:4],
+            })
+            conn.commit()
+        return {"message": "Payment marked as paid"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.patch("/bhph/payments/{payment_id}/late")
+def mark_payment_late(payment_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                UPDATE {ct(client_id, 'bhph_payments')}
+                SET status = 'Late'
+                WHERE id = :id
+            """), {"id": payment_id})
+            conn.commit()
+        return {"message": "Payment marked as late"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/bhph/summary")
+def get_bhph_summary(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        summary = q(f"""
+            SELECT
+                COUNT(DISTINCT c.id) as active_contracts,
+                SUM(c.amount_financed) as total_portfolio,
+                SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END) as total_collected,
+                SUM(CASE WHEN p.status = 'Late' THEN p.amount_due ELSE 0 END) as total_late,
+                COUNT(CASE WHEN p.status = 'Late' THEN 1 END) as late_payments,
+                COUNT(CASE WHEN p.due_date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD') AND p.status = 'Upcoming' THEN 1 END) as due_today
+            FROM {ct(client_id, 'bhph_contracts')} c
+            LEFT JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
+            WHERE c.status = 'Active'
+        """)[0]
+        return summary
+    except Exception as e:
+        return {}
