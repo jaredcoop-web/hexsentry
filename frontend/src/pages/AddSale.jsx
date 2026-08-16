@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import api from '../api'
 import { Plus } from 'lucide-react'
+import api from '../api'
 
 const INPUT  = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
 const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
@@ -15,22 +15,39 @@ export default function AddSale({ user, isMobile }) {
   const [showDropdown, setShowDropdown]   = useState(false)
   const [fromInventory, setFromInventory] = useState(false)
   const [selectedInventoryId, setSelectedInventoryId] = useState(null)
-  const searchRef  = useRef()
+  const searchRef   = useRef()
   const dropdownRef = useRef()
 
   const [form, setForm] = useState({
     date: today, description: '', sale_price: '', cost: '',
-    recon: '', pack: '',
     salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
     finance_reserve: '', warranty: '', gap_insurance: '', addons: '',
+    down_payment: '', interest_rate: '', term_months: '24',
+    payment_frequency: 'Monthly',
   })
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
 
-  const totalCost    = () => (parseFloat(form.cost) || 0) + (parseFloat(form.recon) || 0) + (parseFloat(form.pack) || 0)
-  const frontGross   = () => (parseFloat(form.sale_price) || 0) - totalCost()
+  const frontGross   = () => (parseFloat(form.sale_price) || 0) - (parseFloat(form.cost) || 0)
   const totalBackend = () => (parseFloat(form.finance_reserve) || 0) + (parseFloat(form.warranty) || 0) + (parseFloat(form.gap_insurance) || 0) + (parseFloat(form.addons) || 0)
   const totalProfit  = () => frontGross() + totalBackend()
+
+  // BHPH calculations
+  const getBHPHCalc = () => {
+    const principal   = (parseFloat(form.sale_price) || 0) - (parseFloat(form.down_payment) || 0)
+    const monthlyRate = (parseFloat(form.interest_rate) || 0) / 100 / 12
+    const months      = parseInt(form.term_months) || 24
+    const monthlyPmt  = monthlyRate > 0
+      ? (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1)
+      : principal / months
+    const totalPaid     = monthlyPmt * months
+    const totalInterest = totalPaid - principal
+    let displayPayment  = monthlyPmt
+    let frequencyLabel  = 'Monthly Payment'
+    if (form.payment_frequency === 'Weekly')    { displayPayment = monthlyPmt * 12 / 52;  frequencyLabel = 'Weekly Payment' }
+    if (form.payment_frequency === 'Bi-Weekly') { displayPayment = monthlyPmt * 12 / 26; frequencyLabel = 'Bi-Weekly Payment' }
+    return { principal, monthlyPmt, totalPaid, totalInterest, displayPayment, frequencyLabel }
+  }
 
   const handleDescriptionChange = async (value) => {
     update('description', value)
@@ -46,9 +63,9 @@ export default function AddSale({ user, isMobile }) {
   const handleSelectInventory = (item) => {
     setForm(prev => ({
       ...prev,
-      description:  item.name,
-      sale_price:   item.asking_price ? String(item.asking_price) : '',
-      cost:         item.cost ? String(item.cost) : '',
+      description: item.name,
+      sale_price:  item.asking_price ? String(item.asking_price) : '',
+      cost:        item.cost ? String(item.cost) : '',
     }))
     setFromInventory(true)
     setSelectedInventoryId(item.id)
@@ -82,16 +99,24 @@ export default function AddSale({ user, isMobile }) {
     setLoading(true)
     setStatus(null)
     try {
+      const bhph = form.payment_type === 'In-House / BHPH' ? getBHPHCalc() : null
       await api.post('/sales/manual', {
         date:            form.date,
         description:     form.description,
         sale_price:      parseFloat(form.sale_price),
-        cost:            totalCost(),
+        cost:            parseFloat(form.cost) || 0,
         gross_profit:    frontGross(),
         salesperson:     form.salesperson,
         payment_type:    form.payment_type,
         lead_source:     form.lead_source,
-        notes:           form.notes,
+        notes:           [
+          form.notes || '',
+          bhph ? `Down: $${parseFloat(form.down_payment).toLocaleString()}` : '',
+          bhph ? `Rate: ${form.interest_rate}%` : '',
+          bhph ? `Term: ${form.term_months}mo` : '',
+          bhph ? `${bhph.frequencyLabel}: $${bhph.displayPayment.toFixed(2)}` : '',
+          bhph ? `Total Interest: $${bhph.totalInterest.toFixed(2)}` : '',
+        ].filter(Boolean).join(' | '),
         finance_reserve: parseFloat(form.finance_reserve) || 0,
         warranty:        parseFloat(form.warranty) || 0,
         gap_insurance:   parseFloat(form.gap_insurance) || 0,
@@ -99,7 +124,12 @@ export default function AddSale({ user, isMobile }) {
         inventory_id:    selectedInventoryId,
       })
       setStatus({ type: 'success', msg: 'Sale recorded successfully!' })
-      setForm({ date: today, description: '', sale_price: '', cost: '', recon: '', pack: '', salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '', finance_reserve: '', warranty: '', gap_insurance: '', addons: '' })
+      setForm({
+        date: today, description: '', sale_price: '', cost: '',
+        salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
+        finance_reserve: '', warranty: '', gap_insurance: '', addons: '',
+        down_payment: '', interest_rate: '', term_months: '24', payment_frequency: 'Monthly',
+      })
       setFromInventory(false)
       setSelectedInventoryId(null)
       setShowFI(false)
@@ -110,14 +140,19 @@ export default function AddSale({ user, isMobile }) {
   }
 
   const gridCols = isMobile ? '1fr' : '1fr 1fr'
+  const isBHPH   = form.payment_type === 'In-House / BHPH'
+  const bhph     = isBHPH && form.sale_price && form.down_payment && form.interest_rate ? getBHPHCalc() : null
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '640px' }}>
-      <h1 style={{ color: '#C0C0C0', marginBottom: '8px', fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><Plus size={22} /> Add Sale</h1>
-      <p style={{ color: '#555', marginBottom: '24px', fontSize: '13px' }}>Log a sale manually — cash, check, financed, or any payment type</p>
+      <h1 style={{ color: '#C0C0C0', marginBottom: '8px', fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Plus size={22} /> Add Sale
+      </h1>
+      <p style={{ color: '#555', marginBottom: '24px', fontSize: '13px' }}>Log a sale — cash, financed, or in-house BHPH</p>
 
       <div style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '24px' }}>
 
+        {/* Date and Salesperson */}
         <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '16px' }}>
           <div>
             <label style={LABEL}>Date of sale</label>
@@ -155,7 +190,8 @@ export default function AddSale({ user, isMobile }) {
                         <span style={{ color: '#555', fontSize: '11px', textTransform: 'uppercase' }}>📦 From Inventory</span>
                       </div>
                       {searchResults.map((item, i) => (
-                        <div key={i} onClick={() => handleSelectInventory(item)} style={{ padding: '12px 14px', cursor: 'pointer', borderBottom: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        <div key={i} onClick={() => handleSelectInventory(item)}
+                          style={{ padding: '12px 14px', cursor: 'pointer', borderBottom: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                           onMouseEnter={e => e.currentTarget.style.background = '#1A1A2E'}
                           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                           <div>
@@ -170,7 +206,8 @@ export default function AddSale({ user, isMobile }) {
                       ))}
                     </>
                   )}
-                  <div onClick={handleNotInInventory} style={{ padding: '12px 14px', cursor: 'pointer', color: '#666', fontSize: '13px', borderTop: searchResults.length > 0 ? '1px solid #222' : 'none' }}
+                  <div onClick={handleNotInInventory}
+                    style={{ padding: '12px 14px', cursor: 'pointer', color: '#666', fontSize: '13px', borderTop: searchResults.length > 0 ? '1px solid #222' : 'none' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#1A1A2E'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     ➕ Not in inventory — enter manually
@@ -188,41 +225,26 @@ export default function AddSale({ user, isMobile }) {
             <input type="number" value={form.sale_price} onChange={e => update('sale_price', e.target.value)} placeholder="0.00" style={INPUT} />
           </div>
           <div>
-            <label style={LABEL}>Invoice / Cost ($)</label>
+            <label style={LABEL}>Invoice / True Cost ($)</label>
             <input type="number" value={form.cost} onChange={e => update('cost', e.target.value)} placeholder="0.00" style={INPUT} />
-          </div>
-          <div>
-            <label style={LABEL}>Reconditioning ($) <span style={{ color: '#555' }}>optional</span></label>
-            <input type="number" value={form.recon} onChange={e => update('recon', e.target.value)} placeholder="0.00" style={INPUT} />
-          </div>
-          <div>
-            <label style={LABEL}>Pack ($) <span style={{ color: '#555' }}>optional</span></label>
-            <input type="number" value={form.pack} onChange={e => update('pack', e.target.value)} placeholder="e.g. 600" style={INPUT} />
           </div>
         </div>
 
         {/* Gross preview */}
         {form.sale_price && (
           <div style={{ background: frontGross() >= 0 ? '#0d2d15' : '#2d1515', border: `1px solid ${frontGross() >= 0 ? '#27ae60' : '#c0392b'}`, borderRadius: '6px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px' }}>
-            {(form.recon || form.pack) && (
-              <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #1a3a1a' }}>
-                {form.cost && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '2px' }}><span>Acquisition:</span><span>${(parseFloat(form.cost)||0).toLocaleString()}</span></div>}
-                {form.recon && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '2px' }}><span>Recon:</span><span>${(parseFloat(form.recon)||0).toLocaleString()}</span></div>}
-                {form.pack && <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '2px' }}><span>Pack:</span><span>${(parseFloat(form.pack)||0).toLocaleString()}</span></div>}
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#999' }}><span>Total cost:</span><span>${totalCost().toLocaleString()}</span></div>
-              </div>
-            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', color: frontGross() >= 0 ? '#2ecc71' : '#e74c3c', fontWeight: 'bold' }}>
               <span>Front end gross:</span><span>${frontGross().toLocaleString()}</span>
             </div>
           </div>
         )}
 
+        {/* Payment type */}
         <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '16px' }}>
           <div>
             <label style={LABEL}>Payment type</label>
             <select value={form.payment_type} onChange={e => update('payment_type', e.target.value)} style={SELECT}>
-              {['Cash','Card','Check','Financed','Bank Transfer','Other'].map(o => <option key={o}>{o}</option>)}
+              {['Cash','Card','Check','Financed','Bank Transfer','In-House / BHPH','Other'].map(o => <option key={o}>{o}</option>)}
             </select>
           </div>
           <div>
@@ -233,6 +255,58 @@ export default function AddSale({ user, isMobile }) {
           </div>
         </div>
 
+        {/* BHPH sub-form */}
+        {isBHPH && (
+          <div style={{ background: '#0d1a2d', border: '1px solid #1a3a5a', borderRadius: '8px', padding: '20px', marginBottom: '16px' }}>
+            <p style={{ color: '#4a9eff', fontSize: '13px', fontWeight: 'bold', margin: '0 0 16px' }}>🏦 In-House Finance Details</p>
+            <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '12px' }}>
+              <div>
+                <label style={LABEL}>Down Payment ($)</label>
+                <input type="number" value={form.down_payment} onChange={e => update('down_payment', e.target.value)} placeholder="0.00" style={INPUT} />
+              </div>
+              <div>
+                <label style={LABEL}>Interest Rate (%)</label>
+                <input type="number" value={form.interest_rate} onChange={e => update('interest_rate', e.target.value)} placeholder="e.g. 18" style={INPUT} />
+              </div>
+              <div>
+                <label style={LABEL}>Term (Months)</label>
+                <select value={form.term_months} onChange={e => update('term_months', e.target.value)} style={SELECT}>
+                  {['12','18','24','30','36','48','60'].map(o => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={LABEL}>Payment Frequency</label>
+                <select value={form.payment_frequency} onChange={e => update('payment_frequency', e.target.value)} style={SELECT}>
+                  {['Weekly','Bi-Weekly','Monthly'].map(o => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* BHPH calculations */}
+            {bhph && (
+              <div style={{ background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', padding: '14px', fontSize: '13px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#666' }}>Amount financed:</span>
+                  <span style={{ color: '#C0C0C0' }}>${bhph.principal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#666' }}>{bhph.frequencyLabel}:</span>
+                  <span style={{ color: '#4a9eff', fontWeight: 'bold' }}>${bhph.displayPayment.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#666' }}>Total paid over term:</span>
+                  <span style={{ color: '#C0C0C0' }}>${bhph.totalPaid.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: '6px' }}>
+                  <span style={{ color: '#666' }}>Total interest earned:</span>
+                  <span style={{ color: '#2ecc71', fontWeight: 'bold' }}>${bhph.totalInterest.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Notes */}
         <div style={{ marginBottom: '20px' }}>
           <label style={LABEL}>Notes <span style={{ color: '#555' }}>optional</span></label>
           <textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="Any additional details..." rows={2} style={{ ...INPUT, resize: 'vertical' }} />
@@ -240,9 +314,10 @@ export default function AddSale({ user, isMobile }) {
 
         {/* F&I toggle */}
         <button onClick={() => setShowFI(!showFI)} style={{ width: '100%', padding: '10px', background: showFI ? '#1a2d1a' : '#0d0d0d', color: showFI ? '#2ecc71' : '#666', border: `1px solid ${showFI ? '#27ae60' : '#333'}`, borderRadius: '6px', cursor: 'pointer', fontSize: '13px', marginBottom: showFI ? '16px' : '24px', textAlign: 'left' }}>
-          {showFI ? '▼' : '▶'} Finance & Insurance (F&I) — <span style={{ color: '#555' }}>optional, for dealerships</span>
+          {showFI ? '▼' : '▶'} Finance & Insurance (F&I) — <span style={{ color: '#555' }}>optional backend income</span>
         </button>
 
+        {/* F&I fields */}
         {showFI && (
           <div style={{ background: '#0d1a0d', border: '1px solid #1a3a1a', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
             <p style={{ color: '#2ecc71', fontSize: '13px', margin: '0 0 16px', fontWeight: 'bold' }}>Backend / F&I Income</p>
@@ -262,6 +337,7 @@ export default function AddSale({ user, isMobile }) {
           </div>
         )}
 
+        {/* Status */}
         {status && (
           <div style={{ background: status.type === 'success' ? '#0d2d15' : '#2d1515', border: `1px solid ${status.type === 'success' ? '#27ae60' : '#c0392b'}`, borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', color: status.type === 'success' ? '#2ecc71' : '#e74c3c', fontSize: '14px' }}>
             {status.type === 'success' ? '✅ ' : '❌ '}{status.msg}
