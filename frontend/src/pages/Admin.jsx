@@ -32,6 +32,7 @@ const ALL_PAGES = [
   { id: 'jobs',             label: '🔧 Jobs',            category: 'repair_shop' },
   { id: 'add-job',          label: '🔩 Add Job',         category: 'repair_shop' },
   { id: 'inventory',        label: '📦 Inventory',       category: 'general' },
+  { id: 'collections', label: '💰 Collections', category: 'dealership' },
 ]
 
 const DEFAULT_PAGES = {
