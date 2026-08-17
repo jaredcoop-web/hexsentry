@@ -272,8 +272,9 @@ export default function Collections({ isMobile }) {
                 <p style={{ color: '#C0C0C0', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>${(Number(selectedContract.amount_financed) - Number(selectedContract.total_collected || 0)).toLocaleString()}</p>
               </div>
             </div>
-
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <h3 style={{ color: '#C0C0C0', fontSize: '13px', margin: '0 0 10px', textTransform: 'uppercase' }}>Payment Schedule</h3>
+            <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+            <div style={{ maxHeight: '500px', overflowY: 'auto', marginTop: '16px' }}>
               {payments.map((p, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
                   <div>
