@@ -23,7 +23,7 @@ export default function AddSale({ user, isMobile }) {
     salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
     finance_reserve: '', warranty: '', gap_insurance: '', addons: '',
     down_payment: '', interest_rate: '', term_months: '24',
-    payment_frequency: 'Monthly',
+    payment_frequency: 'Monthly', customer_name: '', customer_phone: '',
   })
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
@@ -123,12 +123,34 @@ export default function AddSale({ user, isMobile }) {
         addons:          parseFloat(form.addons) || 0,
         inventory_id:    selectedInventoryId,
       })
+      // Auto-create BHPH contract
+      if (form.payment_type === 'In-House / BHPH' && form.customer_name && bhph) {
+         try {
+          await api.post('/bhph/contracts', {
+            sale_id:           null,
+            customer_name:     form.customer_name,
+            customer_phone:    form.customer_phone,
+            vehicle:           form.description,
+            sale_price:        parseFloat(form.sale_price),
+            down_payment:      parseFloat(form.down_payment),
+            amount_financed:   bhph.principal,
+            interest_rate:     parseFloat(form.interest_rate) || 0,
+            term_months:       parseInt(form.term_months),
+            payment_frequency: form.payment_frequency,
+            payment_amount:    bhph.displayPayment,
+            total_interest:    bhph.totalInterest,
+            start_date:        form.date,
+            notes:             form.notes,
+          })
+        } catch {}
+      }
       setStatus({ type: 'success', msg: 'Sale recorded successfully!' })
       setForm({
         date: today, description: '', sale_price: '', cost: '',
         salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
         finance_reserve: '', warranty: '', gap_insurance: '', addons: '',
         down_payment: '', interest_rate: '', term_months: '24', payment_frequency: 'Monthly',
+        customer_name: '', customer_phone: '',
       })
       setFromInventory(false)
       setSelectedInventoryId(null)
@@ -259,6 +281,16 @@ export default function AddSale({ user, isMobile }) {
         {isBHPH && (
           <div style={{ background: '#0d1a2d', border: '1px solid #1a3a5a', borderRadius: '8px', padding: '20px', marginBottom: '16px' }}>
             <p style={{ color: '#4a9eff', fontSize: '13px', fontWeight: 'bold', margin: '0 0 16px' }}>🏦 In-House Finance Details</p>
+            <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <label style={LABEL}>Customer name *</label>
+                <input type="text" value={form.customer_name} onChange={e => update('customer_name', e.target.value)} placeholder="John Smith" style={INPUT} />
+              </div>
+              <div>
+                <label style={LABEL}>Customer phone</label>
+                <input type="text" value={form.customer_phone} onChange={e => update('customer_phone', e.target.value)} placeholder="(555) 123-4567" style={INPUT} />
+              </div>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '12px' }}>
               <div>
                 <label style={LABEL}>Down Payment ($)</label>
