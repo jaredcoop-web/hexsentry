@@ -58,6 +58,14 @@ export default function Collections({ isMobile }) {
 
   useEffect(() => { load() }, [])
 
+  useEffect(() => {
+    const lastId = localStorage.getItem('lastContractId')
+    if (lastId && contracts.length > 0) {
+      const found = contracts.find(c => c.id === parseInt(lastId))
+      if (found) handleSelectContract(found)
+    }
+  }, [contracts])
+
   const loadPayments = async (contractId) => {
     try {
       const res = await api.get(`/bhph/contracts/${contractId}/payments`)
@@ -68,6 +76,7 @@ export default function Collections({ isMobile }) {
   const handleSelectContract = (contract) => {
     setSelectedContract(contract)
     loadPayments(contract.id)
+    localStorage.setItem('lastContractId', contract.id)
   }
 
   const handleMarkPaid = async (paymentId) => {
