@@ -1714,13 +1714,18 @@ def get_contract_payments(contract_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
         payments = q(f"""
-            SELECT * FROM {ct(client_id, 'bhph_payments')}
+            SELECT id, contract_id, due_date, amount_due, 
+                   COALESCE(amount_paid, 0) as amount_paid,
+                   COALESCE(paid_date, '') as paid_date,
+                   COALESCE(status, 'Upcoming') as status,
+                   COALESCE(notes, '') as notes
+            FROM {ct(client_id, 'bhph_payments')}
             WHERE contract_id = {contract_id}
             ORDER BY due_date ASC
         """)
         return payments
     except Exception as e:
-        return []
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.patch("/bhph/payments/{payment_id}/pay")
