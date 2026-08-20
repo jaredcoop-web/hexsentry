@@ -1809,3 +1809,27 @@ def get_bhph_summary(user=Depends(get_current_user)):
         return summary
     except Exception as e:
         return {}
+    
+@app.delete("/bhph/contracts/{contract_id}")
+def delete_bhph_contract(contract_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'bhph_payments')} WHERE contract_id=:id"), {"id": contract_id})
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'bhph_contracts')} WHERE id=:id"), {"id": contract_id})
+            conn.commit()
+        return {"message": "Contract deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/bhph/contracts")
+def clear_all_bhph(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'bhph_payments')}"))
+            conn.execute(text(f"DELETE FROM {ct(client_id, 'bhph_contracts')}"))
+            conn.commit()
+        return {"message": "All contracts cleared"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

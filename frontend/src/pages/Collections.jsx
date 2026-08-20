@@ -97,6 +97,25 @@ export default function Collections({ isMobile }) {
     } catch { setMsg({ type: 'error', text: 'Failed' }) }
   }
 
+  const handleDeleteContract = async (contractId) => {
+  try {
+    await api.delete(`/bhph/contracts/${contractId}`)
+    setMsg({ type: 'success', text: 'Contract deleted' })
+    setSelectedContract(null)
+    load()
+  } catch { setMsg({ type: 'error', text: 'Failed to delete' }) }
+}
+
+const handleClearAll = async () => {
+  if (!window.confirm('Delete ALL contracts? This cannot be undone.')) return
+  try {
+    await api.delete('/bhph/contracts')
+    setMsg({ type: 'success', text: 'All contracts cleared' })
+    setSelectedContract(null)
+    load()
+  } catch { setMsg({ type: 'error', text: 'Failed to clear' }) }
+}
+
   const handleCreate = async () => {
     if (!form.customer_name || !form.vehicle || !form.sale_price || !form.down_payment) {
       setMsg({ type: 'error', text: 'Please fill in all required fields.' })
@@ -143,9 +162,14 @@ export default function Collections({ isMobile }) {
           </h1>
           <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Track in-house finance payments and collections</p>
         </div>
-        <button onClick={() => setShowNew(!showNew)} style={{ padding: '10px 16px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
-          {showNew ? 'Cancel' : '➕ New Contract'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={handleClearAll} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+            Clear All
+          </button>
+          <button onClick={() => setShowNew(!showNew)} style={{ padding: '10px 16px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+            {showNew ? 'Cancel' : '➕ New Contract'}
+          </button>
+        </div>
       </div>
 
       {msg && (
@@ -234,7 +258,12 @@ export default function Collections({ isMobile }) {
             contracts.map((c, i) => (
               <div key={i}
                 onClick={() => handleSelectContract(c)}
-                style={{ padding: '14px', background: selectedContract?.id === c.id ? '#0d1a2d' : '#0A0A0A', border: `1px solid ${selectedContract?.id === c.id ? '#4a9eff' : '#222'}`, borderRadius: '8px', marginBottom: '8px', cursor: 'pointer' }}>
+                style={{ padding: '14px', background: selectedContract?.id === c.id ? '#0d1a2d' : '#0A0A0A', border: `1px solid ${selectedContract?.id === c.id ? '#4a9eff' : '#222'}`, borderRadius: '8px', marginBottom: '8px', cursor: 'pointer', position: 'relative' }}>
+                <button
+                  onClick={e => { e.stopPropagation(); handleDeleteContract(c.id) }}
+                  style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '14px' }}>
+                  ✕
+                </button>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <p style={{ color: '#C0C0C0', margin: '0 0 4px', fontWeight: 'bold', fontSize: '14px' }}>{c.customer_name}</p>
