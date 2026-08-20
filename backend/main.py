@@ -358,19 +358,19 @@ def get_sales(user=Depends(get_current_user)):
     try:
         summary = q(f"""
             SELECT COUNT(*) as total_sales,
-                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as total_gross,
-                   ROUND(CAST(AVG(gross_profit) AS numeric), 0) as avg_gross,
+                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 2) as total_gross,
+                   ROUND(CAST(AVG(CASE WHEN payment_type = 'In-House / BHPH' THEN NULL ELSE gross_profit END) AS numeric), 2) as avg_gross,
                    SUM(CASE WHEN month = TO_CHAR(CURRENT_DATE, 'YYYY-MM') THEN 1 ELSE 0 END) as this_month
             FROM {table}
         """)[0]
         monthly = q(f"""
             SELECT month, COUNT(*) as units,
-                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross
+                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 2) as gross
             FROM {table} GROUP BY month ORDER BY month
         """)
         top_salespeople = q(f"""
             SELECT salesperson, COUNT(*) as deals,
-                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as gross
+                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 2) as gross
             FROM {table} GROUP BY salesperson ORDER BY gross DESC LIMIT 5
         """)
         top_models = q(f"""
