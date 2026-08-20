@@ -334,7 +334,8 @@ def google_disconnect(user=Depends(get_current_user)):
 def get_kpis(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        sales = q(f"SELECT COUNT(*) as total_sales, ROUND(CAST(SUM(gross_profit) AS numeric), 2) as total_gross, ROUND(CAST(AVG(gross_profit) AS numeric), 2) as avg_gross FROM {ct(client_id, 'sales')}")
+        sales = q(f"SELECT COUNT(*) as total_sales, ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 2) as total_gross,
+ROUND(CAST(AVG(CASE WHEN payment_type = 'In-House / BHPH' THEN NULL ELSE gross_profit END) AS numeric), 2) as avg_gross, ROUND(CAST(AVG(CASE WHEN payment_type = 'In-House / BHPH' THEN NULL ELSE gross_profit END) AS numeric), 2) as avg_gross, FROM {ct(client_id, 'sales')}")
         inv   = q(f"SELECT SUM(CASE WHEN is_stale=true AND status='Available' THEN 1 ELSE 0 END) as stale FROM {ct(client_id, 'inventory')}")
         rev   = q(f"SELECT ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating FROM {ct(client_id, 'reviews')}")
         return {"sales": sales[0] if sales else {}, "inventory": inv[0] if inv else {}, "reviews": rev[0] if rev else {}}
@@ -596,6 +597,7 @@ class ManualSale(BaseModel):
     gap_insurance:   float = 0
     addons:          float = 0
     inventory_id:    Optional[int] = None
+    
 
 @app.post("/sales/manual")
 def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
@@ -626,6 +628,7 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 "month":          sale.date[:7],
                 "year":           sale.date[:4],
                 "margin":         round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
+                "payment_type": sale.payment_type,
             })
             conn.commit()
 
