@@ -144,7 +144,7 @@ export default function Finances({ isMobile }) {
       {/* KPIs */}
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
         {[
-          { label: 'Sales Income',   value: `$${totalIncome.toLocaleString()}`,     color: '#2ecc71' },
+          { label: 'Sales Income',   value: `$${totalSaleInc.toLocaleString()}`,    color: '#2ecc71' },
           { label: 'Other Income',   value: `$${totalOtherInc.toLocaleString()}`,   color: '#3498db' },
           { label: 'Total Expenses', value: `$${totalExpenses.toLocaleString()}`,   color: '#e74c3c' },
           { label: 'Net Cash Flow',  value: `$${netCashflow.toLocaleString()}`,     color: netCashflow >= 0 ? '#2ecc71' : '#e74c3c' },
