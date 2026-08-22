@@ -45,7 +45,7 @@ export default function Sales({ isMobile }) {
     } catch { setMsg({ type: 'error', text: 'Failed to clear sales' }) }
   }
 
-  const fmt = (n) => n != null ? `$${Number(n).toLocaleString()}` : 'N/A'
+  const fmt = (n) => n != null ? `$${Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'N/A'
 
   if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading sales...</p>
 
