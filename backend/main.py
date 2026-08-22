@@ -358,7 +358,10 @@ def get_sales(user=Depends(get_current_user)):
     try:
         summary = q(f"""
             SELECT COUNT(*) as total_sales,
-                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 2) as total_gross,
+                   ROUND(CAST(
+                       COALESCE(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END), 0) +
+                       COALESCE((SELECT SUM(amount) FROM {ct(client_id, 'income')} WHERE category = 'BHPH Payment'), 0)
+                   AS numeric), 2) as total_gross,
                    ROUND(CAST(AVG(CASE WHEN payment_type = 'In-House / BHPH' THEN NULL ELSE gross_profit END) AS numeric), 2) as avg_gross,
                    SUM(CASE WHEN month = TO_CHAR(CURRENT_DATE, 'YYYY-MM') THEN 1 ELSE 0 END) as this_month
             FROM {table}
@@ -1373,9 +1376,10 @@ def get_expenses(user=Depends(get_current_user)):
 def get_cashflow(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
+        # Only count non-BHPH sales as immediate income
         sales_data = q(f"""
             SELECT month,
-                   ROUND(CAST(SUM(gross_profit) AS numeric), 0) as income
+                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 0) as income
             FROM {ct(client_id, 'sales')}
             GROUP BY month ORDER BY month
         """)
@@ -1385,33 +1389,66 @@ def get_cashflow(user=Depends(get_current_user)):
             FROM {ct(client_id, 'expenses')}
             GROUP BY month ORDER BY month
         """)
+        # Sale Income from manual entries
+        sale_income_data = q(f"""
+            SELECT month,
+                   ROUND(CAST(SUM(amount) AS numeric), 0) as sale_income
+            FROM {ct(client_id, 'income')}
+            WHERE category = 'Sale Income'
+            GROUP BY month ORDER BY month
+        """)
+        # BHPH payments tracked separately
+        bhph_income_data = q(f"""
+            SELECT month,
+                   ROUND(CAST(SUM(amount) AS numeric), 0) as bhph_income
+            FROM {ct(client_id, 'income')}
+            WHERE category = 'BHPH Payment'
+            GROUP BY month ORDER BY month
+        """)
+        # Other income (owner contributions, loans, etc)
         other_income_data = q(f"""
             SELECT month,
                    ROUND(CAST(SUM(amount) AS numeric), 0) as other_income
             FROM {ct(client_id, 'income')}
+            WHERE category NOT IN ('Sale Income', 'BHPH Payment')
             GROUP BY month ORDER BY month
         """)
+
         months = {}
+
         for s in sales_data:
             months[s["month"]] = {"month": s["month"], "income": s["income"] or 0, "expenses": 0, "other_income": 0}
+
         for e in expense_data:
-            if e["month"] in months:
-                months[e["month"]]["expenses"] = e["expenses"] or 0
-            else:
-                months[e["month"]] = {"month": e["month"], "income": 0, "expenses": e["expenses"] or 0, "other_income": 0}
+            if e["month"] not in months:
+                months[e["month"]] = {"month": e["month"], "income": 0, "expenses": 0, "other_income": 0}
+            months[e["month"]]["expenses"] = e["expenses"] or 0
+
+        # Add Sale Income to income
+        for s in sale_income_data:
+            if s["month"] not in months:
+                months[s["month"]] = {"month": s["month"], "income": 0, "expenses": 0, "other_income": 0}
+            months[s["month"]]["income"] = (months[s["month"]].get("income") or 0) + (s["sale_income"] or 0)
+
+        # Add BHPH payments to income
+        for b in bhph_income_data:
+            if b["month"] not in months:
+                months[b["month"]] = {"month": b["month"], "income": 0, "expenses": 0, "other_income": 0}
+            months[b["month"]]["income"] = (months[b["month"]].get("income") or 0) + (b["bhph_income"] or 0)
+
+        # Add other income
         for o in other_income_data:
-            if o["month"] in months:
-                months[o["month"]]["other_income"] = o["other_income"] or 0
-            else:
-                months[o["month"]] = {"month": o["month"], "income": 0, "expenses": 0, "other_income": o["other_income"] or 0}
+            if o["month"] not in months:
+                months[o["month"]] = {"month": o["month"], "income": 0, "expenses": 0, "other_income": 0}
+            months[o["month"]]["other_income"] = o["other_income"] or 0
+
         result = sorted(months.values(), key=lambda x: x["month"])
         for r in result:
             r["net"] = (r["income"] + r["other_income"]) - r["expenses"]
         return {"cashflow": result}
     except Exception as e:
         return {"error": str(e)}
-
-
+    
 @app.delete("/expenses/{expense_id}")
 def delete_expense(expense_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
@@ -1774,7 +1811,7 @@ def mark_payment_paid(payment_id: int, user=Depends(get_current_user)):
             conn.execute(text(f"""
                 INSERT INTO {ct(client_id, 'income')}
                 (date, category, description, amount, month, year)
-                VALUES (:date, 'Sale Income', :desc, :amount, :month, :year)
+                VALUES (:date, 'BHPH Payment', :desc, :amount, :month, :year)
             """), {
                 "date":   today,
                 "desc":   f"BHPH Payment #{payment_id}",
