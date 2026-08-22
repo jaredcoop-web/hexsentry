@@ -145,10 +145,10 @@ export default function Finances({ isMobile }) {
       {/* KPIs */}
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
         {[
-          { label: 'Sales Income',   value: `$${totalSaleInc.toLocaleString()}`,    color: '#2ecc71' },
-          { label: 'Other Income',   value: `$${totalOtherInc.toLocaleString()}`,   color: '#3498db' },
-          { label: 'Total Expenses', value: `$${totalExpenses.toLocaleString()}`,   color: '#e74c3c' },
-          { label: 'Net Cash Flow',  value: `$${netCashflow.toLocaleString()}`,     color: netCashflow >= 0 ? '#2ecc71' : '#e74c3c' },
+          { label: 'Sales Income',   value: `$${totalSaleInc.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,    color: '#2ecc71' },
+          { label: 'Other Income',   value: `$${totalOtherInc.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,   color: '#3498db' },
+          { label: 'Total Expenses', value: `$${totalExpenses..toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,   color: '#e74c3c' },
+          { label: 'Net Cash Flow',  value: `$${netCashflow.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,     color: netCashflow >= 0 ? '#2ecc71' : '#e74c3c' },
         ].map((k, i) => (
           <div key={i} style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '14px 16px', flex: '1 1', minWidth: isMobile ? 'calc(50% - 10px)' : '120px' }}>
             <p style={{ color: '#666', fontSize: '11px', margin: '0 0 6px', textTransform: 'uppercase' }}>{k.label}</p>
@@ -166,7 +166,7 @@ export default function Finances({ isMobile }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#222" />
               <XAxis dataKey="month" stroke="#666" tick={{ fontSize: 10 }} />
               <YAxis stroke="#666" tick={{ fontSize: 10 }} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
-              <Tooltip contentStyle={{ background: '#1A1A2E', border: '1px solid #333', color: '#C0C0C0' }} formatter={v => [`$${Number(v).toLocaleString()}`]} />
+              <Tooltip contentStyle={{ background: '#1A1A2E', border: '1px solid #333', color: '#C0C0C0' }} formatter={v => [`$${Number(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`]} />
               <Legend />
               <Bar dataKey="income"   name="Income"   fill="#2ecc71" radius={[4,4,0,0]} />
               <Bar dataKey="expenses" name="Expenses" fill="#e74c3c" radius={[4,4,0,0]} />
@@ -182,7 +182,7 @@ export default function Finances({ isMobile }) {
           {data.by_category.map((c, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #1a1a1a' }}>
               <span style={{ color: '#999', fontSize: '13px' }}>{c.category}</span>
-              <span style={{ color: '#e74c3c', fontSize: '13px', fontWeight: 'bold' }}>${Number(c.total).toLocaleString()}</span>
+              <span style={{ color: '#e74c3c', fontSize: '13px', fontWeight: 'bold' }}>${Number(c.total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
           ))}
         </div>
@@ -218,7 +218,7 @@ export default function Finances({ isMobile }) {
                     <td style={{ color: '#999', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{t.category}</td>
                     <td style={{ color: '#C0C0C0', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{t.description}</td>
                     <td style={{ color: t.type === 'income' ? '#2ecc71' : '#e74c3c', padding: '10px 0', borderBottom: '1px solid #1a1a1a', fontSize: '13px', fontWeight: 'bold' }}>
-                      {t.type === 'income' ? '+' : '-'}${Number(t.amount).toLocaleString()}
+                      {t.type === 'income' ? '+' : '-'}${Number(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </td>
                     <td style={{ padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
                       <button onClick={() => t.type === 'income' ? handleDeleteIncome(t.id) : handleDeleteExpense(t.id)} style={{ padding: '3px 8px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
