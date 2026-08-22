@@ -609,9 +609,9 @@ class ManualSale(BaseModel):
 
 @app.post("/sales/manual")
 def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
-    client_id  = user["client_id"]
-    table      = ct(client_id, "sales")
-    fi_table   = ct(client_id, "fi")
+    client_id     = user["client_id"]
+    table         = ct(client_id, "sales")
+    fi_table      = ct(client_id, "fi")
     total_backend = sale.finance_reserve + sale.warranty + sale.gap_insurance + sale.addons
 
     try:
@@ -620,9 +620,9 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 INSERT INTO {table}
                 (date, model, sale_price, cost, gross_profit, salesperson,
                  lead_source, finance_income, total_income, month, year,
-                 days_on_lot, gross_margin_pct)
+                 days_on_lot, gross_margin_pct, payment_type)
                 VALUES (:date, :model, :sale_price, :cost, :gross_profit, :salesperson,
-                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin)
+                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin, :payment_type)
             """), {
                 "date":           sale.date,
                 "model":          sale.description,
@@ -636,7 +636,7 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 "month":          sale.date[:7],
                 "year":           sale.date[:4],
                 "margin":         round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
-                "payment_type": sale.payment_type,
+                "payment_type":   sale.payment_type,
             })
             conn.commit()
 
@@ -663,7 +663,6 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 })
                 conn.commit()
 
-        
         # Auto-mark specific inventory item as sold if selected
         try:
             inv_id = getattr(sale, 'inventory_id', None)
@@ -675,10 +674,25 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
         except:
             pass
 
+        # Add to income only if NOT BHPH
+        if sale.payment_type != 'In-House / BHPH' and sale.gross_profit > 0:
+            with engine.connect() as conn:
+                conn.execute(text(f"""
+                    INSERT INTO {ct(client_id, 'income')}
+                    (date, category, description, amount, month, year)
+                    VALUES (:date, 'Sale Income', :desc, :amount, :month, :year)
+                """), {
+                    "date":   sale.date,
+                    "desc":   sale.description,
+                    "amount": sale.gross_profit,
+                    "month":  sale.date[:7],
+                    "year":   sale.date[:4],
+                })
+                conn.commit()
+
         return {"message": "Sale recorded successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
     
 @app.get("/fi")
 def get_fi(user=Depends(get_current_user)):
@@ -1760,7 +1774,7 @@ def mark_payment_paid(payment_id: int, user=Depends(get_current_user)):
             conn.execute(text(f"""
                 INSERT INTO {ct(client_id, 'income')}
                 (date, category, description, amount, month, year)
-                VALUES (:date, 'BHPH Payment', :desc, :amount, :month, :year)
+                VALUES (:date, 'Sale Income', :desc, :amount, :month, :year)
             """), {
                 "date":   today,
                 "desc":   f"BHPH Payment #{payment_id}",
