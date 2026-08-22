@@ -72,7 +72,7 @@ export default function Sales({ isMobile }) {
         {[
           { label: 'Total Sales',    value: summary?.total_sales || 0 },
           { label: 'Total Gross',    value: fmt(summary?.total_gross), color: '#2ecc71' },
-          { label: 'Avg Gross/Deal', value: fmt(summary?.avg_gross) },
+          { label: 'BHPH Collected', value: fmt(summary?.bhph_collected), color: '#4a9eff' },
           { label: 'This Month',     value: summary?.this_month || 0 },
         ].map((k, i) => (
           <div key={i} style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '16px', flex: '1 1', minWidth: isMobile ? 'calc(50% - 10px)' : '120px' }}>

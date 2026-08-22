@@ -362,7 +362,7 @@ def get_sales(user=Depends(get_current_user)):
                        COALESCE(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END), 0) +
                        COALESCE((SELECT SUM(amount) FROM {ct(client_id, 'income')} WHERE category = 'BHPH Payment'), 0)
                    AS numeric), 2) as total_gross,
-                   ROUND(CAST(AVG(CASE WHEN payment_type = 'In-House / BHPH' THEN NULL ELSE gross_profit END) AS numeric), 2) as avg_gross,
+                   COALESCE((SELECT SUM(amount) FROM {ct(client_id, 'income')} WHERE category = 'BHPH Payment'), 0) as bhph_collected,
                    SUM(CASE WHEN month = TO_CHAR(CURRENT_DATE, 'YYYY-MM') THEN 1 ELSE 0 END) as this_month
             FROM {table}
         """)[0]
@@ -381,13 +381,13 @@ def get_sales(user=Depends(get_current_user)):
             FROM {table} GROUP BY model ORDER BY units DESC LIMIT 5
         """)
         return {
-            "total_sales":  summary.get("total_sales") or 0,
-            "total_gross":  summary.get("total_gross"),
-            "avg_gross":    summary.get("avg_gross"),
-            "this_month":   summary.get("this_month") or 0,
-            "monthly":      monthly,
-            "leaderboard":  top_salespeople,
-            "top_models":   top_models,
+            "total_sales":    summary.get("total_sales") or 0,
+            "total_gross":    summary.get("total_gross"),
+            "bhph_collected": summary.get("bhph_collected"),
+            "this_month":     summary.get("this_month") or 0,
+            "monthly":        monthly,
+            "leaderboard":    top_salespeople,
+            "top_models":     top_models,
         }
     except Exception as e:
         return {"error": str(e)}
