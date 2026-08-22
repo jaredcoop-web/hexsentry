@@ -1290,33 +1290,6 @@ class Expense(BaseModel):
     frequency:   str = "one-time"
     notes:       Optional[str] = ""
 
-@app.post("/expenses/add")
-def add_expense(expense: Expense, user=Depends(get_current_user)):
-    client_id = user["client_id"]
-    table     = ct(client_id, "expenses")
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(f"""
-                INSERT INTO {table}
-                (date, category, description, amount, recurring, frequency, notes, month, year)
-                VALUES (:date, :category, :description, :amount, :recurring, :frequency, :notes, :month, :year)
-            """), {
-                "date":        expense.date,
-                "category":    expense.category,
-                "description": expense.description,
-                "amount":      expense.amount,
-                "recurring":   expense.recurring,
-                "frequency":   expense.frequency,
-                "notes":       expense.notes or "",
-                "month":       expense.date[:7],
-                "year":        expense.date[:4],
-            })
-            conn.commit()
-        return {"message": "Expense added"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.get("/expenses")
 def get_expenses(user=Depends(get_current_user)):
     client_id = user["client_id"]
@@ -1334,6 +1307,13 @@ def get_expenses(user=Depends(get_current_user)):
             SELECT ROUND(CAST(SUM(amount) AS numeric), 0) as total_other_income
             FROM {inc_table}
             WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+            AND category NOT IN ('Sale Income', 'BHPH Payment')
+        """)
+        sale_income = q(f"""
+            SELECT ROUND(CAST(SUM(amount) AS numeric), 0) as total_sale_income
+            FROM {inc_table}
+            WHERE month = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
+            AND category IN ('Sale Income', 'BHPH Payment')
         """)
         by_category = q(f"""
             SELECT category,
@@ -1362,6 +1342,7 @@ def get_expenses(user=Depends(get_current_user)):
             "summary": {
                 **(summary[0] if summary else {}),
                 "total_other_income": other_income[0].get("total_other_income", 0) if other_income else 0,
+                "total_sale_income":  sale_income[0].get("total_sale_income", 0) if sale_income else 0,
             },
             "by_category":   by_category,
             "monthly":       monthly,
@@ -1370,7 +1351,6 @@ def get_expenses(user=Depends(get_current_user)):
         }
     except Exception as e:
         return {"error": str(e)}
-
 
 @app.get("/cashflow")
 def get_cashflow(user=Depends(get_current_user)):

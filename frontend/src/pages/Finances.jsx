@@ -76,9 +76,9 @@ export default function Finances({ isMobile }) {
 
   const thisMonth     = cashflow?.cashflow?.slice(-1)[0]
   const totalIncome   = thisMonth?.income || 0
-  const totalExpenses = parseInt(data?.summary?.total_expenses || 0)
   const totalOtherInc = parseInt(data?.summary?.total_other_income || 0)
-  const netCashflow   = (totalIncome + totalOtherInc) - totalExpenses
+  const totalSaleInc  = parseInt(data?.summary?.total_sale_income || 0)
+  const netCashflow   = (totalIncome + totalOtherInc + totalSaleInc) - totalExpenses
 
   const gridCols = isMobile ? '1fr' : '1fr 1fr'
 
