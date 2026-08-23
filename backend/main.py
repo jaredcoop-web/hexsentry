@@ -1333,9 +1333,11 @@ def get_expenses(user=Depends(get_current_user)):
             FROM {exp_table}
             ORDER BY date DESC LIMIT 50
         """)
-        recent_income = q(f"""
-            SELECT id, date, category, description, amount
-            FROM {inc_table}
+        recent = q(f"""
+            SELECT id, date, category, description, 
+                   ROUND(CAST(amount AS numeric), 2) as amount, 
+                   recurring, frequency
+            FROM {exp_table}
             ORDER BY date DESC LIMIT 50
         """)
         return {
