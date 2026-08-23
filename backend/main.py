@@ -1828,9 +1828,9 @@ def get_bhph_summary(user=Depends(get_current_user)):
         summary = q(f"""
             SELECT
                 COUNT(DISTINCT c.id) as active_contracts,
-                SUM(c.amount_financed) as total_portfolio,
-                SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END) as total_collected,
-                SUM(CASE WHEN p.status = 'Late' THEN p.amount_due ELSE 0 END) as total_late,
+                ROUND(CAST(SUM(c.amount_financed) AS numeric), 2) as total_portfolio,
+                ROUND(CAST(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END) AS numeric), 2) as total_collected,
+                ROUND(CAST(SUM(CASE WHEN p.status = 'Late' THEN p.amount_due ELSE 0 END) AS numeric), 2) as total_late,
                 COUNT(CASE WHEN p.status = 'Late' THEN 1 END) as late_payments,
                 COUNT(CASE WHEN p.due_date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD') AND p.status = 'Upcoming' THEN 1 END) as due_today
             FROM {ct(client_id, 'bhph_contracts')} c
