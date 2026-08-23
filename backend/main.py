@@ -1740,7 +1740,7 @@ def get_bhph_contracts(user=Depends(get_current_user)):
         contracts = q(f"""
             SELECT c.*,
                    COUNT(p.id) as total_payments,
-                   SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END) as total_collected,
+                   ROUND(CAST(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END) AS numeric), 2) as total_collected,
                    SUM(CASE WHEN p.status = 'Late' THEN 1 ELSE 0 END) as late_count,
                    SUM(CASE WHEN p.status = 'Upcoming' AND p.due_date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD') THEN 1 ELSE 0 END) as due_today
             FROM {ct(client_id, 'bhph_contracts')} c
