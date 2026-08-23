@@ -184,8 +184,8 @@ export default function Collections({ isMobile }) {
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
           {[
             { label: 'Active Contracts', value: summary.active_contracts || 0 },
-            { label: 'Total Portfolio',  value: `$${Number(summary.total_portfolio || 0).toLocaleString()}`, color: '#4a9eff' },
-            { label: 'Total Collected',  value: `$${Number(summary.total_collected || 0).toLocaleString()}`, color: '#2ecc71' },
+            { label: 'Total Portfolio',  value: `$${Number(summary.total_portfolio || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, color: '#4a9eff' },
+            { label: 'Total Collected',  value: `$${Number(summary.total_collected || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, color: '#2ecc71' },
             { label: 'Late Payments',    value: summary.late_payments || 0, color: (summary.late_payments || 0) > 0 ? '#e74c3c' : '#2ecc71' },
             { label: 'Due Today',        value: summary.due_today || 0, color: (summary.due_today || 0) > 0 ? '#f39c12' : '#2ecc71' },
           ].map((k, i) => (
@@ -267,7 +267,7 @@ export default function Collections({ isMobile }) {
                         🔴 {c.late_count} late
                       </span>
                     )}
-                    <p style={{ color: '#2ecc71', margin: 0, fontSize: '13px', fontWeight: 'bold' }}>${Number(c.total_collected || 0).toLocaleString()}</p>
+                    <p style={{ color: '#2ecc71', margin: 0, fontSize: '13px', fontWeight: 'bold' }}>${Number(c.total_collected || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                     <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>collected</p>
                   </div>
                 </div>
