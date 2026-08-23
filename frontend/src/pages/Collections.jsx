@@ -6,6 +6,7 @@ const CARD = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8
 const INPUT = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
 const LABEL = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
 const SELECT = { ...INPUT, cursor: 'pointer' }
+const fmt = (n) => n != null ? `$${Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '$0.00'
 
 export default function Collections({ isMobile }) {
   const [contracts, setContracts]               = useState([])
@@ -155,7 +156,6 @@ export default function Collections({ isMobile }) {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -164,9 +164,7 @@ export default function Collections({ isMobile }) {
           <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Track in-house finance payments and collections</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={handleClearAll} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
-            Clear All
-          </button>
+          <button onClick={handleClearAll} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Clear All</button>
           <button onClick={() => setShowNew(!showNew)} style={{ padding: '10px 16px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
             {showNew ? 'Cancel' : '➕ New Contract'}
           </button>
@@ -179,13 +177,12 @@ export default function Collections({ isMobile }) {
         </div>
       )}
 
-      {/* KPIs */}
       {summary && (
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
           {[
             { label: 'Active Contracts', value: summary.active_contracts || 0 },
-            { label: 'Total Portfolio',  value: `$${Number(summary.total_portfolio || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, color: '#4a9eff' },
-            { label: 'Total Collected',  value: `$${Number(summary.total_collected || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, color: '#2ecc71' },
+            { label: 'Total Portfolio',  value: fmt(summary.total_portfolio), color: '#4a9eff' },
+            { label: 'Total Collected',  value: fmt(summary.total_collected), color: '#2ecc71' },
             { label: 'Late Payments',    value: summary.late_payments || 0, color: (summary.late_payments || 0) > 0 ? '#e74c3c' : '#2ecc71' },
             { label: 'Due Today',        value: summary.due_today || 0, color: (summary.due_today || 0) > 0 ? '#f39c12' : '#2ecc71' },
           ].map((k, i) => (
@@ -197,7 +194,6 @@ export default function Collections({ isMobile }) {
         </div>
       )}
 
-      {/* New Contract Form */}
       {showNew && (
         <div style={CARD}>
           <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '20px' }}>New BHPH Contract</h2>
@@ -222,9 +218,9 @@ export default function Collections({ isMobile }) {
           </div>
           {calc && (
             <div style={{ background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', padding: '14px', marginBottom: '16px', fontSize: '13px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span style={{ color: '#666' }}>Amount financed:</span><span style={{ color: '#C0C0C0' }}>${calc.principal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span style={{ color: '#666' }}>{form.payment_frequency} payment:</span><span style={{ color: '#4a9eff', fontWeight: 'bold' }}>${calc.paymentAmount.toFixed(2)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: '6px' }}><span style={{ color: '#666' }}>Total interest earned:</span><span style={{ color: '#2ecc71', fontWeight: 'bold' }}>${calc.totalInterest.toFixed(2)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span style={{ color: '#666' }}>Amount financed:</span><span style={{ color: '#C0C0C0' }}>{fmt(calc.principal)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span style={{ color: '#666' }}>{form.payment_frequency} payment:</span><span style={{ color: '#4a9eff', fontWeight: 'bold' }}>{fmt(calc.paymentAmount)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: '6px' }}><span style={{ color: '#666' }}>Total interest earned:</span><span style={{ color: '#2ecc71', fontWeight: 'bold' }}>{fmt(calc.totalInterest)}</span></div>
             </div>
           )}
           <div style={{ marginBottom: '16px' }}>
@@ -237,29 +233,22 @@ export default function Collections({ isMobile }) {
         </div>
       )}
 
-      {/* Contract list + payment detail */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : selectedContract ? '1fr 1fr' : '1fr', gap: '20px' }}>
-
-        {/* Contracts list */}
         <div style={CARD}>
           <h2 style={{ color: '#C0C0C0', fontSize: '15px', marginBottom: '16px' }}>Active Contracts</h2>
           {contracts.length === 0 ? (
             <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No contracts yet.</p>
           ) : (
             contracts.map((c, i) => (
-              <div key={i}
-                onClick={() => handleSelectContract(c)}
+              <div key={i} onClick={() => handleSelectContract(c)}
                 style={{ padding: '14px', background: selectedContract?.id === c.id ? '#0d1a2d' : '#0A0A0A', border: `1px solid ${selectedContract?.id === c.id ? '#4a9eff' : '#222'}`, borderRadius: '8px', marginBottom: '8px', cursor: 'pointer', position: 'relative' }}>
-                <button
-                  onClick={e => { e.stopPropagation(); handleDeleteContract(c.id) }}
-                  style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '14px' }}>
-                  ✕
-                </button>
+                <button onClick={e => { e.stopPropagation(); handleDeleteContract(c.id) }}
+                  style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '14px' }}>✕</button>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <p style={{ color: '#C0C0C0', margin: '0 0 4px', fontWeight: 'bold', fontSize: '14px' }}>{c.customer_name}</p>
                     <p style={{ color: '#666', margin: '0 0 4px', fontSize: '12px' }}>{c.vehicle}</p>
-                    <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>{c.payment_frequency} — ${Number(c.payment_amount).toFixed(2)}/payment</p>
+                    <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>{c.payment_frequency} — {fmt(c.payment_amount)}/payment</p>
                   </div>
                   <div style={{ textAlign: 'right', marginRight: '20px' }}>
                     {(c.late_count || 0) > 0 && (
@@ -267,7 +256,7 @@ export default function Collections({ isMobile }) {
                         🔴 {c.late_count} late
                       </span>
                     )}
-                    <p style={{ color: '#2ecc71', margin: 0, fontSize: '13px', fontWeight: 'bold' }}>${Number(c.total_collected || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                    <p style={{ color: '#2ecc71', margin: 0, fontSize: '13px', fontWeight: 'bold' }}>{fmt(c.total_collected)}</p>
                     <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>collected</p>
                   </div>
                 </div>
@@ -276,7 +265,6 @@ export default function Collections({ isMobile }) {
           )}
         </div>
 
-        {/* Payment schedule */}
         {selectedContract && (
           <div style={CARD}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -289,15 +277,15 @@ export default function Collections({ isMobile }) {
             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
               <div style={{ background: '#0A0A0A', borderRadius: '6px', padding: '8px 12px', flex: 1 }}>
                 <p style={{ color: '#555', fontSize: '10px', margin: '0 0 2px', textTransform: 'uppercase' }}>Financed</p>
-                <p style={{ color: '#4a9eff', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>${Number(selectedContract.amount_financed).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                <p style={{ color: '#4a9eff', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>{fmt(selectedContract.amount_financed)}</p>
               </div>
               <div style={{ background: '#0A0A0A', borderRadius: '6px', padding: '8px 12px', flex: 1 }}>
                 <p style={{ color: '#555', fontSize: '10px', margin: '0 0 2px', textTransform: 'uppercase' }}>Collected</p>
-                <p style={{ color: '#2ecc71', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>${Number(selectedContract.total_collected || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                <p style={{ color: '#2ecc71', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>{fmt(selectedContract.total_collected)}</p>
               </div>
               <div style={{ background: '#0A0A0A', borderRadius: '6px', padding: '8px 12px', flex: 1 }}>
                 <p style={{ color: '#555', fontSize: '10px', margin: '0 0 2px', textTransform: 'uppercase' }}>Remaining</p>
-                <p style={{ color: '#C0C0C0', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>${(Number(selectedContract.amount_financed) - Number(selectedContract.total_collected || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                <p style={{ color: '#C0C0C0', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>{fmt(Number(selectedContract.amount_financed) - Number(selectedContract.total_collected || 0))}</p>
               </div>
             </div>
             <h3 style={{ color: '#C0C0C0', fontSize: '13px', margin: '0 0 10px', textTransform: 'uppercase' }}>Payment Schedule</h3>
@@ -316,16 +304,12 @@ export default function Collections({ isMobile }) {
                       </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#C0C0C0', fontSize: '13px' }}>${Number(p.amount_due).toFixed(2)}</span>
+                      <span style={{ color: '#C0C0C0', fontSize: '13px' }}>{fmt(p.amount_due)}</span>
                       {p.status !== 'Paid' && (
                         <>
-                          <button onClick={() => handleMarkPaid(p.id)} style={{ padding: '4px 8px', background: '#0d2d15', color: '#2ecc71', border: '1px solid #27ae60', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
-                            Paid
-                          </button>
+                          <button onClick={() => handleMarkPaid(p.id)} style={{ padding: '4px 8px', background: '#0d2d15', color: '#2ecc71', border: '1px solid #27ae60', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>Paid</button>
                           {p.status !== 'Late' && (
-                            <button onClick={() => handleMarkLate(p.id)} style={{ padding: '4px 8px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
-                              Late
-                            </button>
+                            <button onClick={() => handleMarkLate(p.id)} style={{ padding: '4px 8px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>Late</button>
                           )}
                         </>
                       )}
