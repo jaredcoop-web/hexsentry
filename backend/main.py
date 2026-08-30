@@ -1887,3 +1887,78 @@ def change_password(data: dict, user=Depends(get_current_user)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+import secrets
+
+@app.post("/forgot-password")
+def forgot_password(data: dict):
+    email = data.get("email", "").lower().strip()
+    try:
+        from pipeline.auth import get_user
+        user = get_user(email)
+        if not user:
+            return {"message": "If that email exists, a reset link has been sent."}
+        
+        token = secrets.token_urlsafe(32)
+        expires = datetime.utcnow() + timedelta(hours=1)
+        
+        with engine.connect() as conn:
+            conn.execute(text("""
+                INSERT INTO password_reset_tokens (email, token, expires_at)
+                VALUES (:email, :token, :expires)
+            """), {"email": email, "token": token, "expires": expires})
+            conn.commit()
+        
+        import resend
+        resend.api_key = os.getenv("RESEND_API_KEY")
+        reset_url = f"https://hexguardapp.com/reset-password?token={token}"
+        resend.Emails.send({
+            "from":    "HexGuard <reports@hexguardapp.com>",
+            "to":      email,
+            "subject": "Reset your HexGuard password",
+            "html":    f"""
+                <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;background:#0A0A0A;color:#C0C0C0;">
+                    <h2 style="color:#C0C0C0;">Reset your password</h2>
+                    <p style="color:#666;">You requested a password reset for your HexGuard account.</p>
+                    <a href="{reset_url}" style="display:inline-block;padding:12px 24px;background:#4a9eff;color:#fff;text-decoration:none;border-radius:6px;margin:16px 0;">Reset Password</a>
+                    <p style="color:#444;font-size:12px;">This link expires in 1 hour. If you didn't request this, ignore this email.</p>
+                </div>
+            """
+        })
+        return {"message": "If that email exists, a reset link has been sent."}
+    except Exception as e:
+        return {"message": "If that email exists, a reset link has been sent."}
+
+
+@app.post("/reset-password")
+def reset_password(data: dict):
+    token    = data.get("token", "")
+    password = data.get("new_password", "")
+    try:
+        from pipeline.auth import hash_password
+        with engine.connect() as conn:
+            result = conn.execute(text("""
+                SELECT email, expires_at, used FROM password_reset_tokens
+                WHERE token = :token
+            """), {"token": token}).fetchone()
+            
+            if not result:
+                raise HTTPException(status_code=400, detail="Invalid reset link")
+            if result[2]:
+                raise HTTPException(status_code=400, detail="Reset link already used")
+            if datetime.utcnow() > result[1]:
+                raise HTTPException(status_code=400, detail="Reset link has expired")
+            
+            email = result[0]
+            conn.execute(text("""
+                UPDATE users SET password_hash = :hash WHERE email = :email
+            """), {"hash": hash_password(password), "email": email})
+            conn.execute(text("""
+                UPDATE password_reset_tokens SET used = true WHERE token = :token
+            """), {"token": token})
+            conn.commit()
+        return {"message": "Password reset successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
