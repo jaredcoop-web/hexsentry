@@ -20,6 +20,8 @@ import AddJob from './pages/AddJob'
 import Jobs from './pages/Jobs'
 import Collections from './pages/Collections'
 import ChangePassword from './pages/ChangePassword'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 
 const Placeholder = ({ title }) => (
@@ -37,6 +39,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home')
   const [showLogin, setShowLogin]     = useState(false)
   const [isMobile, setIsMobile]       = useState(window.innerWidth < 768)
+  const [showForgot, setShowForgot] = useState(false)
 
   useEffect(() => {
     const handle = () => setIsMobile(window.innerWidth < 768)
@@ -57,8 +60,13 @@ export default function App() {
     setShowLogin(false)
   }
 
-  if (!user && !showLogin) return <Landing onGetStarted={() => setShowLogin(true)} />
-  if (!user && showLogin)  return <Login onLogin={handleLogin} onBack={() => setShowLogin(false)} />
+  // Check for password reset token in URL
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('token')) return <ResetPassword />
+
+  if (!user && !showLogin && !showForgot) return <Landing onGetStarted={() => setShowLogin(true)} />
+  if (!user && showForgot) return <ForgotPassword onBack={() => setShowForgot(false)} />
+  if (!user && showLogin)  return <Login onLogin={handleLogin} onBack={() => setShowLogin(false)} onForgotPassword={() => { setShowLogin(false); setShowForgot(true) }} />
 
   const renderPage = () => {
     switch (currentPage) {

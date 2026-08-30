@@ -6,7 +6,7 @@ import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
-export default function Login({ onLogin, onBack }) {
+export default function Login({ onLogin, onBack, onForgotPassword }) {
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -176,6 +176,12 @@ export default function Login({ onLogin, onBack }) {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <p style={{ textAlign: 'center', marginTop: '12px' }}>
+          <button onClick={onForgotPassword} style={{ background: 'none', border: 'none', color: '#4a9eff', cursor: 'pointer', fontSize: '13px' }}>
+            Forgot password?
+          </button>
+        </p>
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <button onClick={onBack} style={{ background: 'none', border: 'none', color: '#4a9eff', cursor: 'pointer', fontSize: '13px', textDecoration: 'underline' }}>
