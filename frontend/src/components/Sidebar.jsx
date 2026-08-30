@@ -17,7 +17,6 @@ const PAGES = [
   { id: 'add-job', icon: <Wrench size={18} />, label: 'Add Job' },
   { id: 'jobs', icon: <ClipboardList size={18} />, label: 'Jobs' },
   { id: 'collections', icon: <DollarSign size={18} />, label: 'Collections' },
-  { id: 'change-password', icon: <KeyRound size={18} />, label: 'Change Password' },
 ]
 
 export default function Sidebar({ user, currentPage, setCurrentPage, onLogout }) {
@@ -123,22 +122,17 @@ const pages = [
             <p style={{ color: '#444', fontSize: '11px', margin: '0 0 8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.sub}</p>
           )}
           <button
+            onClick={() => setCurrentPage('change-password')}
+            title={collapsed ? 'Change Password' : ''}
+            style={{ width: '100%', padding: '8px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}
+          >
+            <KeyRound size={16} />
+            {!collapsed && <span>Change Password</span>}
+          </button>
+          <button
             onClick={onLogout}
             title={collapsed ? 'Log out' : ''}
-            style={{
-              width: '100%',
-              padding: '8px',
-              background: 'transparent',
-              color: '#666',
-              border: '1px solid #333',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-            }}
+            style={{ width: '100%', padding: '8px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             <LogOut size={16} />
             {!collapsed && <span>Log out</span>}
