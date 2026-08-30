@@ -147,7 +147,7 @@ export default function Finances({ isMobile }) {
         {[
           { label: 'Sales Income',   value: `$${totalSaleInc.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,    color: '#2ecc71' },
           { label: 'Other Income',   value: `$${totalOtherInc.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,   color: '#3498db' },
-          { label: 'Total Expenses', value: `$${totalExpenses..toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,   color: '#e74c3c' },
+          { label: 'Total Expenses', value: `$${totalExpenses.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,   color: '#e74c3c' },
           { label: 'Net Cash Flow',  value: `$${netCashflow.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`,     color: netCashflow >= 0 ? '#2ecc71' : '#e74c3c' },
         ].map((k, i) => (
           <div key={i} style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '14px 16px', flex: '1 1', minWidth: isMobile ? 'calc(50% - 10px)' : '120px' }}>
