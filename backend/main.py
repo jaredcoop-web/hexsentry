@@ -1866,3 +1866,24 @@ def clear_all_bhph(user=Depends(get_current_user)):
         return {"message": "All contracts cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/change-password")
+def change_password(data: dict, user=Depends(get_current_user)):
+    from pipeline.auth import get_user, hash_password, verify_password
+    try:
+        db_user = get_user(user["sub"])
+        if not verify_password(data["current_password"], db_user["password_hash"]):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        with engine.connect() as conn:
+            conn.execute(text("""
+                UPDATE users SET password_hash = :hash WHERE email = :email
+            """), {
+                "hash":  hash_password(data["new_password"]),
+                "email": user["sub"]
+            })
+            conn.commit()
+        return {"message": "Password updated"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

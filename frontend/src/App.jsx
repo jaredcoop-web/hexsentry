@@ -19,6 +19,7 @@ import DealerInventory from './pages/DealerInventory'
 import AddJob from './pages/AddJob'
 import Jobs from './pages/Jobs'
 import Collections from './pages/Collections'
+import ChangePassword from './pages/ChangePassword'
 
 
 const Placeholder = ({ title }) => (
@@ -77,6 +78,7 @@ export default function App() {
       case 'add-job': return <AddJob isMobile={isMobile} />
       case 'jobs': return <Jobs isMobile={isMobile} />
       case 'collections': return <Collections isMobile={isMobile} />
+      case 'change-password': return <ChangePassword />
       default:          return <Home user={user} setCurrentPage={setCurrentPage} isMobile={isMobile} />
     }
   }
