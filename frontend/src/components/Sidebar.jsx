@@ -1,6 +1,6 @@
 
 import { useState } from 'react'
-import { Home, Car, Plus, Briefcase, Star, Package, Mail, Bot, CreditCard, DollarSign, Settings, LogOut, ChevronLeft, ChevronRight, Truck, Wrench, ClipboardList} from 'lucide-react'
+import { Home, Car, Plus, Briefcase, Star, Package, Mail, Bot, CreditCard, DollarSign, Settings, LogOut, ChevronLeft, ChevronRight, Truck, Wrench, ClipboardList, KeyRound } from 'lucide-react'
 
 const PAGES = [
   { id: 'home',      label: 'Home',         icon: <Home size={18} /> },
