@@ -1927,8 +1927,7 @@ def forgot_password(data: dict):
         })
         return {"message": "If that email exists, a reset link has been sent."}
     except Exception as e:
-        return {"message": "If that email exists, a reset link has been sent."}
-
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/reset-password")
 def reset_password(data: dict):
