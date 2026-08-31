@@ -49,7 +49,7 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('connected') || params.get('error')) setCurrentPage('reviews')
+    if (params.get('reset_token')) return <ResetPassword />
   }, [])
 
   const handleLogin  = (userData) => { setUser(userData); setCurrentPage('home') }

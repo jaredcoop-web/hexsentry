@@ -9,7 +9,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const t = params.get('token')
+    const t = params.get('reset_token')
     if (t) setToken(t)
     else setStatus({ type: 'error', msg: 'Invalid reset link.' })
   }, [])

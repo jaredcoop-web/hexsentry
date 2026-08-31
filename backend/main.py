@@ -1911,7 +1911,7 @@ def forgot_password(data: dict):
         
         import resend
         resend.api_key = os.getenv("RESEND_API_KEY")
-        reset_url = f"https://hexguardapp.com/reset-password?token={token}"
+        reset_url = f"https://hexguardapp.com/?reset_token={token}"
         resend.Emails.send({
             "from":    "HexGuard <reports@hexguardapp.com>",
             "to":      email,
