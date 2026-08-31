@@ -47,10 +47,6 @@ export default function App() {
     return () => window.removeEventListener('resize', handle)
   }, [])
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('reset_token')) return <ResetPassword />
-  }, [])
 
   const handleLogin  = (userData) => { setUser(userData); setCurrentPage('home') }
   const handleLogout = () => {
