@@ -56,9 +56,9 @@ export default function App() {
     setShowLogin(false)
   }
 
-  // Check for password reset token in URL
+  // Check for password reset token in URL — must be before user check
   const params = new URLSearchParams(window.location.search)
-  if (params.get('token')) return <ResetPassword />
+  if (params.get('reset_token')) return <ResetPassword />
 
   if (!user && !showLogin && !showForgot) return <Landing onGetStarted={() => setShowLogin(true)} />
   if (!user && showForgot) return <ForgotPassword onBack={() => setShowForgot(false)} />
