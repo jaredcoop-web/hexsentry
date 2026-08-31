@@ -1040,7 +1040,6 @@ class EmailReportRequest(BaseModel):
     business_name:   Optional[str] = ""
 
 def _send_report(user: dict, recipient_email: str):
-    import resend
     import os
     resend.api_key = os.getenv("RESEND_API_KEY")
 
