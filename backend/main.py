@@ -1895,6 +1895,7 @@ def forgot_password(data: dict):
     try:
         from pipeline.auth import get_user
         user = get_user(email)
+        print(f"DEBUG: user found = {user is not None}, email = {email}")
         if not user:
             return {"message": "If that email exists, a reset link has been sent."}
         
