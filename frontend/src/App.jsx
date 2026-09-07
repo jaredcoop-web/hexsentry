@@ -22,6 +22,7 @@ import Collections from './pages/Collections'
 import ChangePassword from './pages/ChangePassword'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import Customers from './pages/Customers'
 
 
 const Placeholder = ({ title }) => (
@@ -83,6 +84,7 @@ export default function App() {
       case 'jobs': return <Jobs isMobile={isMobile} />
       case 'collections': return <Collections isMobile={isMobile} />
       case 'change-password': return <ChangePassword />
+      case 'customers': return <Customers isMobile={isMobile} />
       default:          return <Home user={user} setCurrentPage={setCurrentPage} isMobile={isMobile} />
     }
   }

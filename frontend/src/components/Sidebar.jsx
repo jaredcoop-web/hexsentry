@@ -17,6 +17,7 @@ const PAGES = [
   { id: 'add-job', icon: <Wrench size={18} />, label: 'Add Job' },
   { id: 'jobs', icon: <ClipboardList size={18} />, label: 'Jobs' },
   { id: 'collections', icon: <DollarSign size={18} />, label: 'Collections' },
+  { id: 'customers', icon: <Users size={18} />, label: 'Customers' },
 ]
 
 export default function Sidebar({ user, currentPage, setCurrentPage, onLogout }) {
