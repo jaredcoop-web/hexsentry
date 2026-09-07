@@ -1,11 +1,11 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { Users } from 'lucide-react'
 import api from '../api'
 
-const INPUT  = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
-const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
-const CARD   = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '20px', marginBottom: '20px' }
-const fmt    = (n) => n != null ? `$${Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '$0.00'
+const INPUT = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
+const LABEL = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
+const CARD  = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '20px', marginBottom: '20px' }
+const fmt   = (n) => n != null ? `$${Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '$0.00'
 
 const EMPTY_FORM = {
   first_name: '', last_name: '', phone: '', email: '',
@@ -13,42 +13,172 @@ const EMPTY_FORM = {
   id_number: '', employer: '', monthly_income: '', notes: ''
 }
 
+// Standalone component defined strictly outside parent function
 const CustomerForm = ({ form, update, saving, onSave, onCancel, saveLabel, isMobile }) => {
   const gridCols = isMobile ? '1fr' : '1fr 1fr'
+  
   return (
     <div style={CARD}>
       <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px', marginBottom: '14px' }}>
-        <div><label style={LABEL}>First name *</label><input type="text" value={form.first_name} onChange={e => update('first_name', e.target.value)} placeholder="John" style={INPUT} /></div>
-        <div><label style={LABEL}>Last name *</label><input type="text" value={form.last_name} onChange={e => update('last_name', e.target.value)} placeholder="Smith" style={INPUT} /></div>
-        <div><label style={LABEL}>Phone</label><input type="text" value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="(555) 123-4567" style={INPUT} /></div>
-        <div><label style={LABEL}>Email</label><input type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="john@email.com" style={INPUT} /></div>
+        <div>
+          <label style={LABEL}>First name *</label>
+          <input 
+            type="text" 
+            name="first_name"
+            value={form.first_name || ''} 
+            onChange={e => update('first_name', e.target.value)} 
+            placeholder="John" 
+            style={INPUT} 
+          />
+        </div>
+        <div>
+          <label style={LABEL}>Last name *</label>
+          <input 
+            type="text" 
+            name="last_name"
+            value={form.last_name || ''} 
+            onChange={e => update('last_name', e.target.value)} 
+            placeholder="Smith" 
+            style={INPUT} 
+          />
+        </div>
+        <div>
+          <label style={LABEL}>Phone</label>
+          <input 
+            type="text" 
+            name="phone"
+            value={form.phone || ''} 
+            onChange={e => update('phone', e.target.value)} 
+            placeholder="(555) 123-4567" 
+            style={INPUT} 
+          />
+        </div>
+        <div>
+          <label style={LABEL}>Email</label>
+          <input 
+            type="email" 
+            name="email"
+            value={form.email || ''} 
+            onChange={e => update('email', e.target.value)} 
+            placeholder="john@email.com" 
+            style={INPUT} 
+          />
+        </div>
       </div>
+      
       <div style={{ background: '#0d0d1a', border: '1px solid #222', borderRadius: '8px', padding: '14px', marginBottom: '14px' }}>
         <p style={{ color: '#4a9eff', fontSize: '12px', fontWeight: 'bold', margin: '0 0 10px', textTransform: 'uppercase' }}>Address</p>
         <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-          <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}><label style={LABEL}>Street address</label><input type="text" value={form.address} onChange={e => update('address', e.target.value)} placeholder="123 Main St" style={INPUT} /></div>
-          <div><label style={LABEL}>City</label><input type="text" value={form.city} onChange={e => update('city', e.target.value)} placeholder="Houston" style={INPUT} /></div>
-          <div><label style={LABEL}>State</label><input type="text" value={form.state} onChange={e => update('state', e.target.value)} placeholder="TX" style={INPUT} /></div>
-          <div><label style={LABEL}>Zip</label><input type="text" value={form.zip} onChange={e => update('zip', e.target.value)} placeholder="77001" style={INPUT} /></div>
+          <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}>
+            <label style={LABEL}>Street address</label>
+            <input 
+              type="text" 
+              name="address"
+              value={form.address || ''} 
+              onChange={e => update('address', e.target.value)} 
+              placeholder="123 Main St" 
+              style={INPUT} 
+            />
+          </div>
+          <div>
+            <label style={LABEL}>City</label>
+            <input 
+              type="text" 
+              name="city"
+              value={form.city || ''} 
+              onChange={e => update('city', e.target.value)} 
+              placeholder="Houston" 
+              style={INPUT} 
+            />
+          </div>
+          <div>
+            <label style={LABEL}>State</label>
+            <input 
+              type="text" 
+              name="state"
+              value={form.state || ''} 
+              onChange={e => update('state', e.target.value)} 
+              placeholder="TX" 
+              style={INPUT} 
+            />
+          </div>
+          <div>
+            <label style={LABEL}>Zip</label>
+            <input 
+              type="text" 
+              name="zip"
+              value={form.zip || ''} 
+              onChange={e => update('zip', e.target.value)} 
+              placeholder="77001" 
+              style={INPUT} 
+            />
+          </div>
         </div>
       </div>
+
       <div style={{ background: '#0d0d1a', border: '1px solid #222', borderRadius: '8px', padding: '14px', marginBottom: '14px' }}>
         <p style={{ color: '#2ecc71', fontSize: '12px', fontWeight: 'bold', margin: '0 0 10px', textTransform: 'uppercase' }}>Employment & ID</p>
         <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-          <div><label style={LABEL}>ID / License #</label><input type="text" value={form.id_number} onChange={e => update('id_number', e.target.value)} placeholder="DL123456" style={INPUT} /></div>
-          <div><label style={LABEL}>Employer</label><input type="text" value={form.employer} onChange={e => update('employer', e.target.value)} placeholder="Company name" style={INPUT} /></div>
-          <div><label style={LABEL}>Monthly income ($)</label><input type="number" value={form.monthly_income} onChange={e => update('monthly_income', e.target.value)} placeholder="0.00" style={INPUT} /></div>
+          <div>
+            <label style={LABEL}>ID / License #</label>
+            <input 
+              type="text" 
+              name="id_number"
+              value={form.id_number || ''} 
+              onChange={e => update('id_number', e.target.value)} 
+              placeholder="DL123456" 
+              style={INPUT} 
+            />
+          </div>
+          <div>
+            <label style={LABEL}>Employer</label>
+            <input 
+              type="text" 
+              name="employer"
+              value={form.employer || ''} 
+              onChange={e => update('employer', e.target.value)} 
+              placeholder="Company name" 
+              style={INPUT} 
+            />
+          </div>
+          <div>
+            <label style={LABEL}>Monthly income ($)</label>
+            <input 
+              type="number" 
+              name="monthly_income"
+              value={form.monthly_income || ''} 
+              onChange={e => update('monthly_income', e.target.value)} 
+              placeholder="0.00" 
+              style={INPUT} 
+            />
+          </div>
         </div>
       </div>
+
       <div style={{ marginBottom: '16px' }}>
         <label style={LABEL}>Notes</label>
-        <textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="Any additional notes..." rows={2} style={{ ...INPUT, resize: 'vertical' }} />
+        <textarea 
+          name="notes"
+          value={form.notes || ''} 
+          onChange={e => update('notes', e.target.value)} 
+          placeholder="Any additional notes..." 
+          rows={2} 
+          style={{ ...INPUT, resize: 'vertical' }} 
+        />
       </div>
+
       <div style={{ display: 'flex', gap: '8px' }}>
-        <button onClick={onSave} disabled={saving} style={{ padding: '10px 20px', background: saving ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+        <button 
+          onClick={onSave} 
+          disabled={saving} 
+          style={{ padding: '10px 20px', background: saving ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+        >
           {saving ? 'Saving...' : saveLabel}
         </button>
-        <button onClick={onCancel} style={{ padding: '10px 20px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
+        <button 
+          onClick={onCancel} 
+          style={{ padding: '10px 20px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}
+        >
           Cancel
         </button>
       </div>
@@ -102,7 +232,7 @@ export default function Customers({ isMobile }) {
     }
     setSaving(true)
     try {
-      const res = await api.post('/customers', {
+      await api.post('/customers', {
         ...form,
         monthly_income: parseFloat(form.monthly_income) || 0
       })
@@ -165,50 +295,6 @@ export default function Customers({ isMobile }) {
 
   const gridCols = isMobile ? '1fr' : '1fr 1fr'
 
-  const CustomerForm = ({ form, update, saving, onSave, onCancel, saveLabel, isMobile }) => (
-    <div style={CARD}>
-      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px', marginBottom: '14px' }}>
-        <div><label style={LABEL}>First name *</label><input type="text" value={form.first_name} onChange={e => update('first_name', e.target.value)} placeholder="John" style={INPUT} /></div>
-        <div><label style={LABEL}>Last name *</label><input type="text" value={form.last_name} onChange={e => update('last_name', e.target.value)} placeholder="Smith" style={INPUT} /></div>
-        <div><label style={LABEL}>Phone</label><input type="text" value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="(555) 123-4567" style={INPUT} /></div>
-        <div><label style={LABEL}>Email</label><input type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="john@email.com" style={INPUT} /></div>
-      </div>
-
-      <div style={{ background: '#0d0d1a', border: '1px solid #222', borderRadius: '8px', padding: '14px', marginBottom: '14px' }}>
-        <p style={{ color: '#4a9eff', fontSize: '12px', fontWeight: 'bold', margin: '0 0 10px', textTransform: 'uppercase' }}>Address</p>
-        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-          <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}><label style={LABEL}>Street address</label><input type="text" value={form.address} onChange={e => update('address', e.target.value)} placeholder="123 Main St" style={INPUT} /></div>
-          <div><label style={LABEL}>City</label><input type="text" value={form.city} onChange={e => update('city', e.target.value)} placeholder="Houston" style={INPUT} /></div>
-          <div><label style={LABEL}>State</label><input type="text" value={form.state} onChange={e => update('state', e.target.value)} placeholder="TX" style={INPUT} /></div>
-          <div><label style={LABEL}>Zip</label><input type="text" value={form.zip} onChange={e => update('zip', e.target.value)} placeholder="77001" style={INPUT} /></div>
-        </div>
-      </div>
-
-      <div style={{ background: '#0d0d1a', border: '1px solid #222', borderRadius: '8px', padding: '14px', marginBottom: '14px' }}>
-        <p style={{ color: '#2ecc71', fontSize: '12px', fontWeight: 'bold', margin: '0 0 10px', textTransform: 'uppercase' }}>Employment & ID</p>
-        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-          <div><label style={LABEL}>ID / License #</label><input type="text" value={form.id_number} onChange={e => update('id_number', e.target.value)} placeholder="DL123456" style={INPUT} /></div>
-          <div><label style={LABEL}>Employer</label><input type="text" value={form.employer} onChange={e => update('employer', e.target.value)} placeholder="Company name" style={INPUT} /></div>
-          <div><label style={LABEL}>Monthly income ($)</label><input type="number" value={form.monthly_income} onChange={e => update('monthly_income', e.target.value)} placeholder="0.00" style={INPUT} /></div>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: '16px' }}>
-        <label style={LABEL}>Notes</label>
-        <textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="Any additional notes..." rows={2} style={{ ...INPUT, resize: 'vertical' }} />
-      </div>
-
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button onClick={onSave} disabled={saving} style={{ padding: '10px 20px', background: saving ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
-          {saving ? 'Saving...' : saveLabel}
-        </button>
-        <button onClick={onCancel} style={{ padding: '10px 20px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
-          Cancel
-        </button>
-      </div>
-    </div>
-  )
-
   if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading customers...</p>
 
   return (
@@ -231,11 +317,10 @@ export default function Customers({ isMobile }) {
         </div>
       )}
 
-      {showNew && <CustomerForm form={form} update={update} saving={saving} isMobile={isMobile} onSave={handleCreate} onCancel={() => setShowNew(false)} saveLabel="Add Customer" />}
-      {showEdit && <CustomerForm form={form} update={update} saving={saving} isMobile={isMobile} onSave={handleUpdate} onCancel={() => setShowEdit(false)} saveLabel="Save Changes" />}
+      {showNew && <CustomerForm key="new-customer-form" form={form} update={update} saving={saving} isMobile={isMobile} onSave={handleCreate} onCancel={() => setShowNew(false)} saveLabel="Add Customer" />}
+      {showEdit && <CustomerForm key="edit-customer-form" form={form} update={update} saving={saving} isMobile={isMobile} onSave={handleUpdate} onCancel={() => setShowEdit(false)} saveLabel="Save Changes" />}
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : selected ? '1fr 1.5fr' : '1fr', gap: '20px' }}>
-
         {/* Customer list */}
         <div style={CARD}>
           <div style={{ marginBottom: '14px' }}>
@@ -253,8 +338,8 @@ export default function Customers({ isMobile }) {
               {customers.length === 0 ? 'No customers yet. Add your first customer above.' : 'No results found.'}
             </p>
           ) : (
-            filtered.map((c, i) => (
-              <div key={i} onClick={() => handleSelect(c)}
+            filtered.map((c) => (
+              <div key={c.id} onClick={() => handleSelect(c)}
                 style={{ padding: '12px', background: selected?.id === c.id ? '#0d1a2d' : '#0A0A0A', border: `1px solid ${selected?.id === c.id ? '#4a9eff' : '#222'}`, borderRadius: '8px', marginBottom: '6px', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
@@ -284,7 +369,6 @@ export default function Customers({ isMobile }) {
                 </div>
               </div>
 
-              {/* Contact info */}
               <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '10px', marginBottom: '16px' }}>
                 {[
                   { label: 'Phone',    value: customerDetail.customer.phone },
@@ -309,7 +393,6 @@ export default function Customers({ isMobile }) {
               )}
             </div>
 
-            {/* Purchase history */}
             {customerDetail.sales?.length > 0 && (
               <div style={CARD}>
                 <h3 style={{ color: '#C0C0C0', fontSize: '14px', margin: '0 0 12px' }}>Purchase History</h3>
@@ -328,7 +411,6 @@ export default function Customers({ isMobile }) {
               </div>
             )}
 
-            {/* BHPH contracts */}
             {customerDetail.contracts?.length > 0 && (
               <div style={CARD}>
                 <h3 style={{ color: '#C0C0C0', fontSize: '14px', margin: '0 0 12px' }}>BHPH Contracts</h3>
