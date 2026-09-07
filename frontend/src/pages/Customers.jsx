@@ -13,6 +13,49 @@ const EMPTY_FORM = {
   id_number: '', employer: '', monthly_income: '', notes: ''
 }
 
+const CustomerForm = ({ form, update, saving, onSave, onCancel, saveLabel, isMobile }) => {
+  const gridCols = isMobile ? '1fr' : '1fr 1fr'
+  return (
+    <div style={CARD}>
+      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px', marginBottom: '14px' }}>
+        <div><label style={LABEL}>First name *</label><input type="text" value={form.first_name} onChange={e => update('first_name', e.target.value)} placeholder="John" style={INPUT} /></div>
+        <div><label style={LABEL}>Last name *</label><input type="text" value={form.last_name} onChange={e => update('last_name', e.target.value)} placeholder="Smith" style={INPUT} /></div>
+        <div><label style={LABEL}>Phone</label><input type="text" value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="(555) 123-4567" style={INPUT} /></div>
+        <div><label style={LABEL}>Email</label><input type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="john@email.com" style={INPUT} /></div>
+      </div>
+      <div style={{ background: '#0d0d1a', border: '1px solid #222', borderRadius: '8px', padding: '14px', marginBottom: '14px' }}>
+        <p style={{ color: '#4a9eff', fontSize: '12px', fontWeight: 'bold', margin: '0 0 10px', textTransform: 'uppercase' }}>Address</p>
+        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
+          <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}><label style={LABEL}>Street address</label><input type="text" value={form.address} onChange={e => update('address', e.target.value)} placeholder="123 Main St" style={INPUT} /></div>
+          <div><label style={LABEL}>City</label><input type="text" value={form.city} onChange={e => update('city', e.target.value)} placeholder="Houston" style={INPUT} /></div>
+          <div><label style={LABEL}>State</label><input type="text" value={form.state} onChange={e => update('state', e.target.value)} placeholder="TX" style={INPUT} /></div>
+          <div><label style={LABEL}>Zip</label><input type="text" value={form.zip} onChange={e => update('zip', e.target.value)} placeholder="77001" style={INPUT} /></div>
+        </div>
+      </div>
+      <div style={{ background: '#0d0d1a', border: '1px solid #222', borderRadius: '8px', padding: '14px', marginBottom: '14px' }}>
+        <p style={{ color: '#2ecc71', fontSize: '12px', fontWeight: 'bold', margin: '0 0 10px', textTransform: 'uppercase' }}>Employment & ID</p>
+        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
+          <div><label style={LABEL}>ID / License #</label><input type="text" value={form.id_number} onChange={e => update('id_number', e.target.value)} placeholder="DL123456" style={INPUT} /></div>
+          <div><label style={LABEL}>Employer</label><input type="text" value={form.employer} onChange={e => update('employer', e.target.value)} placeholder="Company name" style={INPUT} /></div>
+          <div><label style={LABEL}>Monthly income ($)</label><input type="number" value={form.monthly_income} onChange={e => update('monthly_income', e.target.value)} placeholder="0.00" style={INPUT} /></div>
+        </div>
+      </div>
+      <div style={{ marginBottom: '16px' }}>
+        <label style={LABEL}>Notes</label>
+        <textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="Any additional notes..." rows={2} style={{ ...INPUT, resize: 'vertical' }} />
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button onClick={onSave} disabled={saving} style={{ padding: '10px 20px', background: saving ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+          {saving ? 'Saving...' : saveLabel}
+        </button>
+        <button onClick={onCancel} style={{ padding: '10px 20px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function Customers({ isMobile }) {
   const [customers, setCustomers]           = useState([])
   const [selected, setSelected]             = useState(null)
@@ -122,7 +165,7 @@ export default function Customers({ isMobile }) {
 
   const gridCols = isMobile ? '1fr' : '1fr 1fr'
 
-  const CustomerForm = ({ onSave, onCancel, saveLabel }) => (
+  const CustomerForm = ({ form, update, saving, onSave, onCancel, saveLabel, isMobile }) => (
     <div style={CARD}>
       <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px', marginBottom: '14px' }}>
         <div><label style={LABEL}>First name *</label><input type="text" value={form.first_name} onChange={e => update('first_name', e.target.value)} placeholder="John" style={INPUT} /></div>
@@ -188,8 +231,8 @@ export default function Customers({ isMobile }) {
         </div>
       )}
 
-      {showNew && <CustomerForm onSave={handleCreate} onCancel={() => setShowNew(false)} saveLabel="Add Customer" />}
-      {showEdit && <CustomerForm onSave={handleUpdate} onCancel={() => setShowEdit(false)} saveLabel="Save Changes" />}
+      {showNew && <CustomerForm form={form} update={update} saving={saving} isMobile={isMobile} onSave={handleCreate} onCancel={() => setShowNew(false)} saveLabel="Add Customer" />}
+      {showEdit && <CustomerForm form={form} update={update} saving={saving} isMobile={isMobile} onSave={handleUpdate} onCancel={() => setShowEdit(false)} saveLabel="Save Changes" />}
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : selected ? '1fr 1.5fr' : '1fr', gap: '20px' }}>
 
