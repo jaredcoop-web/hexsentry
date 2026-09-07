@@ -1243,6 +1243,11 @@ def create_client(client: NewClient, user=Depends(get_current_user)):
                     paid_date TEXT, status TEXT DEFAULT 'Upcoming',
                     notes TEXT DEFAULT '',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"""),
+                ("customers", """id SERIAL PRIMARY KEY, first_name TEXT, last_name TEXT,
+                    phone TEXT, email TEXT, address TEXT, city TEXT, state TEXT, zip TEXT,
+                    id_number TEXT, employer TEXT, monthly_income FLOAT,
+                    notes TEXT DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"""),
             ]:
                 table = f"client_{client.client_id}_{table_suffix}"
                 conn.execute(text(f"CREATE TABLE IF NOT EXISTS {table} ({schema})"))
@@ -1961,3 +1966,128 @@ def reset_password(data: dict):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# ── Customer endpoints ────────────────────────────────────────────────────────
+
+@app.post("/customers")
+def create_customer(customer: dict, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "customers")
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                INSERT INTO {table}
+                (first_name, last_name, phone, email, address, city, state, zip,
+                 id_number, employer, monthly_income, notes)
+                VALUES (:first_name, :last_name, :phone, :email, :address, :city,
+                        :state, :zip, :id_number, :employer, :monthly_income, :notes)
+                RETURNING id
+            """), customer)
+            customer_id = result.fetchone()[0]
+            conn.commit()
+        return {"message": "Customer created", "id": customer_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/customers")
+def get_customers(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        customers = q(f"""
+            SELECT id, first_name, last_name, phone, email, city, state, created_at
+            FROM {ct(client_id, 'customers')}
+            ORDER BY last_name ASC
+        """)
+        return customers
+    except Exception as e:
+        return []
+
+
+@app.get("/customers/{customer_id}")
+def get_customer(customer_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        customer = q(f"""
+            SELECT * FROM {ct(client_id, 'customers')}
+            WHERE id = {customer_id}
+        """)
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        
+        sales = q(f"""
+            SELECT id, date, model, sale_price, gross_profit, payment_type
+            FROM {ct(client_id, 'sales')}
+            WHERE customer_id = {customer_id}
+            ORDER BY date DESC
+        """)
+        
+        contracts = q(f"""
+            SELECT id, vehicle, sale_price, amount_financed, payment_frequency,
+                   payment_amount, status, total_collected
+            FROM {ct(client_id, 'bhph_contracts')}
+            WHERE customer_id = {customer_id}
+        """)
+        
+        return {
+            "customer": customer[0],
+            "sales":    sales,
+            "contracts": contracts
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.patch("/customers/{customer_id}")
+def update_customer(customer_id: int, data: dict, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                UPDATE {ct(client_id, 'customers')}
+                SET first_name=:first_name, last_name=:last_name, phone=:phone,
+                    email=:email, address=:address, city=:city, state=:state,
+                    zip=:zip, id_number=:id_number, employer=:employer,
+                    monthly_income=:monthly_income, notes=:notes
+                WHERE id=:id
+            """), {**data, "id": customer_id})
+            conn.commit()
+        return {"message": "Customer updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/customers/{customer_id}")
+def delete_customer(customer_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                DELETE FROM {ct(client_id, 'customers')} WHERE id=:id
+            """), {"id": customer_id})
+            conn.commit()
+        return {"message": "Customer deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/customers/search")
+def search_customers(term: str, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                SELECT id, first_name, last_name, phone, email
+                FROM {ct(client_id, 'customers')}
+                WHERE LOWER(first_name) LIKE LOWER(:term)
+                OR LOWER(last_name) LIKE LOWER(:term)
+                OR phone LIKE :term
+                ORDER BY last_name ASC
+                LIMIT 10
+            """), {"term": f"%{term}%"})
+            rows = result.fetchall()
+            return [{"id": r[0], "first_name": r[1], "last_name": r[2], "phone": r[3], "email": r[4]} for r in rows]
+    except Exception as e:
+        return []
