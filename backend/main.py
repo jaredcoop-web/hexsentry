@@ -626,7 +626,7 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                  lead_source, finance_income, total_income, month, year,
                  days_on_lot, gross_margin_pct, payment_type, customer_id)
                 VALUES (:date, :model, :sale_price, :cost, :gross_profit, :salesperson,
-                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin, :payment_type :customer_id)
+                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin, :payment_type, :customer_id)
             """), {
                 "date":           sale.date,
                 "model":          sale.description,
