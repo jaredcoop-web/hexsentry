@@ -2005,6 +2005,24 @@ def get_customers(user=Depends(get_current_user)):
     except Exception as e:
         return []
 
+@app.get("/customers/search")
+def search_customers(term: str, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                SELECT id, first_name, last_name, phone, email
+                FROM {ct(client_id, 'customers')}
+                WHERE LOWER(first_name) LIKE LOWER(:term)
+                OR LOWER(last_name) LIKE LOWER(:term)
+                OR phone LIKE :term
+                ORDER BY last_name ASC
+                LIMIT 10
+            """), {"term": f"%{term}%"})
+            rows = result.fetchall()
+            return [{"id": r[0], "first_name": r[1], "last_name": r[2], "phone": r[3], "email": r[4]} for r in rows]
+    except Exception as e:
+        return []
 
 @app.get("/customers/{customer_id}")
 def get_customer(customer_id: int, user=Depends(get_current_user)):
@@ -2060,24 +2078,7 @@ def update_customer(customer_id: int, data: dict, user=Depends(get_current_user)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/customers/search")
-def search_customers(term: str, user=Depends(get_current_user)):
-    client_id = user["client_id"]
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(text(f"""
-                SELECT id, first_name, last_name, phone, email
-                FROM {ct(client_id, 'customers')}
-                WHERE LOWER(first_name) LIKE LOWER(:term)
-                OR LOWER(last_name) LIKE LOWER(:term)
-                OR phone LIKE :term
-                ORDER BY last_name ASC
-                LIMIT 10
-            """), {"term": f"%{term}%"})
-            rows = result.fetchall()
-            return [{"id": r[0], "first_name": r[1], "last_name": r[2], "phone": r[3], "email": r[4]} for r in rows]
-    except Exception as e:
-        return []
+
 
 @app.delete("/customers/{customer_id}")
 def delete_customer(customer_id: int, user=Depends(get_current_user)):
