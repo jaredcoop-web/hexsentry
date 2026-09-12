@@ -608,6 +608,7 @@ class ManualSale(BaseModel):
     gap_insurance:   float = 0
     addons:          float = 0
     inventory_id:    Optional[int] = None
+    customer_id: Optional[int] = None
     
 
 @app.post("/sales/manual")
@@ -623,9 +624,9 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 INSERT INTO {table}
                 (date, model, sale_price, cost, gross_profit, salesperson,
                  lead_source, finance_income, total_income, month, year,
-                 days_on_lot, gross_margin_pct, payment_type)
+                 days_on_lot, gross_margin_pct, payment_type, customer_id)
                 VALUES (:date, :model, :sale_price, :cost, :gross_profit, :salesperson,
-                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin, :payment_type)
+                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin, :payment_type :customer_id)
             """), {
                 "date":           sale.date,
                 "model":          sale.description,
@@ -640,6 +641,7 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 "year":           sale.date[:4],
                 "margin":         round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
                 "payment_type":   sale.payment_type,
+                "customer_id": sale.customer_id,
             })
             conn.commit()
 

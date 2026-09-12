@@ -15,15 +15,17 @@ export default function AddSale({ user, isMobile }) {
   const [showDropdown, setShowDropdown]   = useState(false)
   const [fromInventory, setFromInventory] = useState(false)
   const [selectedInventoryId, setSelectedInventoryId] = useState(null)
+  const [customerResults, setCustomerResults] = useState([])
   const searchRef   = useRef()
   const dropdownRef = useRef()
+  
 
   const [form, setForm] = useState({
     date: today, description: '', sale_price: '', cost: '',
     salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
     finance_reserve: '', warranty: '', gap_insurance: '', addons: '',
     down_payment: '', interest_rate: '', term_months: '24',
-    payment_frequency: 'Monthly', customer_name: '', customer_phone: '',
+    payment_frequency: 'Monthly', customer_name: '', customer_phone: '', customer_id: null,
   })
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
@@ -80,6 +82,22 @@ export default function AddSale({ user, isMobile }) {
     setSearchResults([])
   }
 
+  const handleCustomerSearch = async (value) => {
+    update('customer_name', value)
+    if (value.length < 2) { setCustomerResults([]); return }
+    try {
+      const res = await api.get(`/customers/search?term=${encodeURIComponent(value)}`)
+      setCustomerResults(res.data || [])
+    } catch { setCustomerResults([]) }
+  }
+
+  const handleSelectCustomer = (c) => {
+    update('customer_id', c.id)
+    update('customer_name', `${c.first_name} ${c.last_name}`)
+    update('customer_phone', c.phone || '')
+    setCustomerResults([])
+  }
+
   useEffect(() => {
     const handleClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target) &&
@@ -122,6 +140,7 @@ export default function AddSale({ user, isMobile }) {
         gap_insurance:   parseFloat(form.gap_insurance) || 0,
         addons:          parseFloat(form.addons) || 0,
         inventory_id:    selectedInventoryId,
+        customer_id: form.customer_id || null,
       })
       // Auto-create BHPH contract
       if (form.payment_type === 'In-House / BHPH' && form.customer_name && bhph) {
@@ -141,6 +160,7 @@ export default function AddSale({ user, isMobile }) {
             total_interest:    bhph.totalInterest,
             start_date:        form.date,
             notes:             form.notes,
+            customer_id: form.customer_id || null,
           })
         } catch {}
       }
@@ -281,11 +301,48 @@ export default function AddSale({ user, isMobile }) {
         {isBHPH && (
           <div style={{ background: '#0d1a2d', border: '1px solid #1a3a5a', borderRadius: '8px', padding: '20px', marginBottom: '16px' }}>
             <p style={{ color: '#4a9eff', fontSize: '13px', fontWeight: 'bold', margin: '0 0 16px' }}>🏦 In-House Finance Details</p>
+
+            {/* Customer search */}
+            <div style={{ marginBottom: '16px', position: 'relative' }}>
+              <label style={LABEL}>Customer *</label>
+              {form.customer_id ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+                  <div style={{ flex: 1, padding: '10px 12px', background: '#0d2d15', border: '1px solid #27ae60', borderRadius: '6px', color: '#2ecc71', fontSize: '14px' }}>
+                    👤 {form.customer_name}
+                  </div>
+                  <button onClick={() => { update('customer_id', null); update('customer_name', ''); update('customer_phone', '') }}
+                    style={{ padding: '10px 12px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                    ✕ Change
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <input type="text" value={form.customer_name} onChange={e => handleCustomerSearch(e.target.value)}
+                    placeholder="Search existing customer..." style={INPUT} />
+                  {customerResults.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', zIndex: 50, marginTop: '4px' }}>
+                      {customerResults.map((c, i) => (
+                        <div key={i} onClick={() => handleSelectCustomer(c)}
+                          style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #1a1a1a' }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#1A1A2E'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                          <p style={{ color: '#C0C0C0', margin: 0, fontSize: '13px' }}>{c.first_name} {c.last_name}</p>
+                          <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>{c.phone}</p>
+                        </div>
+                      ))}
+                      <div onClick={() => setCustomerResults([])}
+                        style={{ padding: '10px 14px', cursor: 'pointer', color: '#666', fontSize: '13px' }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#1A1A2E'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        ➕ Use "{form.customer_name}" as new customer
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={LABEL}>Customer name *</label>
-                <input type="text" value={form.customer_name} onChange={e => update('customer_name', e.target.value)} placeholder="John Smith" style={INPUT} />
-              </div>
               <div>
                 <label style={LABEL}>Customer phone</label>
                 <input type="text" value={form.customer_phone} onChange={e => update('customer_phone', e.target.value)} placeholder="(555) 123-4567" style={INPUT} />
