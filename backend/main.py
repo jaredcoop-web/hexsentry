@@ -2180,7 +2180,9 @@ def create_credit_app(data: dict, user=Depends(get_current_user)):
             conn.commit()
         return {"message": "Credit application saved", "id": app_id}
     except Exception as e:
+        print(f"credit app error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    
 
 
 @app.get("/credit-application/{customer_id}")
