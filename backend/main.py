@@ -1291,6 +1291,16 @@ def create_client(client: NewClient, user=Depends(get_current_user)):
                     id_number TEXT, employer TEXT, monthly_income FLOAT,
                     notes TEXT DEFAULT '',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"""),
+                ("credit_applications", """id SERIAL PRIMARY KEY, customer_id INTEGER NOT NULL,
+                    dob TEXT, ssn_last4 TEXT, address_years TEXT,
+                    job_title TEXT, employer_address TEXT, employment_years TEXT,
+                    ref1_name TEXT, ref1_phone TEXT, ref1_relationship TEXT, ref1_years TEXT,
+                    ref2_name TEXT, ref2_phone TEXT, ref2_relationship TEXT, ref2_years TEXT,
+                    ref3_name TEXT, ref3_phone TEXT, ref3_relationship TEXT, ref3_years TEXT,
+                    desired_vehicle TEXT, desired_down_payment FLOAT, desired_monthly_payment FLOAT,
+                    credit_score INTEGER, signed BOOLEAN DEFAULT false, signed_date TEXT,
+                    signature_data TEXT, notes TEXT DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"""),
             ]:
                 table = f"client_{client.client_id}_{table_suffix}"
                 conn.execute(text(f"CREATE TABLE IF NOT EXISTS {table} ({schema})"))
