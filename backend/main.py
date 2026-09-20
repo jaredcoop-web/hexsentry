@@ -2094,10 +2094,14 @@ def get_customer(customer_id: int, user=Depends(get_current_user)):
         """)
         
         contracts = q(f"""
-            SELECT id, vehicle, sale_price, amount_financed, payment_frequency,
-                   payment_amount, status, total_collected
-            FROM {ct(client_id, 'bhph_contracts')}
-            WHERE customer_id = {customer_id}
+            SELECT c.id, c.vehicle, c.sale_price, c.amount_financed, 
+                c.payment_frequency, c.payment_amount, c.status,
+                COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) as total_collected
+            FROM {ct(client_id, 'bhph_contracts')} c
+            LEFT JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
+            WHERE c.customer_id = {customer_id}
+            GROUP BY c.id, c.vehicle, c.sale_price, c.amount_financed, 
+                    c.payment_frequency, c.payment_amount, c.status
         """)
         
         return {
