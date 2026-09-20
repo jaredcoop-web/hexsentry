@@ -588,6 +588,7 @@ def get_anomalies(user=Depends(get_current_user)):
                 FROM {ct(client_id, 'bhph_contracts')} c
                 JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
                 WHERE p.status = 'Late'
+                OR (p.status = 'Upcoming' AND CAST(p.due_date AS date) < CURRENT_DATE)
                 GROUP BY c.customer_name, c.vehicle
             """)
             for l in late:
