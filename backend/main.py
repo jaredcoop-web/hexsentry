@@ -697,6 +697,7 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
 
         return {"message": "Sale recorded successfully"}
     except Exception as e:
+        print(f"ERROR: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/fi")
