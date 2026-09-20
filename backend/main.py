@@ -2108,6 +2108,7 @@ def get_customer(customer_id: int, user=Depends(get_current_user)):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"get_customer error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
