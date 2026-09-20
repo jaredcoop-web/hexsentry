@@ -579,6 +579,45 @@ def get_anomalies(user=Depends(get_current_user)):
                     "detail":   f"{leads[0]['deals']} deals, ${int(leads[0]['gross'] or 0):,} gross. Consider increasing investment here."
                 })
         except: pass
+        
+        # Check for late BHPH payments
+        try:
+            late = q(f"""
+                SELECT c.customer_name, c.vehicle, COUNT(p.id) as late_count,
+                    SUM(p.amount_due) as amount_owed
+                FROM {ct(client_id, 'bhph_contracts')} c
+                JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
+                WHERE p.status = 'Late'
+                GROUP BY c.customer_name, c.vehicle
+            """)
+            for l in late:
+                alerts.append({
+                    "level":    "critical",
+                    "category": "Collections",
+                    "title":    f"{l['customer_name']} — {l['late_count']} late payment(s)",
+                    "detail":   f"{l['vehicle']} — ${l['amount_owed']:,.2f} past due"
+                })
+        except:
+            pass
+        
+        # Check for payments due today
+        try:
+            due_today = q(f"""
+                SELECT c.customer_name, c.vehicle, p.amount_due
+                FROM {ct(client_id, 'bhph_contracts')} c
+                JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
+                WHERE p.due_date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+                AND p.status = 'Upcoming'
+            """)
+            for d in due_today:
+                alerts.append({
+                    "level":    "warning",
+                    "category": "Collections",
+                    "title":    f"{d['customer_name']} — payment due today",
+                    "detail":   f"{d['vehicle']} — ${d['amount_due']:,.2f} due"
+                })
+        except:
+            pass
 
     except Exception as e:
         print(f"Anomaly error: {e}")
