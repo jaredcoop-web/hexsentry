@@ -170,7 +170,7 @@ export default function AddSale({ user, isMobile }) {
         salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
         finance_reserve: '', warranty: '', gap_insurance: '', addons: '',
         down_payment: '', interest_rate: '', term_months: '24', payment_frequency: 'Monthly',
-        customer_name: '', customer_phone: '',
+        customer_name: '', customer_phone: '', customer_id: null,
       })
       setFromInventory(false)
       setSelectedInventoryId(null)
