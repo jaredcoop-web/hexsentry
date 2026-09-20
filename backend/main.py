@@ -2150,3 +2150,79 @@ def delete_customer(customer_id: int, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Credit Application endpoints ──────────────────────────────────────────────
+
+@app.post("/credit-application")
+def create_credit_app(data: dict, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "credit_applications")
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                INSERT INTO {table}
+                (customer_id, dob, ssn_last4, address_years, job_title,
+                 employer_address, employment_years,
+                 ref1_name, ref1_phone, ref1_relationship, ref1_years,
+                 ref2_name, ref2_phone, ref2_relationship, ref2_years,
+                 ref3_name, ref3_phone, ref3_relationship, ref3_years,
+                 desired_vehicle, desired_down_payment, desired_monthly_payment,
+                 credit_score, signed, signed_date, signature_data, notes)
+                VALUES (:customer_id, :dob, :ssn_last4, :address_years, :job_title,
+                        :employer_address, :employment_years,
+                        :ref1_name, :ref1_phone, :ref1_relationship, :ref1_years,
+                        :ref2_name, :ref2_phone, :ref2_relationship, :ref2_years,
+                        :ref3_name, :ref3_phone, :ref3_relationship, :ref3_years,
+                        :desired_vehicle, :desired_down_payment, :desired_monthly_payment,
+                        :credit_score, :signed, :signed_date, :signature_data, :notes)
+                RETURNING id
+            """), data)
+            app_id = result.fetchone()[0]
+            conn.commit()
+        return {"message": "Credit application saved", "id": app_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/credit-application/{customer_id}")
+def get_credit_app(customer_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        apps = q(f"""
+            SELECT * FROM {ct(client_id, 'credit_applications')}
+            WHERE customer_id = {customer_id}
+            ORDER BY created_at DESC LIMIT 1
+        """)
+        return apps[0] if apps else None
+    except Exception as e:
+        return None
+
+
+@app.patch("/credit-application/{app_id}")
+def update_credit_app(app_id: int, data: dict, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "credit_applications")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                UPDATE {table}
+                SET dob=:dob, ssn_last4=:ssn_last4, address_years=:address_years,
+                    job_title=:job_title, employer_address=:employer_address,
+                    employment_years=:employment_years,
+                    ref1_name=:ref1_name, ref1_phone=:ref1_phone,
+                    ref1_relationship=:ref1_relationship, ref1_years=:ref1_years,
+                    ref2_name=:ref2_name, ref2_phone=:ref2_phone,
+                    ref2_relationship=:ref2_relationship, ref2_years=:ref2_years,
+                    ref3_name=:ref3_name, ref3_phone=:ref3_phone,
+                    ref3_relationship=:ref3_relationship, ref3_years=:ref3_years,
+                    desired_vehicle=:desired_vehicle,
+                    desired_down_payment=:desired_down_payment,
+                    desired_monthly_payment=:desired_monthly_payment,
+                    credit_score=:credit_score, signed=:signed,
+                    signed_date=:signed_date, signature_data=:signature_data,
+                    notes=:notes
+                WHERE id=:id
+            """), {**data, "id": app_id})
+            conn.commit()
+        return {"message": "Credit application updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
