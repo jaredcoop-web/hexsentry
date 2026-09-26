@@ -1301,6 +1301,10 @@ def create_client(client: NewClient, user=Depends(get_current_user)):
                     credit_score INTEGER, signed BOOLEAN DEFAULT false, signed_date TEXT,
                     signature_data TEXT, notes TEXT DEFAULT '',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"""),
+                ("insurance", """id SERIAL PRIMARY KEY, customer_id INTEGER NOT NULL,
+                    insurance_company TEXT, policy_number TEXT, agent_name TEXT,
+                    agent_phone TEXT, effective_date TEXT, expiration_date TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"""),
             ]:
                 table = f"client_{client.client_id}_{table_suffix}"
                 conn.execute(text(f"CREATE TABLE IF NOT EXISTS {table} ({schema})"))
@@ -2030,10 +2034,20 @@ def create_customer(customer: dict, user=Depends(get_current_user)):
         with engine.connect() as conn:
             result = conn.execute(text(f"""
                 INSERT INTO {table}
-                (first_name, last_name, phone, email, address, city, state, zip,
-                 id_number, employer, monthly_income, notes)
-                VALUES (:first_name, :last_name, :phone, :email, :address, :city,
-                        :state, :zip, :id_number, :employer, :monthly_income, :notes)
+                (first_name, middle_name, last_name, suffix, phone, phone_secondary,
+                 email, date_of_birth, dl_state, dl_expiration, ssn,
+                 address, city, state, zip, housing_status, time_at_address,
+                 prev_address, prev_city, prev_state, prev_zip,
+                 id_number, employer, employer_phone, monthly_income,
+                 net_monthly_income, income_frequency, other_income_source,
+                 other_income_amount, notes)
+                VALUES (:first_name, :middle_name, :last_name, :suffix, :phone, :phone_secondary,
+                        :email, :date_of_birth, :dl_state, :dl_expiration, :ssn,
+                        :address, :city, :state, :zip, :housing_status, :time_at_address,
+                        :prev_address, :prev_city, :prev_state, :prev_zip,
+                        :id_number, :employer, :employer_phone, :monthly_income,
+                        :net_monthly_income, :income_frequency, :other_income_source,
+                        :other_income_amount, :notes)
                 RETURNING id
             """), customer)
             customer_id = result.fetchone()[0]
@@ -2226,5 +2240,56 @@ def update_credit_app(app_id: int, data: dict, user=Depends(get_current_user)):
             """), {**data, "id": app_id})
             conn.commit()
         return {"message": "Credit application updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/insurance")
+def create_insurance(data: dict, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table     = ct(client_id, "insurance")
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                INSERT INTO {table}
+                (customer_id, insurance_company, policy_number, agent_name,
+                 agent_phone, effective_date, expiration_date)
+                VALUES (:customer_id, :insurance_company, :policy_number, :agent_name,
+                        :agent_phone, :effective_date, :expiration_date)
+                RETURNING id
+            """), data)
+            conn.commit()
+        return {"message": "Insurance saved"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/insurance/{customer_id}")
+def get_insurance(customer_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        ins = q(f"""
+            SELECT * FROM {ct(client_id, 'insurance')}
+            WHERE customer_id = {customer_id}
+            ORDER BY created_at DESC LIMIT 1
+        """)
+        return ins[0] if ins else None
+    except:
+        return None
+
+
+@app.patch("/insurance/{insurance_id}")
+def update_insurance(insurance_id: int, data: dict, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                UPDATE {ct(client_id, 'insurance')}
+                SET insurance_company=:insurance_company, policy_number=:policy_number,
+                    agent_name=:agent_name, agent_phone=:agent_phone,
+                    effective_date=:effective_date, expiration_date=:expiration_date
+                WHERE id=:id
+            """), {**data, "id": insurance_id})
+            conn.commit()
+        return {"message": "Insurance updated"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
