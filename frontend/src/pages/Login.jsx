@@ -46,7 +46,7 @@ export default function Login({ onLogin, onBack, onForgotPassword }) {
   const ImagePanel = ({ position }) => (
     <div style={{
       flex: 1,
-      backgroundImage: position === 'left' ? 'url(/molecule.png)' : 'url(/Carhexguard.png)',
+      backgroundImage: position === 'left' ? 'url(/molecule.png)' : 'url(/logo.png)',
       backgroundSize: 'cover',
       backgroundPosition: 'center 70%',
       minHeight: '100vh',
