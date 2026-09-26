@@ -47,7 +47,7 @@ export default function Login({ onLogin, onBack, onForgotPassword }) {
     <div style={{
       flex: 1,
       backgroundImage: position === 'left' ? 'url(/molecule.png)' : 'url(/logo.png)',
-      backgroundSize: '85%',
+      backgroundSize: '93%',
       backgroundPosition: 'center center',
       backgroundRepeat: 'no-repeat',
       minHeight: '100vh',
