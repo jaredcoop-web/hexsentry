@@ -22,7 +22,6 @@ import Collections from './pages/Collections'
 import ChangePassword from './pages/ChangePassword'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
-import Customers from './pages/Customers'
 import Customers from "./pages/Customers";
 
 
@@ -86,7 +85,6 @@ export default function App() {
       case 'collections': return <Collections isMobile={isMobile} />
       case 'change-password': return <ChangePassword />
       case 'customers': return <Customers isMobile={isMobile} />
-      case "customers": return <Customers />;
       default:          return <Home user={user} setCurrentPage={setCurrentPage} isMobile={isMobile} />
     }
   }
