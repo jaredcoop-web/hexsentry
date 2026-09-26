@@ -2,8 +2,8 @@ import os
 import bcrypt
 from sqlalchemy import create_engine, text
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
+DATABASE_URL_FIXED = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://") if DATABASE_URL else DATABASE_URL
+engine = create_engine(DATABASE_URL_FIXED)
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
