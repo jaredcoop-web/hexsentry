@@ -1,522 +1,837 @@
-import { useEffect, useState, useRef } from 'react'
-import { Users } from 'lucide-react'
-import api from '../api'
+import { useState, useEffect, useCallback } from "react";
+import { jwtDecode } from "jwt-decode";
 
-const INPUT  = { width: '100%', padding: '10px 12px', background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', marginTop: '6px' }
-const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom: '2px' }
-const CARD   = { background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '20px', marginBottom: '20px' }
-const SECTION = { background: '#0d0d1a', border: '1px solid #222', borderRadius: '8px', padding: '16px', marginBottom: '16px' }
-const fmt    = (n) => n != null ? `$${Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '$0.00'
+const API = import.meta.env.VITE_API_URL || "https://hex-guard.onrender.com";
 
-const EMPTY_FORM = {
-  first_name: '', last_name: '', phone: '', email: '',
-  address: '', city: '', state: '', zip: '',
-  id_number: '', employer: '', monthly_income: '', notes: ''
+function getToken() {
+  return localStorage.getItem("token");
 }
 
-const EMPTY_APP = {
-  dob: '', ssn_last4: '', address_years: '',
-  job_title: '', employer_address: '', employment_years: '',
-  ref1_name: '', ref1_phone: '', ref1_relationship: '', ref1_years: '',
-  ref2_name: '', ref2_phone: '', ref2_relationship: '', ref2_years: '',
-  ref3_name: '', ref3_phone: '', ref3_relationship: '', ref3_years: '',
-  desired_vehicle: '', desired_down_payment: '', desired_monthly_payment: '',
-  credit_score: '', signed: false, signed_date: '', signature_data: '', notes: ''
+function getClientId() {
+  try {
+    const token = getToken();
+    if (!token) return null;
+    const decoded = jwtDecode(token);
+    return decoded.client_id;
+  } catch {
+    return null;
+  }
 }
 
-const CustomerForm = ({ form, update, saving, onSave, onCancel, saveLabel, isMobile }) => {
-  const gridCols = isMobile ? '1fr' : '1fr 1fr'
+const STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
+  "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
+  "VA","WA","WV","WI","WY"
+];
+
+const HOUSING_OPTIONS = ["Own", "Rent", "Family", "Other"];
+const INCOME_FREQ = ["Weekly", "Bi-Weekly", "Semi-Monthly", "Monthly"];
+const RELATIONSHIP_OPTIONS = ["Spouse", "Parent", "Sibling", "Child", "Friend", "Coworker", "Other"];
+
+const emptyCustomer = {
+  first_name: "", middle_name: "", last_name: "", suffix: "",
+  email: "", phone: "", phone2: "",
+  dob: "", ssn: "", dl_number: "", dl_state: "", dl_expiration: "",
+  address: "", city: "", state: "", zip: "",
+  housing_status: "", time_at_address: "",
+  prev_address: "", prev_city: "", prev_state: "", prev_zip: "",
+  employer: "", employer_phone: "", gross_monthly: "", net_monthly: "",
+  income_frequency: "", other_income: "", other_income_source: "",
+  notes: "",
+};
+
+const emptyCreditApp = {
+  credit_score: "",
+  signature_obtained: false,
+  ref1_name: "", ref1_phone: "", ref1_address: "", ref1_relationship: "",
+  ref2_name: "", ref2_phone: "", ref2_address: "", ref2_relationship: "",
+  ref3_name: "", ref3_phone: "", ref3_address: "", ref3_relationship: "",
+  ref4_name: "", ref4_phone: "", ref4_address: "", ref4_relationship: "",
+  ref5_name: "", ref5_phone: "", ref5_address: "", ref5_relationship: "",
+  vehicle_interest: "",
+};
+
+const emptyInsurance = {
+  company: "", policy_number: "", agent_name: "", agent_phone: "",
+  effective_date: "", expiration_date: "",
+};
+
+function CustomerForm({ initial = {}, onSave, onCancel, title }) {
+  const [form, setForm] = useState({ ...emptyCustomer, ...initial });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.first_name || !form.last_name) {
+      setError("First and last name are required.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(form);
+    } catch (err) {
+      setError(err.message || "Save failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inp = "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const label = "block text-xs font-medium text-gray-600 mb-1";
+  const section = "mb-6";
+  const sectionTitle = "text-sm font-semibold text-gray-700 mb-3 pb-1 border-b border-gray-200";
+
   return (
-    <div style={CARD}>
-      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px', marginBottom: '14px' }}>
-        <div><label style={LABEL}>First name *</label><input type="text" value={form.first_name} onChange={e => update('first_name', e.target.value)} placeholder="John" style={INPUT} /></div>
-        <div><label style={LABEL}>Last name *</label><input type="text" value={form.last_name} onChange={e => update('last_name', e.target.value)} placeholder="Smith" style={INPUT} /></div>
-        <div><label style={LABEL}>Phone</label><input type="text" value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="(555) 123-4567" style={INPUT} /></div>
-        <div><label style={LABEL}>Email</label><input type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="john@email.com" style={INPUT} /></div>
-      </div>
-      <div style={SECTION}>
-        <p style={{ color: '#4a9eff', fontSize: '12px', fontWeight: 'bold', margin: '0 0 10px', textTransform: 'uppercase' }}>Address</p>
-        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-          <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}><label style={LABEL}>Street address</label><input type="text" value={form.address} onChange={e => update('address', e.target.value)} placeholder="123 Main St" style={INPUT} /></div>
-          <div><label style={LABEL}>City</label><input type="text" value={form.city} onChange={e => update('city', e.target.value)} placeholder="Houston" style={INPUT} /></div>
-          <div><label style={LABEL}>State</label><input type="text" value={form.state} onChange={e => update('state', e.target.value)} placeholder="TX" style={INPUT} /></div>
-          <div><label style={LABEL}>Zip</label><input type="text" value={form.zip} onChange={e => update('zip', e.target.value)} placeholder="77001" style={INPUT} /></div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+      {error && <div className="text-red-600 text-sm bg-red-50 px-3 py-2 rounded">{error}</div>}
+
+      {/* Identity */}
+      <div className={section}>
+        <div className={sectionTitle}>Identity</div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className={label}>First Name *</label>
+            <input className={inp} value={form.first_name} onChange={e => set("first_name", e.target.value)} required />
+          </div>
+          <div>
+            <label className={label}>Middle Name</label>
+            <input className={inp} value={form.middle_name} onChange={e => set("middle_name", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>Last Name *</label>
+            <input className={inp} value={form.last_name} onChange={e => set("last_name", e.target.value)} required />
+          </div>
+          <div>
+            <label className={label}>Suffix</label>
+            <select className={inp} value={form.suffix} onChange={e => set("suffix", e.target.value)}>
+              <option value="">—</option>
+              {["Jr.", "Sr.", "II", "III", "IV"].map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className={label}>Date of Birth</label>
+            <input type="date" className={inp} value={form.dob} onChange={e => set("dob", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>SSN</label>
+            <input className={inp} placeholder="XXX-XX-XXXX" value={form.ssn} onChange={e => set("ssn", e.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className={label}>DL Number</label>
+            <input className={inp} value={form.dl_number} onChange={e => set("dl_number", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>DL State</label>
+            <select className={inp} value={form.dl_state} onChange={e => set("dl_state", e.target.value)}>
+              <option value="">—</option>
+              {STATES.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={label}>DL Expiration</label>
+            <input type="date" className={inp} value={form.dl_expiration} onChange={e => set("dl_expiration", e.target.value)} />
+          </div>
         </div>
       </div>
-      <div style={SECTION}>
-        <p style={{ color: '#2ecc71', fontSize: '12px', fontWeight: 'bold', margin: '0 0 10px', textTransform: 'uppercase' }}>Employment & ID</p>
-        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-          <div><label style={LABEL}>ID / License #</label><input type="text" value={form.id_number} onChange={e => update('id_number', e.target.value)} placeholder="DL123456" style={INPUT} /></div>
-          <div><label style={LABEL}>Employer</label><input type="text" value={form.employer} onChange={e => update('employer', e.target.value)} placeholder="Company name" style={INPUT} /></div>
-          <div><label style={LABEL}>Monthly income ($)</label><input type="number" value={form.monthly_income} onChange={e => update('monthly_income', e.target.value)} placeholder="0.00" style={INPUT} /></div>
+
+      {/* Contact */}
+      <div className={section}>
+        <div className={sectionTitle}>Contact</div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className={label}>Email</label>
+            <input type="email" className={inp} value={form.email} onChange={e => set("email", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>Primary Phone</label>
+            <input className={inp} value={form.phone} onChange={e => set("phone", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>Secondary Phone</label>
+            <input className={inp} value={form.phone2} onChange={e => set("phone2", e.target.value)} />
+          </div>
         </div>
       </div>
-      <div style={{ marginBottom: '16px' }}>
-        <label style={LABEL}>Notes</label>
-        <textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="Any additional notes..." rows={2} style={{ ...INPUT, resize: 'vertical' }} />
+
+      {/* Residential */}
+      <div className={section}>
+        <div className={sectionTitle}>Residential</div>
+        <div className="mb-3">
+          <label className={label}>Current Address</label>
+          <input className={inp} placeholder="Street address" value={form.address} onChange={e => set("address", e.target.value)} />
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <div>
+            <label className={label}>City</label>
+            <input className={inp} value={form.city} onChange={e => set("city", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>State</label>
+            <select className={inp} value={form.state} onChange={e => set("state", e.target.value)}>
+              <option value="">—</option>
+              {STATES.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={label}>ZIP</label>
+            <input className={inp} value={form.zip} onChange={e => set("zip", e.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className={label}>Housing Status</label>
+            <select className={inp} value={form.housing_status} onChange={e => set("housing_status", e.target.value)}>
+              <option value="">—</option>
+              {HOUSING_OPTIONS.map(h => <option key={h}>{h}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={label}>Time at Address</label>
+            <input className={inp} placeholder="e.g. 2 years 3 months" value={form.time_at_address} onChange={e => set("time_at_address", e.target.value)} />
+          </div>
+        </div>
+        <div className="text-xs font-medium text-gray-500 mb-2">Previous Address (if less than 2 years at current)</div>
+        <div className="mb-3">
+          <input className={inp} placeholder="Previous street address" value={form.prev_address} onChange={e => set("prev_address", e.target.value)} />
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className={label}>City</label>
+            <input className={inp} value={form.prev_city} onChange={e => set("prev_city", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>State</label>
+            <select className={inp} value={form.prev_state} onChange={e => set("prev_state", e.target.value)}>
+              <option value="">—</option>
+              {STATES.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={label}>ZIP</label>
+            <input className={inp} value={form.prev_zip} onChange={e => set("prev_zip", e.target.value)} />
+          </div>
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button onClick={onSave} disabled={saving} style={{ padding: '10px 20px', background: saving ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
-          {saving ? 'Saving...' : saveLabel}
+
+      {/* Employment */}
+      <div className={section}>
+        <div className={sectionTitle}>Employment & Income</div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className={label}>Employer</label>
+            <input className={inp} value={form.employer} onChange={e => set("employer", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>Employer Phone</label>
+            <input className={inp} value={form.employer_phone} onChange={e => set("employer_phone", e.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <div>
+            <label className={label}>Gross Monthly Income</label>
+            <input className={inp} type="number" placeholder="0.00" value={form.gross_monthly} onChange={e => set("gross_monthly", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>Net Monthly Income</label>
+            <input className={inp} type="number" placeholder="0.00" value={form.net_monthly} onChange={e => set("net_monthly", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>Pay Frequency</label>
+            <select className={inp} value={form.income_frequency} onChange={e => set("income_frequency", e.target.value)}>
+              <option value="">—</option>
+              {INCOME_FREQ.map(f => <option key={f}>{f}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={label}>Other Income ($)</label>
+            <input className={inp} type="number" placeholder="0.00" value={form.other_income} onChange={e => set("other_income", e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>Other Income Source</label>
+            <input className={inp} placeholder="e.g. Social Security" value={form.other_income_source} onChange={e => set("other_income_source", e.target.value)} />
+          </div>
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div className={section}>
+        <div className={sectionTitle}>Notes</div>
+        <textarea className={inp} rows={3} value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Internal notes..." />
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <button type="submit" disabled={saving}
+          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          {saving ? "Saving…" : "Save Customer"}
         </button>
-        <button onClick={onCancel} style={{ padding: '10px 20px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>Cancel</button>
+        <button type="button" onClick={onCancel}
+          className="px-4 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function CreditAppTab({ customerId }) {
+  const [form, setForm] = useState(emptyCreditApp);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (!customerId) return;
+    setLoading(true);
+    fetch(`${API}/credit-application/${customerId}`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setForm({ ...emptyCreditApp, ...data }); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [customerId]);
+
+  const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMsg("");
+    try {
+      const r = await fetch(`${API}/credit-application/${customerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify(form),
+      });
+      if (!r.ok) throw new Error("Save failed");
+      setMsg("✓ Saved");
+      setTimeout(() => setMsg(""), 3000);
+    } catch {
+      setMsg("Error saving");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inp = "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const label = "block text-xs font-medium text-gray-600 mb-1";
+
+  if (loading) return <div className="text-gray-400 text-sm py-8 text-center">Loading…</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={label}>Credit Score (optional)</label>
+          <input className={inp} type="number" placeholder="e.g. 620" value={form.credit_score} onChange={e => set("credit_score", e.target.value)} />
+        </div>
+        <div className="flex items-end pb-1">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={!!form.signature_obtained} onChange={e => set("signature_obtained", e.target.checked)}
+              className="w-4 h-4 rounded" />
+            <span className="text-sm text-gray-700">Physical Signature Obtained</span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label className={label}>Vehicle Interest</label>
+        <input className={inp} placeholder="e.g. 2022 Toyota Camry" value={form.vehicle_interest} onChange={e => set("vehicle_interest", e.target.value)} />
+      </div>
+
+      <div>
+        <div className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b border-gray-200">References (up to 5)</div>
+        {[1,2,3,4,5].map(n => (
+          <div key={n} className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="text-xs font-semibold text-gray-500 mb-2">Reference {n}</div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <label className={label}>Full Name</label>
+                <input className={inp} value={form[`ref${n}_name`]} onChange={e => set(`ref${n}_name`, e.target.value)} />
+              </div>
+              <div>
+                <label className={label}>Phone</label>
+                <input className={inp} value={form[`ref${n}_phone`]} onChange={e => set(`ref${n}_phone`, e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={label}>Address</label>
+                <input className={inp} value={form[`ref${n}_address`]} onChange={e => set(`ref${n}_address`, e.target.value)} />
+              </div>
+              <div>
+                <label className={label}>Relationship</label>
+                <select className={inp} value={form[`ref${n}_relationship`]} onChange={e => set(`ref${n}_relationship`, e.target.value)}>
+                  <option value="">—</option>
+                  {RELATIONSHIP_OPTIONS.map(r => <option key={r}>{r}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={handleSave} disabled={saving}
+          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          {saving ? "Saving…" : "Save Credit App"}
+        </button>
+        {msg && <span className="text-sm text-green-600">{msg}</span>}
       </div>
     </div>
-  )
+  );
 }
 
-export default function Customers({ isMobile }) {
-  const [customers, setCustomers]           = useState([])
-  const [selected, setSelected]             = useState(null)
-  const [customerDetail, setCustomerDetail] = useState(null)
-  const [showNew, setShowNew]               = useState(false)
-  const [showEdit, setShowEdit]             = useState(false)
-  const [showCreditApp, setShowCreditApp]   = useState(false)
-  const [loading, setLoading]               = useState(true)
-  const [saving, setSaving]                 = useState(false)
-  const [savingApp, setSavingApp]           = useState(false)
-  const [msg, setMsg]                       = useState(null)
-  const [search, setSearch]                 = useState('')
-  const [form, setForm]                     = useState(EMPTY_FORM)
-  const [creditApp, setCreditApp]           = useState(EMPTY_APP)
-  const [existingAppId, setExistingAppId]   = useState(null)
-  const canvasRef                           = useRef(null)
-  const [isDrawing, setIsDrawing]           = useState(false)
-  const [hasSig, setHasSig]                 = useState(false)
+function InsuranceTab({ customerId }) {
+  const [form, setForm] = useState(emptyInsurance);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
 
-  const update    = (k, v) => setForm(p => ({ ...p, [k]: v }))
-  const updateApp = (k, v) => setCreditApp(p => ({ ...p, [k]: v }))
-
-  const load = async () => {
-    setLoading(true)
-    try {
-      const res = await api.get('/customers')
-      setCustomers(res.data || [])
-    } catch {}
-    setLoading(false)
-  }
-
-  useEffect(() => { load() }, [])
-
-  const loadDetail = async (id) => {
-    try {
-      const res = await api.get(`/customers/${id}`)
-      setCustomerDetail(res.data)
-    } catch {}
-  }
-
-  const loadCreditApp = async (id) => {
-    try {
-      const res = await api.get(`/credit-application/${id}`)
-      if (res.data) {
-        setCreditApp({ ...EMPTY_APP, ...res.data })
-        setExistingAppId(res.data.id)
-        if (res.data.signature_data) setHasSig(true)
-      } else {
-        setCreditApp(EMPTY_APP)
-        setExistingAppId(null)
-        setHasSig(false)
-      }
-    } catch {
-      setCreditApp(EMPTY_APP)
-      setExistingAppId(null)
-    }
-  }
-
-  const handleSelect = (customer) => {
-    setSelected(customer)
-    loadDetail(customer.id)
-    setShowNew(false)
-    setShowEdit(false)
-    setShowCreditApp(false)
-  }
-
-  const handleCreditAppOpen = () => {
-    loadCreditApp(selected.id)
-    setShowCreditApp(true)
-  }
-
-  const handleCreate = async () => {
-    if (!form.first_name || !form.last_name) { setMsg({ type: 'error', text: 'First and last name are required.' }); return }
-    setSaving(true)
-    try {
-      await api.post('/customers', { ...form, monthly_income: parseFloat(form.monthly_income) || 0 })
-      setMsg({ type: 'success', text: `${form.first_name} ${form.last_name} added!` })
-      setForm(EMPTY_FORM)
-      setShowNew(false)
-      load()
-    } catch { setMsg({ type: 'error', text: 'Failed to create customer' }) }
-    setSaving(false)
-  }
-
-  const handleUpdate = async () => {
-    setSaving(true)
-    try {
-      await api.patch(`/customers/${selected.id}`, { ...form, monthly_income: parseFloat(form.monthly_income) || 0 })
-      setMsg({ type: 'success', text: 'Customer updated!' })
-      setShowEdit(false)
-      loadDetail(selected.id)
-      load()
-    } catch { setMsg({ type: 'error', text: 'Failed to update' }) }
-    setSaving(false)
-  }
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this customer?')) return
-    try {
-      await api.delete(`/customers/${id}`)
-      setMsg({ type: 'success', text: 'Customer deleted' })
-      setSelected(null)
-      setCustomerDetail(null)
-      load()
-    } catch { setMsg({ type: 'error', text: 'Failed to delete' }) }
-  }
-
-  const handleEdit = () => {
-    if (!customerDetail) return
-    setForm({
-      first_name:     customerDetail.customer.first_name || '',
-      last_name:      customerDetail.customer.last_name || '',
-      phone:          customerDetail.customer.phone || '',
-      email:          customerDetail.customer.email || '',
-      address:        customerDetail.customer.address || '',
-      city:           customerDetail.customer.city || '',
-      state:          customerDetail.customer.state || '',
-      zip:            customerDetail.customer.zip || '',
-      id_number:      customerDetail.customer.id_number || '',
-      employer:       customerDetail.customer.employer || '',
-      monthly_income: customerDetail.customer.monthly_income || '',
-      notes:          customerDetail.customer.notes || '',
+  useEffect(() => {
+    if (!customerId) return;
+    setLoading(true);
+    fetch(`${API}/insurance/${customerId}`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
     })
-    setShowEdit(true)
-  }
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setForm({ ...emptyInsurance, ...data }); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [customerId]);
 
-  const handleSaveCreditApp = async () => {
-    setSavingApp(true)
-    const sigData = hasSig && canvasRef.current ? canvasRef.current.toDataURL() : creditApp.signature_data || ''
-    const payload = {
-      customer_id:              selected.id,
-      dob:                      creditApp.dob || '',
-      ssn_last4:                creditApp.ssn_last4 || '',
-      address_years:            creditApp.address_years || '',
-      job_title:                creditApp.job_title || '',
-      employer_address:         creditApp.employer_address || '',
-      employment_years:         creditApp.employment_years || '',
-      ref1_name:                creditApp.ref1_name || '',
-      ref1_phone:               creditApp.ref1_phone || '',
-      ref1_relationship:        creditApp.ref1_relationship || '',
-      ref1_years:               creditApp.ref1_years || '',
-      ref2_name:                creditApp.ref2_name || '',
-      ref2_phone:               creditApp.ref2_phone || '',
-      ref2_relationship:        creditApp.ref2_relationship || '',
-      ref2_years:               creditApp.ref2_years || '',
-      ref3_name:                creditApp.ref3_name || '',
-      ref3_phone:               creditApp.ref3_phone || '',
-      ref3_relationship:        creditApp.ref3_relationship || '',
-      ref3_years:               creditApp.ref3_years || '',
-      desired_vehicle:          creditApp.desired_vehicle || '',
-      desired_down_payment:     parseFloat(creditApp.desired_down_payment) || 0,
-      desired_monthly_payment:  parseFloat(creditApp.desired_monthly_payment) || 0,
-      credit_score:             creditApp.credit_score ? parseInt(creditApp.credit_score) : null,
-      signed:                   creditApp.signed || false,
-      signed_date:              creditApp.signed ? new Date().toISOString().slice(0, 10) : '',
-      signature_data:           sigData,
-      notes:                    creditApp.notes || '',
-    }
+  const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMsg("");
     try {
-      if (existingAppId) {
-        await api.patch(`/credit-application/${existingAppId}`, payload)
-      } else {
-        await api.post('/credit-application', payload)
-      }
-      setMsg({ type: 'success', text: 'Credit application saved!' })
-      setShowCreditApp(false)
-    } catch { setMsg({ type: 'error', text: 'Failed to save credit application' }) }
-    setSavingApp(false)
-  }
+      const r = await fetch(`${API}/insurance/${customerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify(form),
+      });
+      if (!r.ok) throw new Error("Save failed");
+      setMsg("✓ Saved");
+      setTimeout(() => setMsg(""), 3000);
+    } catch {
+      setMsg("Error saving");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  // Signature canvas
-  const startDraw = (e) => {
-    setIsDrawing(true)
-    const canvas = canvasRef.current
-    const rect   = canvas.getBoundingClientRect()
-    const ctx    = canvas.getContext('2d')
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
-    ctx.beginPath()
-    ctx.moveTo(x, y)
-  }
+  const isExpired = form.expiration_date && new Date(form.expiration_date) < new Date();
+  const inp = "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const label = "block text-xs font-medium text-gray-600 mb-1";
 
-  const draw = (e) => {
-    if (!isDrawing) return
-    e.preventDefault()
-    const canvas = canvasRef.current
-    const rect   = canvas.getBoundingClientRect()
-    const ctx    = canvas.getContext('2d')
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
-    ctx.lineTo(x, y)
-    ctx.strokeStyle = '#C0C0C0'
-    ctx.lineWidth   = 2
-    ctx.stroke()
-    setHasSig(true)
-  }
-
-  const stopDraw = () => setIsDrawing(false)
-
-  const clearSig = () => {
-    const canvas = canvasRef.current
-    const ctx    = canvas.getContext('2d')
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    setHasSig(false)
-  }
-
-  const filtered = customers.filter(c =>
-    `${c.first_name} ${c.last_name} ${c.phone} ${c.email}`.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const gridCols = isMobile ? '1fr' : '1fr 1fr'
-
-  if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading customers...</p>
+  if (loading) return <div className="text-gray-400 text-sm py-8 text-center">Loading…</div>;
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+    <div className="space-y-4">
+      {isExpired && (
+        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-center gap-2">
+          <span className="text-red-500 text-lg">⚠️</span>
+          <div>
+            <div className="text-red-700 font-semibold text-sm">Insurance Expired</div>
+            <div className="text-red-600 text-xs">
+              Policy expired {new Date(form.expiration_date).toLocaleDateString()}. Update before processing transactions.
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <h1 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: isMobile ? '20px' : '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Users size={22} /> Customers
-          </h1>
-          <p style={{ color: '#555', margin: 0, fontSize: '13px' }}>Customer profiles, credit applications, and deal history</p>
+          <label className={label}>Insurance Company</label>
+          <input className={inp} value={form.company} onChange={e => set("company", e.target.value)} />
         </div>
-        <button onClick={() => { setShowNew(!showNew); setShowEdit(false); setForm(EMPTY_FORM) }} style={{ padding: '10px 16px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
-          {showNew ? 'Cancel' : '➕ New Customer'}
-        </button>
+        <div>
+          <label className={label}>Policy Number</label>
+          <input className={inp} value={form.policy_number} onChange={e => set("policy_number", e.target.value)} />
+        </div>
+        <div>
+          <label className={label}>Agent Name</label>
+          <input className={inp} value={form.agent_name} onChange={e => set("agent_name", e.target.value)} />
+        </div>
+        <div>
+          <label className={label}>Agent Phone</label>
+          <input className={inp} value={form.agent_phone} onChange={e => set("agent_phone", e.target.value)} />
+        </div>
+        <div>
+          <label className={label}>Effective Date</label>
+          <input type="date" className={inp} value={form.effective_date} onChange={e => set("effective_date", e.target.value)} />
+        </div>
+        <div>
+          <label className={label}>Expiration Date</label>
+          <input type="date"
+            className={`${inp} ${isExpired ? "border-red-400 bg-red-50" : ""}`}
+            value={form.expiration_date}
+            onChange={e => set("expiration_date", e.target.value)} />
+        </div>
       </div>
+      <div className="flex items-center gap-3 pt-2">
+        <button onClick={handleSave} disabled={saving}
+          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          {saving ? "Saving…" : "Save Insurance"}
+        </button>
+        {msg && <span className="text-sm text-green-600">{msg}</span>}
+      </div>
+    </div>
+  );
+}
 
-      {msg && (
-        <div style={{ background: msg.type === 'success' ? '#0d2d15' : '#2d1515', border: `1px solid ${msg.type === 'success' ? '#27ae60' : '#c0392b'}`, borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', color: msg.type === 'success' ? '#2ecc71' : '#e74c3c', fontSize: '14px' }}>
-          {msg.text}
-        </div>
-      )}
+function HistoryTab({ customerId }) {
+  const [contracts, setContracts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-      {showNew && <CustomerForm form={form} update={update} saving={saving} isMobile={isMobile} onSave={handleCreate} onCancel={() => setShowNew(false)} saveLabel="Add Customer" />}
-      {showEdit && <CustomerForm form={form} update={update} saving={saving} isMobile={isMobile} onSave={handleUpdate} onCancel={() => setShowEdit(false)} saveLabel="Save Changes" />}
+  useEffect(() => {
+    if (!customerId) return;
+    setLoading(true);
+    fetch(`${API}/customers/${customerId}/contracts`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setContracts(Array.isArray(data) ? data : []))
+      .catch(() => setContracts([]))
+      .finally(() => setLoading(false));
+  }, [customerId]);
 
-      {/* Credit Application Form */}
-      {showCreditApp && selected && (
-        <div style={CARD}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ color: '#C0C0C0', margin: 0, fontSize: '16px' }}>📋 Credit Application — {selected.first_name} {selected.last_name}</h2>
-            <button onClick={() => setShowCreditApp(false)} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '18px' }}>✕</button>
-          </div>
+  if (loading) return <div className="text-gray-400 text-sm py-8 text-center">Loading…</div>;
 
-          {/* Personal */}
-          <div style={SECTION}>
-            <p style={{ color: '#4a9eff', fontSize: '12px', fontWeight: 'bold', margin: '0 0 12px', textTransform: 'uppercase' }}>Personal Information</p>
-            <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-              <div><label style={LABEL}>Date of Birth</label><input type="date" value={creditApp.dob} onChange={e => updateApp('dob', e.target.value)} style={INPUT} /></div>
-              <div><label style={LABEL}>SSN Last 4 digits</label><input type="text" maxLength={4} value={creditApp.ssn_last4} onChange={e => updateApp('ssn_last4', e.target.value)} placeholder="####" style={INPUT} /></div>
-              <div><label style={LABEL}>Years at current address</label><input type="text" value={creditApp.address_years} onChange={e => updateApp('address_years', e.target.value)} placeholder="e.g. 2 years" style={INPUT} /></div>
-              <div><label style={LABEL}>Credit Score <span style={{ color: '#555' }}>(optional)</span></label><input type="number" value={creditApp.credit_score} onChange={e => updateApp('credit_score', e.target.value)} placeholder="e.g. 620" style={INPUT} /></div>
+  if (contracts.length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-400">
+        <div className="text-4xl mb-2">🚗</div>
+        <div className="text-sm">No purchase history on file</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {contracts.map(c => (
+        <div key={c.contract_id} className="border border-gray-200 rounded-lg p-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="font-semibold text-gray-800">{c.year} {c.make} {c.model}</div>
+              <div className="text-xs text-gray-500 mt-0.5">Contract #{c.contract_id} · {c.sale_date}</div>
             </div>
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+              c.status === "Active" ? "bg-green-100 text-green-700" :
+              c.status === "Paid Off" ? "bg-blue-100 text-blue-700" :
+              "bg-gray-100 text-gray-600"
+            }`}>{c.status}</span>
           </div>
-
-          {/* Employment */}
-          <div style={SECTION}>
-            <p style={{ color: '#2ecc71', fontSize: '12px', fontWeight: 'bold', margin: '0 0 12px', textTransform: 'uppercase' }}>Employment</p>
-            <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-              <div><label style={LABEL}>Job Title</label><input type="text" value={creditApp.job_title} onChange={e => updateApp('job_title', e.target.value)} placeholder="e.g. Warehouse Worker" style={INPUT} /></div>
-              <div><label style={LABEL}>Years employed</label><input type="text" value={creditApp.employment_years} onChange={e => updateApp('employment_years', e.target.value)} placeholder="e.g. 3 years" style={INPUT} /></div>
-              <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}><label style={LABEL}>Employer address</label><input type="text" value={creditApp.employer_address} onChange={e => updateApp('employer_address', e.target.value)} placeholder="123 Business Ave, Houston TX" style={INPUT} /></div>
-            </div>
-          </div>
-
-          {/* References */}
-          <div style={SECTION}>
-            <p style={{ color: '#f39c12', fontSize: '12px', fontWeight: 'bold', margin: '0 0 12px', textTransform: 'uppercase' }}>References</p>
-            {[1, 2, 3].map(n => (
-              <div key={n} style={{ marginBottom: n < 3 ? '14px' : 0 }}>
-                <p style={{ color: '#666', fontSize: '12px', margin: '0 0 8px' }}>Reference {n}</p>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '10px' }}>
-                  <div><label style={LABEL}>Name</label><input type="text" value={creditApp[`ref${n}_name`]} onChange={e => updateApp(`ref${n}_name`, e.target.value)} placeholder="Full name" style={INPUT} /></div>
-                  <div><label style={LABEL}>Phone</label><input type="text" value={creditApp[`ref${n}_phone`]} onChange={e => updateApp(`ref${n}_phone`, e.target.value)} placeholder="(555) 000-0000" style={INPUT} /></div>
-                  <div><label style={LABEL}>Relationship</label><input type="text" value={creditApp[`ref${n}_relationship`]} onChange={e => updateApp(`ref${n}_relationship`, e.target.value)} placeholder="Friend, Family..." style={INPUT} /></div>
-                  <div><label style={LABEL}>Years known</label><input type="text" value={creditApp[`ref${n}_years`]} onChange={e => updateApp(`ref${n}_years`, e.target.value)} placeholder="e.g. 5 years" style={INPUT} /></div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Vehicle interest */}
-          <div style={SECTION}>
-            <p style={{ color: '#C0C0C0', fontSize: '12px', fontWeight: 'bold', margin: '0 0 12px', textTransform: 'uppercase' }}>Vehicle Interest</p>
-            <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
-              <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}><label style={LABEL}>Desired vehicle</label><input type="text" value={creditApp.desired_vehicle} onChange={e => updateApp('desired_vehicle', e.target.value)} placeholder="e.g. 2018 Honda Civic" style={INPUT} /></div>
-              <div><label style={LABEL}>Down payment ($)</label><input type="number" value={creditApp.desired_down_payment} onChange={e => updateApp('desired_down_payment', e.target.value)} placeholder="0.00" style={INPUT} /></div>
-              <div><label style={LABEL}>Desired monthly payment ($)</label><input type="number" value={creditApp.desired_monthly_payment} onChange={e => updateApp('desired_monthly_payment', e.target.value)} placeholder="0.00" style={INPUT} /></div>
-            </div>
-          </div>
-
-          {/* Signature */}
-          <div style={SECTION}>
-            <p style={{ color: '#C0C0C0', fontSize: '12px', fontWeight: 'bold', margin: '0 0 12px', textTransform: 'uppercase' }}>Signature</p>
-            <p style={{ color: '#555', fontSize: '12px', margin: '0 0 10px' }}>Customer signs below to certify the information is accurate</p>
-            {creditApp.signature_data && !hasSig ? (
-              <div>
-                <img src={creditApp.signature_data} alt="Signature" style={{ background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', maxWidth: '100%' }} />
-                <button onClick={() => { setCreditApp(p => ({ ...p, signature_data: '' })); setHasSig(false) }} style={{ marginTop: '8px', padding: '6px 12px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                  Clear & Re-sign
-                </button>
-              </div>
-            ) : (
-              <div>
-                <canvas
-                  ref={canvasRef}
-                  width={400}
-                  height={120}
-                  onMouseDown={startDraw}
-                  onMouseMove={draw}
-                  onMouseUp={stopDraw}
-                  onMouseLeave={stopDraw}
-                  onTouchStart={startDraw}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDraw}
-                  style={{ background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', cursor: 'crosshair', touchAction: 'none', maxWidth: '100%' }}
-                />
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
-                  <button onClick={clearSig} style={{ padding: '6px 12px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Clear</button>
-                  {hasSig && <span style={{ color: '#2ecc71', fontSize: '12px' }}>✅ Signature captured</span>}
-                </div>
-              </div>
-            )}
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input type="checkbox" checked={creditApp.signed} onChange={e => updateApp('signed', e.target.checked)} id="signed" />
-              <label htmlFor="signed" style={{ color: '#999', fontSize: '13px', cursor: 'pointer' }}>Customer acknowledges this information is accurate</label>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={LABEL}>Notes</label>
-            <textarea value={creditApp.notes} onChange={e => updateApp('notes', e.target.value)} placeholder="Additional notes..." rows={2} style={{ ...INPUT, resize: 'vertical' }} />
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={handleSaveCreditApp} disabled={savingApp} style={{ padding: '12px 24px', background: savingApp ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: savingApp ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
-              {savingApp ? 'Saving...' : existingAppId ? 'Update Application' : 'Save Application'}
-            </button>
-            <button onClick={() => setShowCreditApp(false)} style={{ padding: '12px 20px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>Cancel</button>
+          <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-gray-600">
+            <div><span className="text-gray-400 block">Sale Price</span>${Number(c.sale_price || 0).toLocaleString()}</div>
+            <div><span className="text-gray-400 block">Balance</span>${Number(c.remaining_balance || 0).toLocaleString()}</div>
+            <div><span className="text-gray-400 block">Payment</span>${Number(c.payment_amount || 0).toLocaleString()}/{c.payment_frequency || "mo"}</div>
           </div>
         </div>
-      )}
+      ))}
+    </div>
+  );
+}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : selected ? '1fr 1.5fr' : '1fr', gap: '20px' }}>
-        {/* Customer list */}
-        <div style={CARD}>
-          <div style={{ marginBottom: '14px' }}>
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, phone, or email..." style={{ ...INPUT, marginTop: 0 }} />
+export default function Customers() {
+  const [customers, setCustomers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [activeTab, setActiveTab] = useState("profile");
+  const [showNew, setShowNew] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editMsg, setEditMsg] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  const fetchCustomers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(`${API}/customers`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      if (r.ok) {
+        const data = await r.json();
+        setCustomers(Array.isArray(data) ? data : []);
+      }
+    } catch {}
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
+
+  const fetchCustomer = async (id) => {
+    try {
+      const r = await fetch(`${API}/customers/${id}`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      if (r.ok) setSelected(await r.json());
+    } catch {}
+  };
+
+  const handleCreate = async (form) => {
+    const r = await fetch(`${API}/customers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      body: JSON.stringify(form),
+    });
+    if (!r.ok) throw new Error("Failed to create customer");
+    const data = await r.json();
+    await fetchCustomers();
+    setShowNew(false);
+    await fetchCustomer(data.customer_id || data.id);
+    setActiveTab("profile");
+  };
+
+  const handleUpdate = async (form) => {
+    const r = await fetch(`${API}/customers/${selected.customer_id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      body: JSON.stringify(form),
+    });
+    if (!r.ok) throw new Error("Failed to update customer");
+    await fetchCustomers();
+    await fetchCustomer(selected.customer_id);
+    setShowEdit(false);
+    setEditMsg("✓ Updated");
+    setTimeout(() => setEditMsg(""), 3000);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await fetch(`${API}/customers/${selected.customer_id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      setSelected(null);
+      setDeleteConfirm(false);
+      fetchCustomers();
+    } catch {}
+  };
+
+  const filtered = customers.filter(c => {
+    const q = search.toLowerCase();
+    return (
+      `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
+      (c.phone || "").includes(q) ||
+      (c.email || "").toLowerCase().includes(q)
+    );
+  });
+
+  const tabs = [
+    { id: "profile", label: "👤 Profile" },
+    { id: "credit", label: "📋 Credit App" },
+    { id: "insurance", label: "🛡️ Insurance" },
+    { id: "history", label: "🚗 History" },
+  ];
+
+  return (
+    <div className="flex bg-gray-50" style={{ minHeight: "calc(100vh - 60px)" }}>
+      {/* Sidebar */}
+      <div className="w-72 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-bold text-gray-800">Customers</h2>
+            <button
+              onClick={() => { setShowNew(true); setSelected(null); setShowEdit(false); setDeleteConfirm(false); }}
+              className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+            >+ New</button>
           </div>
-          <p style={{ color: '#555', fontSize: '12px', margin: '0 0 10px' }}>{filtered.length} customer{filtered.length !== 1 ? 's' : ''}</p>
-          {filtered.length === 0 ? (
-            <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>
-              {customers.length === 0 ? 'No customers yet.' : 'No results found.'}
-            </p>
+          <input
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search name, phone, email…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="text-center text-gray-400 text-sm py-8">Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center text-gray-400 text-sm py-8">No customers found</div>
           ) : (
-            filtered.map((c, i) => (
-              <div key={i} onClick={() => handleSelect(c)}
-                style={{ padding: '12px', background: selected?.id === c.id ? '#0d1a2d' : '#0A0A0A', border: `1px solid ${selected?.id === c.id ? '#4a9eff' : '#222'}`, borderRadius: '8px', marginBottom: '6px', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <p style={{ color: '#C0C0C0', margin: '0 0 2px', fontWeight: 'bold', fontSize: '14px' }}>{c.first_name} {c.last_name}</p>
-                    <p style={{ color: '#666', margin: 0, fontSize: '12px' }}>{c.phone || c.email || '—'}</p>
-                  </div>
-                  <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>{c.city ? `${c.city}, ${c.state}` : '—'}</p>
-                </div>
-              </div>
+            filtered.map(c => (
+              <button
+                key={c.customer_id}
+                onClick={() => {
+                  fetchCustomer(c.customer_id);
+                  setShowNew(false);
+                  setShowEdit(false);
+                  setDeleteConfirm(false);
+                  setActiveTab("profile");
+                }}
+                className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                  selected?.customer_id === c.customer_id ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
+                }`}
+              >
+                <div className="font-medium text-gray-800 text-sm">{c.first_name} {c.last_name}</div>
+                {c.phone && <div className="text-xs text-gray-500 mt-0.5">{c.phone}</div>}
+                {c.email && <div className="text-xs text-gray-400 truncate">{c.email}</div>}
+              </button>
             ))
           )}
         </div>
+      </div>
 
-        {/* Customer detail */}
-        {selected && customerDetail && !showCreditApp && (
-          <div>
-            <div style={CARD}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+      {/* Main content */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {showNew ? (
+          <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <CustomerForm
+              title="New Customer"
+              onSave={handleCreate}
+              onCancel={() => setShowNew(false)}
+            />
+          </div>
+        ) : selected ? (
+          <div className="max-w-3xl mx-auto">
+            {/* Header card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4">
+              <div className="flex justify-between items-start">
                 <div>
-                  <h2 style={{ color: '#C0C0C0', margin: '0 0 4px', fontSize: '18px' }}>{customerDetail.customer.first_name} {customerDetail.customer.last_name}</h2>
-                  <p style={{ color: '#666', margin: 0, fontSize: '13px' }}>Customer since {new Date(customerDetail.customer.created_at).toLocaleDateString()}</p>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <button onClick={handleCreditAppOpen} style={{ padding: '6px 12px', background: '#0d1a2d', color: '#4a9eff', border: '1px solid #4a9eff', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>📋 Credit App</button>
-                  <button onClick={handleEdit} style={{ padding: '6px 12px', background: 'transparent', color: '#C0C0C0', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
-                  <button onClick={() => handleDelete(selected.id)} style={{ padding: '6px 12px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Delete</button>
-                  <button onClick={() => { setSelected(null); setCustomerDetail(null) }} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '18px' }}>✕</button>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '10px', marginBottom: '16px' }}>
-                {[
-                  { label: 'Phone',    value: customerDetail.customer.phone },
-                  { label: 'Email',    value: customerDetail.customer.email },
-                  { label: 'Address',  value: [customerDetail.customer.address, customerDetail.customer.city, customerDetail.customer.state, customerDetail.customer.zip].filter(Boolean).join(', ') },
-                  { label: 'Employer', value: customerDetail.customer.employer },
-                  { label: 'Income',   value: customerDetail.customer.monthly_income ? fmt(customerDetail.customer.monthly_income) + '/mo' : null },
-                  { label: 'ID #',     value: customerDetail.customer.id_number },
-                ].filter(item => item.value).map((item, i) => (
-                  <div key={i} style={{ background: '#0A0A0A', borderRadius: '6px', padding: '10px 12px' }}>
-                    <p style={{ color: '#555', fontSize: '10px', margin: '0 0 2px', textTransform: 'uppercase' }}>{item.label}</p>
-                    <p style={{ color: '#C0C0C0', fontSize: '13px', margin: 0 }}>{item.value}</p>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {selected.first_name}
+                    {selected.middle_name ? ` ${selected.middle_name}` : ""}
+                    {` ${selected.last_name}`}
+                    {selected.suffix ? ` ${selected.suffix}` : ""}
+                  </h2>
+                  <div className="flex flex-wrap gap-4 mt-1 text-sm text-gray-500">
+                    {selected.phone && <span>📞 {selected.phone}</span>}
+                    {selected.email && <span>✉️ {selected.email}</span>}
+                    {selected.city && <span>📍 {selected.city}, {selected.state}</span>}
                   </div>
-                ))}
-              </div>
-
-              {customerDetail.customer.notes && (
-                <div style={{ background: '#0A0A0A', borderRadius: '6px', padding: '10px 12px', marginBottom: '16px' }}>
-                  <p style={{ color: '#555', fontSize: '10px', margin: '0 0 4px', textTransform: 'uppercase' }}>Notes</p>
-                  <p style={{ color: '#999', fontSize: '13px', margin: 0 }}>{customerDetail.customer.notes}</p>
                 </div>
-              )}
+                <div className="flex gap-2 items-center">
+                  {editMsg && <span className="text-sm text-green-600">{editMsg}</span>}
+                  <button
+                    onClick={() => { setShowEdit(v => !v); setDeleteConfirm(false); }}
+                    className="px-3 py-1.5 text-xs border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50"
+                  >{showEdit ? "Cancel Edit" : "Edit"}</button>
+                  <button
+                    onClick={() => setDeleteConfirm(v => !v)}
+                    className="px-3 py-1.5 text-xs border border-red-200 rounded-md text-red-600 hover:bg-red-50"
+                  >Delete</button>
+                </div>
+              </div>
             </div>
 
-            {customerDetail.sales?.length > 0 && (
-              <div style={CARD}>
-                <h3 style={{ color: '#C0C0C0', fontSize: '14px', margin: '0 0 12px' }}>Purchase History</h3>
-                {customerDetail.sales.map((s, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
-                    <div>
-                      <p style={{ color: '#C0C0C0', margin: '0 0 2px', fontSize: '13px' }}>{s.model}</p>
-                      <p style={{ color: '#666', margin: 0, fontSize: '11px' }}>{s.date} · {s.payment_type}</p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ color: '#C0C0C0', margin: '0 0 2px', fontSize: '13px' }}>{fmt(s.sale_price)}</p>
-                      <p style={{ color: '#2ecc71', margin: 0, fontSize: '11px' }}>{fmt(s.gross_profit)} gross</p>
-                    </div>
-                  </div>
-                ))}
+            {/* Delete confirm */}
+            {deleteConfirm && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex justify-between items-center">
+                <span className="text-sm text-red-700 font-medium">
+                  Delete {selected.first_name} {selected.last_name}? This cannot be undone.
+                </span>
+                <div className="flex gap-2">
+                  <button onClick={handleDelete} className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">Confirm Delete</button>
+                  <button onClick={() => setDeleteConfirm(false)} className="px-3 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Cancel</button>
+                </div>
               </div>
             )}
 
-            {customerDetail.contracts?.length > 0 && (
-              <div style={CARD}>
-                <h3 style={{ color: '#C0C0C0', fontSize: '14px', margin: '0 0 12px' }}>BHPH Contracts</h3>
-                {customerDetail.contracts.map((c, i) => (
-                  <div key={i} style={{ background: '#0A0A0A', borderRadius: '6px', padding: '12px', marginBottom: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <p style={{ color: '#C0C0C0', margin: 0, fontSize: '13px', fontWeight: 'bold' }}>{c.vehicle}</p>
-                      <span style={{ color: c.status === 'Active' ? '#2ecc71' : '#555', fontSize: '11px', padding: '2px 8px', border: `1px solid ${c.status === 'Active' ? '#27ae60' : '#333'}`, borderRadius: '10px' }}>{c.status}</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '16px', fontSize: '12px', flexWrap: 'wrap' }}>
-                      <span style={{ color: '#666' }}>Financed: <strong style={{ color: '#4a9eff' }}>{fmt(c.amount_financed)}</strong></span>
-                      <span style={{ color: '#666' }}>Collected: <strong style={{ color: '#2ecc71' }}>{fmt(c.total_collected)}</strong></span>
-                      <span style={{ color: '#666' }}>{c.payment_frequency}: <strong style={{ color: '#C0C0C0' }}>{fmt(c.payment_amount)}</strong></span>
-                    </div>
-                  </div>
-                ))}
+            {/* Edit form */}
+            {showEdit && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-4">
+                <CustomerForm
+                  title="Edit Customer"
+                  initial={selected}
+                  onSave={handleUpdate}
+                  onCancel={() => setShowEdit(false)}
+                />
               </div>
             )}
+
+            {/* Tabbed detail view */}
+            {!showEdit && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div className="flex border-b border-gray-200 overflow-x-auto">
+                  {tabs.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveTab(t.id)}
+                      className={`px-5 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                        activeTab === t.id
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
+                    >{t.label}</button>
+                  ))}
+                </div>
+                <div className="p-6">
+                  {activeTab === "profile" && (
+                    <div className="grid grid-cols-2 gap-6 text-sm">
+                      <div>
+                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Identity</div>
+                        <div className="space-y-2">
+                          {selected.dob && <div><span className="text-gray-500">DOB: </span>{new Date(selected.dob).toLocaleDateString()}</div>}
+                          {selected.ssn && <div><span className="text-gray-500">SSN: </span>***-**-{String(selected.ssn).slice(-4)}</div>}
+                          {selected.dl_number && <div><span className="text-gray-500">DL: </span>{selected.dl_number} ({selected.dl_state})</div>}
+                          {selected.dl_expiration && <div><span className="text-gray-500">DL Exp: </span>{new Date(selected.dl_expiration).toLocaleDateString()}</div>}
+                          {!selected.dob && !selected.ssn && !selected.dl_number && <div className="text-gray-400 italic text-xs">No identity info on file</div>}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Residential</div>
+                        <div className="space-y-2">
+                          {selected.address && <div>{selected.address}</div>}
+                          {selected.city && <div>{selected.city}, {selected.state} {selected.zip}</div>}
+                          {selected.housing_status && <div><span className="text-gray-500">Housing: </span>{selected.housing_status}</div>}
+                          {selected.time_at_address && <div><span className="text-gray-500">Time there: </span>{selected.time_at_address}</div>}
+                          {selected.prev_address && (
+                            <div className="mt-2 pt-2 border-t border-gray-100">
+                              <div className="text-xs text-gray-400 mb-1">Previous Address</div>
+                              <div>{selected.prev_address}</div>
+                              {selected.prev_city && <div>{selected.prev_city}, {selected.prev_state} {selected.prev_zip}</div>}
+                            </div>
+                          )}
+                          {!selected.address && <div className="text-gray-400 italic text-xs">No address on file</div>}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Employment & Income</div>
+                        <div className="space-y-2">
+                          {selected.employer && <div><span className="text-gray-500">Employer: </span>{selected.employer}</div>}
+                          {selected.employer_phone && <div><span className="text-gray-500">Work Phone: </span>{selected.employer_phone}</div>}
+                          {selected.gross_monthly && <div><span className="text-gray-500">Gross/mo: </span>${Number(selected.gross_monthly).toLocaleString()}</div>}
+                          {selected.net_monthly && <div><span className="text-gray-500">Net/mo: </span>${Number(selected.net_monthly).toLocaleString()}</div>}
+                          {selected.income_frequency && <div><span className="text-gray-500">Pay Freq: </span>{selected.income_frequency}</div>}
+                          {selected.other_income && <div><span className="text-gray-500">Other Income: </span>${Number(selected.other_income).toLocaleString()} — {selected.other_income_source}</div>}
+                          {!selected.employer && !selected.gross_monthly && <div className="text-gray-400 italic text-xs">No employment info on file</div>}
+                        </div>
+                      </div>
+                      {selected.notes && (
+                        <div>
+                          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Notes</div>
+                          <div className="text-gray-700 whitespace-pre-wrap text-sm">{selected.notes}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {activeTab === "credit" && <CreditAppTab customerId={selected.customer_id} />}
+                  {activeTab === "insurance" && <InsuranceTab customerId={selected.customer_id} />}
+                  {activeTab === "history" && <HistoryTab customerId={selected.customer_id} />}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400" style={{ minHeight: "400px" }}>
+            <div className="text-6xl mb-4">👤</div>
+            <div className="text-lg font-medium mb-1">Select a customer</div>
+            <div className="text-sm">or click <span className="font-semibold text-blue-500">+ New</span> to add one</div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

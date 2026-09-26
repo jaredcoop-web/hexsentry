@@ -2029,30 +2029,60 @@ def reset_password(data: dict):
 @app.post("/customers")
 def create_customer(customer: dict, user=Depends(get_current_user)):
     client_id = user["client_id"]
-    table     = ct(client_id, "customers")
+    table = ct(client_id, "customers")
     try:
         with engine.connect() as conn:
             result = conn.execute(text(f"""
                 INSERT INTO {table}
-                (first_name, middle_name, last_name, suffix, phone, phone_secondary,
-                 email, date_of_birth, dl_state, dl_expiration, ssn,
+                (first_name, middle_name, last_name, suffix, phone, phone2,
+                 email, dob, ssn, dl_number, dl_state, dl_expiration,
                  address, city, state, zip, housing_status, time_at_address,
                  prev_address, prev_city, prev_state, prev_zip,
-                 id_number, employer, employer_phone, monthly_income,
-                 net_monthly_income, income_frequency, other_income_source,
-                 other_income_amount, notes)
-                VALUES (:first_name, :middle_name, :last_name, :suffix, :phone, :phone_secondary,
-                        :email, :date_of_birth, :dl_state, :dl_expiration, :ssn,
-                        :address, :city, :state, :zip, :housing_status, :time_at_address,
-                        :prev_address, :prev_city, :prev_state, :prev_zip,
-                        :id_number, :employer, :employer_phone, :monthly_income,
-                        :net_monthly_income, :income_frequency, :other_income_source,
-                        :other_income_amount, :notes)
+                 employer, employer_phone, gross_monthly, net_monthly,
+                 income_frequency, other_income, other_income_source, notes)
+                VALUES
+                (:first_name, :middle_name, :last_name, :suffix, :phone, :phone2,
+                 :email, :dob, :ssn, :dl_number, :dl_state, :dl_expiration,
+                 :address, :city, :state, :zip, :housing_status, :time_at_address,
+                 :prev_address, :prev_city, :prev_state, :prev_zip,
+                 :employer, :employer_phone, :gross_monthly, :net_monthly,
+                 :income_frequency, :other_income, :other_income_source, :notes)
                 RETURNING id
-            """), customer)
+            """), {
+                "first_name": customer.get("first_name", ""),
+                "middle_name": customer.get("middle_name"),
+                "last_name": customer.get("last_name", ""),
+                "suffix": customer.get("suffix"),
+                "phone": customer.get("phone"),
+                "phone2": customer.get("phone2"),
+                "email": customer.get("email"),
+                "dob": customer.get("dob") or None,
+                "ssn": customer.get("ssn"),
+                "dl_number": customer.get("dl_number"),
+                "dl_state": customer.get("dl_state"),
+                "dl_expiration": customer.get("dl_expiration") or None,
+                "address": customer.get("address"),
+                "city": customer.get("city"),
+                "state": customer.get("state"),
+                "zip": customer.get("zip"),
+                "housing_status": customer.get("housing_status"),
+                "time_at_address": customer.get("time_at_address"),
+                "prev_address": customer.get("prev_address"),
+                "prev_city": customer.get("prev_city"),
+                "prev_state": customer.get("prev_state"),
+                "prev_zip": customer.get("prev_zip"),
+                "employer": customer.get("employer"),
+                "employer_phone": customer.get("employer_phone"),
+                "gross_monthly": customer.get("gross_monthly") or None,
+                "net_monthly": customer.get("net_monthly") or None,
+                "income_frequency": customer.get("income_frequency"),
+                "other_income": customer.get("other_income") or None,
+                "other_income_source": customer.get("other_income_source"),
+                "notes": customer.get("notes"),
+            })
             customer_id = result.fetchone()[0]
             conn.commit()
-        return {"message": "Customer created", "id": customer_id}
+        return {"message": "Customer created", "customer_id": customer_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -2061,14 +2091,15 @@ def create_customer(customer: dict, user=Depends(get_current_user)):
 def get_customers(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        customers = q(f"""
-            SELECT id, first_name, last_name, phone, email, city, state, created_at
+        rows = q(f"""
+            SELECT id AS customer_id, first_name, last_name, phone, email, city, state
             FROM {ct(client_id, 'customers')}
             ORDER BY last_name ASC
         """)
-        return customers
-    except Exception as e:
+        return rows
+    except Exception:
         return []
+
 
 @app.get("/customers/search")
 def search_customers(term: str, user=Depends(get_current_user)):
@@ -2076,7 +2107,7 @@ def search_customers(term: str, user=Depends(get_current_user)):
     try:
         with engine.connect() as conn:
             result = conn.execute(text(f"""
-                SELECT id, first_name, last_name, phone, email
+                SELECT id AS customer_id, first_name, last_name, phone, email
                 FROM {ct(client_id, 'customers')}
                 WHERE LOWER(first_name) LIKE LOWER(:term)
                 OR LOWER(last_name) LIKE LOWER(:term)
@@ -2084,50 +2115,54 @@ def search_customers(term: str, user=Depends(get_current_user)):
                 ORDER BY last_name ASC
                 LIMIT 10
             """), {"term": f"%{term}%"})
-            rows = result.fetchall()
-            return [{"id": r[0], "first_name": r[1], "last_name": r[2], "phone": r[3], "email": r[4]} for r in rows]
-    except Exception as e:
+            rows = result.mappings().fetchall()
+            return [dict(r) for r in rows]
+    except Exception:
         return []
+
 
 @app.get("/customers/{customer_id}")
 def get_customer(customer_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        customer = q(f"""
-            SELECT * FROM {ct(client_id, 'customers')}
+        rows = q(f"""
+            SELECT id AS customer_id, first_name, middle_name, last_name, suffix,
+                   phone, phone2, email, dob, ssn, dl_number, dl_state, dl_expiration,
+                   address, city, state, zip, housing_status, time_at_address,
+                   prev_address, prev_city, prev_state, prev_zip,
+                   employer, employer_phone, gross_monthly, net_monthly,
+                   income_frequency, other_income, other_income_source, notes
+            FROM {ct(client_id, 'customers')}
             WHERE id = {customer_id}
         """)
-        if not customer:
+        if not rows:
             raise HTTPException(status_code=404, detail="Customer not found")
-        
-        sales = q(f"""
-            SELECT id, date, model, sale_price, gross_profit, payment_type
-            FROM {ct(client_id, 'sales')}
-            WHERE customer_id = {customer_id}
-            ORDER BY date DESC
-        """)
-        
-        contracts = q(f"""
-            SELECT c.id, c.vehicle, c.sale_price, c.amount_financed, 
-                c.payment_frequency, c.payment_amount, c.status,
-                COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) as total_collected
-            FROM {ct(client_id, 'bhph_contracts')} c
-            LEFT JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
-            WHERE c.customer_id = {customer_id}
-            GROUP BY c.id, c.vehicle, c.sale_price, c.amount_financed, 
-                    c.payment_frequency, c.payment_amount, c.status
-        """)
-        
-        return {
-            "customer": customer[0],
-            "sales":    sales,
-            "contracts": contracts
-        }
+        return rows[0]
     except HTTPException:
         raise
     except Exception as e:
-        print(f"get_customer error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/customers/{customer_id}/contracts")
+def get_customer_contracts(customer_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        rows = q(f"""
+            SELECT c.id AS contract_id, c.vehicle, c.sale_price, c.amount_financed,
+                   c.payment_frequency, c.payment_amount, c.status,
+                   COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) AS total_collected,
+                   c.sale_price - COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) AS remaining_balance
+            FROM {ct(client_id, 'bhph_contracts')} c
+            LEFT JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
+            WHERE c.customer_id = {customer_id}
+            GROUP BY c.id, c.vehicle, c.sale_price, c.amount_financed,
+                     c.payment_frequency, c.payment_amount, c.status
+            ORDER BY c.id DESC
+        """)
+        return rows
+    except Exception:
+        return []
 
 
 @app.patch("/customers/{customer_id}")
@@ -2137,17 +2172,58 @@ def update_customer(customer_id: int, data: dict, user=Depends(get_current_user)
         with engine.connect() as conn:
             conn.execute(text(f"""
                 UPDATE {ct(client_id, 'customers')}
-                SET first_name=:first_name, last_name=:last_name, phone=:phone,
-                    email=:email, address=:address, city=:city, state=:state,
-                    zip=:zip, id_number=:id_number, employer=:employer,
-                    monthly_income=:monthly_income, notes=:notes
+                SET first_name=:first_name, middle_name=:middle_name,
+                    last_name=:last_name, suffix=:suffix,
+                    phone=:phone, phone2=:phone2, email=:email,
+                    dob=:dob, ssn=:ssn, dl_number=:dl_number,
+                    dl_state=:dl_state, dl_expiration=:dl_expiration,
+                    address=:address, city=:city, state=:state, zip=:zip,
+                    housing_status=:housing_status, time_at_address=:time_at_address,
+                    prev_address=:prev_address, prev_city=:prev_city,
+                    prev_state=:prev_state, prev_zip=:prev_zip,
+                    employer=:employer, employer_phone=:employer_phone,
+                    gross_monthly=:gross_monthly, net_monthly=:net_monthly,
+                    income_frequency=:income_frequency,
+                    other_income=:other_income, other_income_source=:other_income_source,
+                    notes=:notes
                 WHERE id=:id
-            """), {**data, "id": customer_id})
+            """), {
+                "first_name": data.get("first_name", ""),
+                "middle_name": data.get("middle_name"),
+                "last_name": data.get("last_name", ""),
+                "suffix": data.get("suffix"),
+                "phone": data.get("phone"),
+                "phone2": data.get("phone2"),
+                "email": data.get("email"),
+                "dob": data.get("dob") or None,
+                "ssn": data.get("ssn"),
+                "dl_number": data.get("dl_number"),
+                "dl_state": data.get("dl_state"),
+                "dl_expiration": data.get("dl_expiration") or None,
+                "address": data.get("address"),
+                "city": data.get("city"),
+                "state": data.get("state"),
+                "zip": data.get("zip"),
+                "housing_status": data.get("housing_status"),
+                "time_at_address": data.get("time_at_address"),
+                "prev_address": data.get("prev_address"),
+                "prev_city": data.get("prev_city"),
+                "prev_state": data.get("prev_state"),
+                "prev_zip": data.get("prev_zip"),
+                "employer": data.get("employer"),
+                "employer_phone": data.get("employer_phone"),
+                "gross_monthly": data.get("gross_monthly") or None,
+                "net_monthly": data.get("net_monthly") or None,
+                "income_frequency": data.get("income_frequency"),
+                "other_income": data.get("other_income") or None,
+                "other_income_source": data.get("other_income_source"),
+                "notes": data.get("notes"),
+                "id": customer_id,
+            })
             conn.commit()
         return {"message": "Customer updated"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 @app.delete("/customers/{customer_id}")
@@ -2163,41 +2239,7 @@ def delete_customer(customer_id: int, user=Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 # ── Credit Application endpoints ──────────────────────────────────────────────
-
-@app.post("/credit-application")
-def create_credit_app(data: dict, user=Depends(get_current_user)):
-    client_id = user["client_id"]
-    table     = ct(client_id, "credit_applications")
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(text(f"""
-                INSERT INTO {table}
-                (customer_id, dob, ssn_last4, address_years, job_title,
-                 employer_address, employment_years,
-                 ref1_name, ref1_phone, ref1_relationship, ref1_years,
-                 ref2_name, ref2_phone, ref2_relationship, ref2_years,
-                 ref3_name, ref3_phone, ref3_relationship, ref3_years,
-                 desired_vehicle, desired_down_payment, desired_monthly_payment,
-                 credit_score, signed, signed_date, signature_data, notes)
-                VALUES (:customer_id, :dob, :ssn_last4, :address_years, :job_title,
-                        :employer_address, :employment_years,
-                        :ref1_name, :ref1_phone, :ref1_relationship, :ref1_years,
-                        :ref2_name, :ref2_phone, :ref2_relationship, :ref2_years,
-                        :ref3_name, :ref3_phone, :ref3_relationship, :ref3_years,
-                        :desired_vehicle, :desired_down_payment, :desired_monthly_payment,
-                        :credit_score, :signed, :signed_date, :signature_data, :notes)
-                RETURNING id
-            """), data)
-            app_id = result.fetchone()[0]
-            conn.commit()
-        return {"message": "Credit application saved", "id": app_id}
-    except Exception as e:
-        print(f"credit app error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-    
-
 
 @app.get("/credit-application/{customer_id}")
 def get_credit_app(customer_id: int, user=Depends(get_current_user)):
@@ -2208,57 +2250,69 @@ def get_credit_app(customer_id: int, user=Depends(get_current_user)):
             WHERE customer_id = {customer_id}
             ORDER BY created_at DESC LIMIT 1
         """)
-        return apps[0] if apps else None
-    except Exception as e:
-        return None
+        return apps[0] if apps else {}
+    except Exception:
+        return {}
 
 
-@app.patch("/credit-application/{app_id}")
-def update_credit_app(app_id: int, data: dict, user=Depends(get_current_user)):
+@app.put("/credit-application/{customer_id}")
+def upsert_credit_app(customer_id: int, data: dict, user=Depends(get_current_user)):
     client_id = user["client_id"]
-    table     = ct(client_id, "credit_applications")
+    table = ct(client_id, "credit_applications")
     try:
         with engine.connect() as conn:
-            conn.execute(text(f"""
-                UPDATE {table}
-                SET dob=:dob, ssn_last4=:ssn_last4, address_years=:address_years,
-                    job_title=:job_title, employer_address=:employer_address,
-                    employment_years=:employment_years,
-                    ref1_name=:ref1_name, ref1_phone=:ref1_phone,
-                    ref1_relationship=:ref1_relationship, ref1_years=:ref1_years,
-                    ref2_name=:ref2_name, ref2_phone=:ref2_phone,
-                    ref2_relationship=:ref2_relationship, ref2_years=:ref2_years,
-                    ref3_name=:ref3_name, ref3_phone=:ref3_phone,
-                    ref3_relationship=:ref3_relationship, ref3_years=:ref3_years,
-                    desired_vehicle=:desired_vehicle,
-                    desired_down_payment=:desired_down_payment,
-                    desired_monthly_payment=:desired_monthly_payment,
-                    credit_score=:credit_score, signed=:signed,
-                    signed_date=:signed_date, signature_data=:signature_data,
-                    notes=:notes
-                WHERE id=:id
-            """), {**data, "id": app_id})
+            existing = conn.execute(text(f"""
+                SELECT id FROM {table} WHERE customer_id = :cid LIMIT 1
+            """), {"cid": customer_id}).fetchone()
+
+            params = {
+                "customer_id": customer_id,
+                "credit_score": data.get("credit_score") or None,
+                "signature_obtained": data.get("signature_obtained", False),
+                "vehicle_interest": data.get("vehicle_interest"),
+                "ref1_name": data.get("ref1_name"), "ref1_phone": data.get("ref1_phone"),
+                "ref1_address": data.get("ref1_address"), "ref1_relationship": data.get("ref1_relationship"),
+                "ref2_name": data.get("ref2_name"), "ref2_phone": data.get("ref2_phone"),
+                "ref2_address": data.get("ref2_address"), "ref2_relationship": data.get("ref2_relationship"),
+                "ref3_name": data.get("ref3_name"), "ref3_phone": data.get("ref3_phone"),
+                "ref3_address": data.get("ref3_address"), "ref3_relationship": data.get("ref3_relationship"),
+                "ref4_name": data.get("ref4_name"), "ref4_phone": data.get("ref4_phone"),
+                "ref4_address": data.get("ref4_address"), "ref4_relationship": data.get("ref4_relationship"),
+                "ref5_name": data.get("ref5_name"), "ref5_phone": data.get("ref5_phone"),
+                "ref5_address": data.get("ref5_address"), "ref5_relationship": data.get("ref5_relationship"),
+            }
+
+            if existing:
+                conn.execute(text(f"""
+                    UPDATE {table}
+                    SET credit_score=:credit_score, signature_obtained=:signature_obtained,
+                        vehicle_interest=:vehicle_interest,
+                        ref1_name=:ref1_name, ref1_phone=:ref1_phone, ref1_address=:ref1_address, ref1_relationship=:ref1_relationship,
+                        ref2_name=:ref2_name, ref2_phone=:ref2_phone, ref2_address=:ref2_address, ref2_relationship=:ref2_relationship,
+                        ref3_name=:ref3_name, ref3_phone=:ref3_phone, ref3_address=:ref3_address, ref3_relationship=:ref3_relationship,
+                        ref4_name=:ref4_name, ref4_phone=:ref4_phone, ref4_address=:ref4_address, ref4_relationship=:ref4_relationship,
+                        ref5_name=:ref5_name, ref5_phone=:ref5_phone, ref5_address=:ref5_address, ref5_relationship=:ref5_relationship
+                    WHERE customer_id=:customer_id
+                """), params)
+            else:
+                conn.execute(text(f"""
+                    INSERT INTO {table}
+                    (customer_id, credit_score, signature_obtained, vehicle_interest,
+                     ref1_name, ref1_phone, ref1_address, ref1_relationship,
+                     ref2_name, ref2_phone, ref2_address, ref2_relationship,
+                     ref3_name, ref3_phone, ref3_address, ref3_relationship,
+                     ref4_name, ref4_phone, ref4_address, ref4_relationship,
+                     ref5_name, ref5_phone, ref5_address, ref5_relationship)
+                    VALUES
+                    (:customer_id, :credit_score, :signature_obtained, :vehicle_interest,
+                     :ref1_name, :ref1_phone, :ref1_address, :ref1_relationship,
+                     :ref2_name, :ref2_phone, :ref2_address, :ref2_relationship,
+                     :ref3_name, :ref3_phone, :ref3_address, :ref3_relationship,
+                     :ref4_name, :ref4_phone, :ref4_address, :ref4_relationship,
+                     :ref5_name, :ref5_phone, :ref5_address, :ref5_relationship)
+                """), params)
             conn.commit()
-        return {"message": "Credit application updated"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-@app.post("/insurance")
-def create_insurance(data: dict, user=Depends(get_current_user)):
-    client_id = user["client_id"]
-    table     = ct(client_id, "insurance")
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(text(f"""
-                INSERT INTO {table}
-                (customer_id, insurance_company, policy_number, agent_name,
-                 agent_phone, effective_date, expiration_date)
-                VALUES (:customer_id, :insurance_company, :policy_number, :agent_name,
-                        :agent_phone, :effective_date, :expiration_date)
-                RETURNING id
-            """), data)
-            conn.commit()
-        return {"message": "Insurance saved"}
+        return {"message": "Credit application saved"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -2270,26 +2324,51 @@ def get_insurance(customer_id: int, user=Depends(get_current_user)):
         ins = q(f"""
             SELECT * FROM {ct(client_id, 'insurance')}
             WHERE customer_id = {customer_id}
-            ORDER BY created_at DESC LIMIT 1
+            ORDER BY id DESC LIMIT 1
         """)
-        return ins[0] if ins else None
-    except:
-        return None
+        return ins[0] if ins else {}
+    except Exception:
+        return {}
 
 
-@app.patch("/insurance/{insurance_id}")
-def update_insurance(insurance_id: int, data: dict, user=Depends(get_current_user)):
+@app.put("/insurance/{customer_id}")
+def upsert_insurance(customer_id: int, data: dict, user=Depends(get_current_user)):
     client_id = user["client_id"]
+    table = ct(client_id, "insurance")
     try:
         with engine.connect() as conn:
-            conn.execute(text(f"""
-                UPDATE {ct(client_id, 'insurance')}
-                SET insurance_company=:insurance_company, policy_number=:policy_number,
-                    agent_name=:agent_name, agent_phone=:agent_phone,
-                    effective_date=:effective_date, expiration_date=:expiration_date
-                WHERE id=:id
-            """), {**data, "id": insurance_id})
+            existing = conn.execute(text(f"""
+                SELECT id FROM {table} WHERE customer_id = :cid LIMIT 1
+            """), {"cid": customer_id}).fetchone()
+
+            params = {
+                "customer_id": customer_id,
+                "company": data.get("company"),
+                "policy_number": data.get("policy_number"),
+                "agent_name": data.get("agent_name"),
+                "agent_phone": data.get("agent_phone"),
+                "effective_date": data.get("effective_date") or None,
+                "expiration_date": data.get("expiration_date") or None,
+            }
+
+            if existing:
+                conn.execute(text(f"""
+                    UPDATE {table}
+                    SET company=:company, policy_number=:policy_number,
+                        agent_name=:agent_name, agent_phone=:agent_phone,
+                        effective_date=:effective_date, expiration_date=:expiration_date
+                    WHERE customer_id=:customer_id
+                """), params)
+            else:
+                conn.execute(text(f"""
+                    INSERT INTO {table}
+                    (customer_id, company, policy_number, agent_name, agent_phone,
+                     effective_date, expiration_date)
+                    VALUES
+                    (:customer_id, :company, :policy_number, :agent_name, :agent_phone,
+                     :effective_date, :expiration_date)
+                """), params)
             conn.commit()
-        return {"message": "Insurance updated"}
+        return {"message": "Insurance saved"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
