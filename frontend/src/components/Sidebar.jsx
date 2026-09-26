@@ -58,7 +58,7 @@ const pages = [
         <div style={{ padding: collapsed ? '20px 12px' : '20px 16px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between' }}>
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img src="/logo.png" alt="HexGuard" style={{ width: '32px', height: '32px', borderRadius: '6px', flexShrink: 0 }} />
+              <img src="/Carhexguard.png" alt="HexGuard" style={{ width: '32px', height: '32px', borderRadius: '6px', flexShrink: 0 }} />
               <div>
                 <h2 style={{ color: '#C0C0C0', margin: 0, fontSize: '16px', whiteSpace: 'nowrap' }}>HexGuard</h2>
                 <p style={{ color: '#555', margin: 0, fontSize: '10px', whiteSpace: 'nowrap' }}>{user?.business_name || 'Business Intelligence'}</p>
@@ -66,7 +66,7 @@ const pages = [
             </div>
           )}
           {collapsed && (
-            <img src="/logo.png" alt="HexGuard" style={{ width: '32px', height: '32px', borderRadius: '6px' }} />
+            <img src="/Carhexguard.png" alt="HexGuard" style={{ width: '32px', height: '32px', borderRadius: '6px' }} />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}

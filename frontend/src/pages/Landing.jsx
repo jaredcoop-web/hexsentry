@@ -105,7 +105,7 @@ export default function Landing({ onGetStarted }) {
 
   return (
   <div style={{ background: '#0A0A0A', minHeight: '100vh', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '20px' }}>
-    <img src="/logo.png" alt="HexGuard" style={{ width: '64px', height: '64px', borderRadius: '12px', marginBottom: '24px' }} />
+    <img src="/Carhexguard.png" alt="HexGuard" style={{ width: '64px', height: '64px', borderRadius: '12px', marginBottom: '24px' }} />
     <h1 style={{ color: '#C0C0C0', fontSize: '32px', fontWeight: 'bold', margin: '0 0 12px' }}>HexGuard</h1>
     <p style={{ color: '#4a9eff', fontSize: '16px', margin: '0 0 8px' }}>The Intelligence Platform for Dealers and Repair Shops.</p>
     <p style={{ color: '#444', fontSize: '14px', margin: '0 0 40px' }}>Coming soon — currently in private beta.</p>
