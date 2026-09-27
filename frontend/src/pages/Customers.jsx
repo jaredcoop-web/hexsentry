@@ -524,14 +524,18 @@ function HistoryTab({ customerId }) {
         <div key={c.contract_id} className="border border-gray-200 rounded-lg p-4">
           <div className="flex justify-between items-start">
             <div>
-              <div className="font-semibold text-gray-800">{c.year} {c.make} {c.model}</div>
+              <div className="font-semibold text-gray-800">{c.vehicle || `${c.year || ''} ${c.make || ''} ${c.model || ''}`.trim()}</div>
               <div className="text-xs text-gray-500 mt-0.5">Contract #{c.contract_id} · {c.sale_date}</div>
             </div>
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-              c.status === "Active" ? "bg-green-100 text-green-700" :
-              c.status === "Paid Off" ? "bg-blue-100 text-blue-700" :
-              "bg-gray-100 text-gray-600"
-            }`}>{c.status}</span>
+            <div className="text-right">
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                c.status === "Active" ? "bg-green-100 text-green-700" :
+                c.status === "Paid Off" ? "bg-blue-100 text-blue-700" :
+                c.status === "Completed" ? "bg-gray-100 text-gray-600" :
+                "bg-gray-100 text-gray-600"
+              }`}>{c.status}</span>
+              <div className="text-xs text-gray-400 mt-1">{c.sale_type}</div>
+            </div>
           </div>
           <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-gray-600">
             <div><span className="text-gray-400 block">Sale Price</span>${Number(c.sale_price || 0).toLocaleString()}</div>
