@@ -260,43 +260,47 @@ export default function AddSale({ user, isMobile }) {
           )}
         </div>
         <div style={{ marginBottom: '16px', position: 'relative' }}>
-              <label style={LABEL}>Customer *</label>
-              {form.customer_id ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
-                  <div style={{ flex: 1, padding: '10px 12px', background: '#0d2d15', border: '1px solid #27ae60', borderRadius: '6px', color: '#2ecc71', fontSize: '14px' }}>
-                    👤 {form.customer_name}
-                  </div>
-                  <button onClick={() => { update('customer_id', null); update('customer_name', ''); update('customer_phone', '') }}
-                    style={{ padding: '10px 12px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
-                    ✕ Change
-                  </button>
+          <label style={LABEL}>Customer *</label>
+          {form.customer_id ? (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+                <div style={{ flex: 1, padding: '10px 12px', background: '#0d2d15', border: '1px solid #27ae60', borderRadius: '6px', color: '#2ecc71', fontSize: '14px' }}>
+                  👤 {form.customer_name}
                 </div>
-              ) : (
-                <div>
-                  <input type="text" value={form.customer_name} onChange={e => handleCustomerSearch(e.target.value)}
-                    placeholder="Search existing customer..." style={INPUT} />
-                  {customerResults.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', zIndex: 50, marginTop: '4px' }}>
-                      {customerResults.map((c, i) => (
-                        <div key={i} onClick={() => handleSelectCustomer(c)}
-                          style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #1a1a1a' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#1A1A2E'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                          <p style={{ color: '#C0C0C0', margin: 0, fontSize: '13px' }}>{c.first_name} {c.last_name}</p>
-                          <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>{c.phone}</p>
-                        </div>
-                      ))}
-                      <div onClick={() => setCustomerResults([])}
-                        style={{ padding: '10px 14px', cursor: 'pointer', color: '#666', fontSize: '13px' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#1A1A2E'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        ➕ Use "{form.customer_name}" as new customer
-                      </div>
+                <button onClick={() => { update('customer_id', null); update('customer_name', ''); update('customer_phone', '') }}
+                  style={{ padding: '10px 12px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                  ✕ Change
+                </button>
+              </div>
+              <input type="text" value={form.customer_phone} onChange={e => update('customer_phone', e.target.value)}
+                placeholder="Customer phone" style={{ ...INPUT, marginTop: '8px' }} />
+            </div>
+          ) : (
+            <div>
+              <input type="text" value={form.customer_name} onChange={e => handleCustomerSearch(e.target.value)}
+                placeholder="Search existing customer..." style={INPUT} />
+              {customerResults.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', zIndex: 50, marginTop: '4px' }}>
+                  {customerResults.map((c, i) => (
+                    <div key={i} onClick={() => handleSelectCustomer(c)}
+                      style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #1a1a1a' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#1A1A2E'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <p style={{ color: '#C0C0C0', margin: 0, fontSize: '13px' }}>{c.first_name} {c.last_name}</p>
+                      <p style={{ color: '#555', margin: 0, fontSize: '11px' }}>{c.phone}</p>
                     </div>
-                  )}
+                  ))}
+                  <div onClick={() => setCustomerResults([])}
+                    style={{ padding: '10px 14px', cursor: 'pointer', color: '#666', fontSize: '13px' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#1A1A2E'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    ➕ Use "{form.customer_name}" as new customer
+                  </div>
                 </div>
               )}
             </div>
+          )}
+        </div>
 
 
         {/* Prices */}
@@ -343,12 +347,7 @@ export default function AddSale({ user, isMobile }) {
 
             
 
-            <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={LABEL}>Customer phone</label>
-                <input type="text" value={form.customer_phone} onChange={e => update('customer_phone', e.target.value)} placeholder="(555) 123-4567" style={INPUT} />
-              </div>
-            </div>
+            
             <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '16px', marginBottom: '12px' }}>
               <div>
                 <label style={LABEL}>Down Payment ($)</label>
