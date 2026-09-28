@@ -2105,18 +2105,15 @@ def get_customers(user=Depends(get_current_user)):
 def search_customers(term: str, user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        with engine.connect() as conn:
-            result = conn.execute(text(f"""
-                SELECT id AS customer_id, first_name, last_name, phone, email
-                FROM {ct(client_id, 'customers')}
-                WHERE LOWER(first_name) LIKE LOWER(:term)
-                OR LOWER(last_name) LIKE LOWER(:term)
-                OR phone LIKE :term
-                ORDER BY last_name ASC
-                LIMIT 10
-            """), {"term": f"%{term}%"})
-            rows = result.mappings().fetchall()
-            return [dict(r) for r in rows]
+        rows = q(f"""
+            SELECT id AS customer_id, first_name, last_name, phone, email
+            FROM {ct(client_id, 'customers')}
+            WHERE first_name ILIKE :term OR last_name ILIKE :term
+               OR phone ILIKE :term OR email ILIKE :term
+            ORDER BY last_name ASC
+            LIMIT 10
+        """, {"term": f"%{term}%"})
+        return rows
     except Exception:
         return []
 
@@ -2148,9 +2145,11 @@ def get_customer(customer_id: int, user=Depends(get_current_user)):
 def get_customer_contracts(customer_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        rows = q(f"""
+        # BHPH contracts
+        bhph = q(f"""
             SELECT c.id AS contract_id, c.vehicle, c.sale_price, c.amount_financed,
                    c.payment_frequency, c.payment_amount, c.status,
+                   'BHPH' AS sale_type,
                    COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) AS total_collected,
                    c.sale_price - COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) AS remaining_balance
             FROM {ct(client_id, 'bhph_contracts')} c
@@ -2160,7 +2159,22 @@ def get_customer_contracts(customer_id: int, user=Depends(get_current_user)):
                      c.payment_frequency, c.payment_amount, c.status
             ORDER BY c.id DESC
         """)
-        return rows
+
+        # All other sales
+        sales = q(f"""
+            SELECT id AS contract_id, description AS vehicle, sale_price,
+                   NULL AS amount_financed, NULL AS payment_frequency,
+                   NULL AS payment_amount, 'Completed' AS status,
+                   payment_type AS sale_type,
+                   sale_price AS total_collected,
+                   0 AS remaining_balance
+            FROM {ct(client_id, 'sales')}
+            WHERE customer_id = {customer_id}
+              AND payment_type != 'In-House / BHPH'
+            ORDER BY id DESC
+        """)
+
+        return list(bhph) + list(sales)
     except Exception:
         return []
 
