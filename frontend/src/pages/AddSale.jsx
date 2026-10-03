@@ -83,6 +83,7 @@ export default function AddSale({ user, isMobile }) {
   }
 
   const handleCustomerSearch = async (value) => {
+    console.log('searching:', value)
     update('customer_name', value)
     if (value.length < 2) { setCustomerResults([]); return }
     try {
