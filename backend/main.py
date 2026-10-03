@@ -2385,4 +2385,5 @@ def upsert_insurance(customer_id: int, data: dict = Body(...), user=Depends(get_
             conn.commit()
         return {"message": "Insurance saved"}
     except Exception as e:
+        print(f"Insurance error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
