@@ -1,21 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../api'
 
-const PAGES = [
-  { id: 'dashboard',        icon: '📊', label: 'Dashboard' },
-  { id: 'sales',            icon: '🚗', label: 'Sales' },
-  { id: 'add-sale',         icon: '➕', label: 'Add Sale' },
-  { id: 'jobs',             icon: '🔧', label: 'Jobs' },
-  { id: 'add-job',          icon: '🔩', label: 'Add Job' },
-  { id: 'inventory',        icon: '📦', label: 'Inventory' },
-  { id: 'dealer-inventory', icon: '🚙', label: 'Lot' },
-  { id: 'reviews',          icon: '⭐', label: 'Reviews' },
-  { id: 'finances',         icon: '💰', label: 'Finances' },
-  { id: 'fi',               icon: '💼', label: 'F&I' },
-  { id: 'ai',               icon: '🤖', label: 'AI Chat' },
-  { id: 'email',            icon: '📧', label: 'Email' },
-  { id: 'payments',         icon: '💳', label: 'Payments' },
-]
+
 
 export default function Home({ user, setCurrentPage, isMobile }) {
   const [kpis, setKpis]     = useState(null)
@@ -78,24 +64,6 @@ export default function Home({ user, setCurrentPage, isMobile }) {
         </div>
       )}
 
-      {/* Quick Access — compact */}
-      <div style={{ marginBottom: '20px' }}>
-        <p style={{ color: '#444', fontSize: '11px', textTransform: 'uppercase', margin: '0 0 8px' }}>Quick Access</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {PAGES.map((p, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(p.id)}
-              style={{ background: '#1A1A2E', border: '1px solid #222', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = '#4a9eff'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = '#222'}
-            >
-              <span style={{ fontSize: '14px' }}>{p.icon}</span>
-              <span style={{ color: '#999', fontSize: '12px' }}>{p.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Quick Stats */}
       {!loading && stats && !stats.error && (
