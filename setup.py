@@ -3,6 +3,11 @@
 ## Set-Alias python C:\Users\jared\PycharmProjects\PythonProject\.venv\Scripts\python
 ## To open website: python -m streamlit run dashboard\app.py
 ## Render link: https://hexsentry.onrender.com/
+## back end: cd C:\Users\jared\PycharmProjects\PythonProject\dealership-dashboard\backend
+## C:\Users\jared\PycharmProjects\PythonProject\.venv\Scripts\python -m uvicorn main:app --reload
+## Frontend: cd C:\Users\jared\PycharmProjects\PythonProject\dealership-dashboard\frontend
+## npm run dev
+
 import os
 
 BASE = os.path.join(os.getcwd(), "dealership-dashboard")

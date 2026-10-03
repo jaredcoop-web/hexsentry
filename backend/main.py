@@ -8,7 +8,7 @@ load_dotenv()
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
@@ -2346,7 +2346,7 @@ def get_insurance(customer_id: int, user=Depends(get_current_user)):
 
 
 @app.put("/insurance/{customer_id}")
-def upsert_insurance(customer_id: int, data: dict, user=Depends(get_current_user)):
+def upsert_insurance(customer_id: int, data: dict = Body(...), user=Depends(get_current_user)):
     client_id = user["client_id"]
     table = ct(client_id, "insurance")
     try:
