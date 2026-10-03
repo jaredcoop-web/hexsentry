@@ -2162,7 +2162,7 @@ def get_customer_contracts(customer_id: int, user=Depends(get_current_user)):
 
         # All other sales
         sales = q(f"""
-            SELECT id AS contract_id, description AS vehicle, sale_price,
+            SELECT id AS contract_id, model AS vehicle, sale_price,
                    NULL AS amount_financed, NULL AS payment_frequency,
                    NULL AS payment_amount, 'Completed' AS status,
                    payment_type AS sale_type,
