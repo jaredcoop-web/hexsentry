@@ -2105,15 +2105,17 @@ def get_customers(user=Depends(get_current_user)):
 def search_customers(term: str, user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        rows = q(f"""
-            SELECT id AS customer_id, first_name, last_name, phone, email
-            FROM {ct(client_id, 'customers')}
-            WHERE first_name ILIKE :term OR last_name ILIKE :term
-               OR phone ILIKE :term OR email ILIKE :term
-            ORDER BY last_name ASC
-            LIMIT 10
-        """, {"term": f"%{term}%"})
-        return rows
+        with engine.connect() as conn:
+            result = conn.execute(text(f"""
+                SELECT id AS customer_id, first_name, last_name, phone, email
+                FROM {ct(client_id, 'customers')}
+                WHERE first_name ILIKE :term OR last_name ILIKE :term
+                   OR phone ILIKE :term OR email ILIKE :term
+                ORDER BY last_name ASC
+                LIMIT 10
+            """), {"term": f"%{term}%"})
+            rows = result.mappings().fetchall()
+            return [dict(r) for r in rows]
     except Exception:
         return []
 
