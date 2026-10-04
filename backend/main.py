@@ -1401,6 +1401,12 @@ def get_expenses(user=Depends(get_current_user)):
             FROM {exp_table}
             ORDER BY date DESC LIMIT 50
         """)
+        recent_income = q(f"""
+            SELECT id, date, category, description,
+                ROUND(CAST(amount AS numeric), 2) as amount
+            FROM {inc_table}
+            ORDER BY date DESC LIMIT 50
+        """)
         return {
             "summary": {
                 **(summary[0] if summary else {}),
@@ -1412,6 +1418,7 @@ def get_expenses(user=Depends(get_current_user)):
             "recent":        recent,
             "recent_income": recent_income,
         }
+        
     except Exception as e:
         return {"error": str(e)}
 
@@ -1501,6 +1508,32 @@ def delete_expense(expense_id: int, user=Depends(get_current_user)):
             conn.execute(text(f"DELETE FROM {table} WHERE id=:id"), {"id": expense_id})
             conn.commit()
         return {"message": "Expense deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/expenses/add")
+def add_expense(expense: dict = Body(...), user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    table = ct(client_id, "expenses")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"""
+                INSERT INTO {table}
+                (date, category, description, amount, recurring, frequency, notes, month, year)
+                VALUES (:date, :category, :description, :amount, :recurring, :frequency, :notes, :month, :year)
+            """), {
+                "date":        expense.get("date"),
+                "category":    expense.get("category"),
+                "description": expense.get("description"),
+                "amount":      float(expense.get("amount", 0)),
+                "recurring":   expense.get("recurring", False),
+                "frequency":   expense.get("frequency", "one-time"),
+                "notes":       expense.get("notes", ""),
+                "month":       expense.get("date", "")[:7],
+                "year":        expense.get("date", "")[:4],
+            })
+            conn.commit()
+        return {"message": "Expense added"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
