@@ -1777,7 +1777,7 @@ def get_stats(user=Depends(get_current_user)):
 # ── BHPH / Collections endpoints ─────────────────────────────────────────────
 
 @app.post("/bhph/contracts")
-def create_bhph_contract(contract: dict, user=Depends(get_current_user)):
+def create_bhph_contract(contract: dict = Body(...), user=Depends(get_current_user)):
     client_id = user["client_id"]
     table     = ct(client_id, "bhph_contracts")
     pay_table = ct(client_id, "bhph_payments")
@@ -1785,17 +1785,16 @@ def create_bhph_contract(contract: dict, user=Depends(get_current_user)):
         with engine.connect() as conn:
             result = conn.execute(text(f"""
                 INSERT INTO {table}
-                (sale_id, customer_name, customer_phone, vehicle, sale_price,
+                (sale_id, customer_id, customer_name, customer_phone, vehicle, sale_price,
                  down_payment, amount_financed, interest_rate, term_months,
                  payment_frequency, payment_amount, total_interest, start_date, notes)
-                VALUES (:sale_id, :customer_name, :customer_phone, :vehicle, :sale_price,
+                VALUES (:sale_id, :customer_id, :customer_name, :customer_phone, :vehicle, :sale_price,
                         :down_payment, :amount_financed, :interest_rate, :term_months,
                         :payment_frequency, :payment_amount, :total_interest, :start_date, :notes)
                 RETURNING id
-            """), contract)
+            """), {**contract, "customer_id": contract.get("customer_id")})
             contract_id = result.fetchone()[0]
 
-            # Auto-generate payment schedule
             from datetime import datetime, timedelta
             start = datetime.strptime(contract["start_date"], "%Y-%m-%d")
             freq  = contract["payment_frequency"]
@@ -1806,7 +1805,7 @@ def create_bhph_contract(contract: dict, user=Depends(get_current_user)):
             for i in range(count):
                 if freq == "Weekly":    due = start + timedelta(weeks=i+1)
                 if freq == "Bi-Weekly": due = start + timedelta(weeks=(i+1)*2)
-                if freq == "Monthly":   
+                if freq == "Monthly":
                     month = (start.month + i) % 12 or 12
                     year  = start.year + (start.month + i - 1) // 12
                     due   = start.replace(month=month, year=year)
@@ -1827,25 +1826,51 @@ def create_bhph_contract(contract: dict, user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/bhph/contracts")
-def get_bhph_contracts(user=Depends(get_current_user)):
+@app.post("/bhph/payments")
+def record_bhph_payment(payment: dict = Body(...), user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    pay_table = ct(client_id, "bhph_payments")
+    try:
+        with engine.connect() as conn:
+            # Find the next Upcoming payment for this contract and mark it Paid
+            row = conn.execute(text(f"""
+                SELECT id FROM {pay_table}
+                WHERE contract_id = :contract_id AND status = 'Upcoming'
+                ORDER BY due_date ASC LIMIT 1
+            """), {"contract_id": payment["contract_id"]}).fetchone()
+
+            if row:
+                conn.execute(text(f"""
+                    UPDATE {pay_table}
+                    SET status = 'Paid', amount_paid = :amount_paid,
+                        payment_date = :payment_date, payment_method = :payment_method,
+                        notes = :notes
+                    WHERE id = :id
+                """), {
+                    "id":             row[0],
+                    "amount_paid":    payment.get("amount_paid"),
+                    "payment_date":   payment.get("payment_date"),
+                    "payment_method": payment.get("payment_method", "Cash"),
+                    "notes":          payment.get("notes", ""),
+                })
+            conn.commit()
+        return {"message": "Payment recorded"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/bhph/payments/{contract_id}")
+def get_bhph_payments(contract_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
-        contracts = q(f"""
-            SELECT c.*,
-                   COUNT(p.id) as total_payments,
-                   ROUND(CAST(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END) AS numeric), 2) as total_collected,
-                   SUM(CASE WHEN p.status = 'Late' THEN 1 ELSE 0 END) as late_count,
-                   SUM(CASE WHEN p.status = 'Upcoming' AND p.due_date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD') THEN 1 ELSE 0 END) as due_today
-            FROM {ct(client_id, 'bhph_contracts')} c
-            LEFT JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
-            GROUP BY c.id
-            ORDER BY c.created_at DESC
+        rows = q(f"""
+            SELECT * FROM {ct(client_id, 'bhph_payments')}
+            WHERE contract_id = {contract_id}
+            ORDER BY due_date ASC
         """)
-        return contracts
-    except Exception as e:
+        return rows
+    except Exception:
         return []
-
 
 @app.get("/bhph/contracts/{contract_id}/payments")
 def get_contract_payments(contract_id: int, user=Depends(get_current_user)):
