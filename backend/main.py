@@ -2110,6 +2110,33 @@ def create_customer(customer: dict, user=Depends(get_current_user)):
     table = ct(client_id, "customers")
     try:
         with engine.connect() as conn:
+            # ── Duplicate check: same name + same phone or email ──
+            first = (customer.get("first_name") or "").strip()
+            last = (customer.get("last_name") or "").strip()
+            phone = (customer.get("phone") or "").strip()
+            email = (customer.get("email") or "").strip()
+
+            match_conditions = []
+            params = {"first_name": first, "last_name": last}
+            if phone:
+                match_conditions.append("phone = :phone")
+                params["phone"] = phone
+            if email:
+                match_conditions.append("LOWER(email) = LOWER(:email)")
+                params["email"] = email
+
+            if match_conditions:
+                existing = conn.execute(text(f"""
+                    SELECT id FROM {table}
+                    WHERE LOWER(first_name) = LOWER(:first_name)
+                      AND LOWER(last_name) = LOWER(:last_name)
+                      AND ({" OR ".join(match_conditions)})
+                    LIMIT 1
+                """), params).fetchone()
+                if existing:
+                    return {"message": "Customer already exists", "customer_id": existing[0]}
+
+            # ── Insert new customer ──
             result = conn.execute(text(f"""
                 INSERT INTO {table}
                 (first_name, middle_name, last_name, suffix, phone, phone2,
