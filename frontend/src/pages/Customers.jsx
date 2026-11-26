@@ -18,6 +18,8 @@ function getClientId() {
   }
 }
 
+const getCustId = (c) => c?.customer_id ?? c?.id;
+
 const STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
   "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
@@ -57,12 +59,19 @@ const emptyInsurance = {
   effective_date: "", expiration_date: "",
 };
 
+const inp =
+  "w-full border border-white/15 bg-[#121526] text-slate-100 placeholder-slate-400 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+const label = "block text-xs font-medium text-slate-300 mb-1";
+const section = "mb-6";
+const sectionTitle =
+  "text-sm font-semibold text-slate-200 mb-3 pb-1 border-b border-white/10";
+
 function CustomerForm({ initial = {}, onSave, onCancel, title }) {
   const [form, setForm] = useState({ ...emptyCustomer, ...initial });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+  const set = (field, val) => setForm((f) => ({ ...f, [field]: val }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,15 +90,14 @@ function CustomerForm({ initial = {}, onSave, onCancel, title }) {
     }
   };
 
-  const inp = "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const label = "block text-xs font-medium text-gray-600 mb-1";
-  const section = "mb-6";
-  const sectionTitle = "text-sm font-semibold text-gray-700 mb-3 pb-1 border-b border-gray-200";
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-      {error && <div className="text-red-600 text-sm bg-red-50 px-3 py-2 rounded">{error}</div>}
+      <h3 className="text-lg font-bold text-white">{title}</h3>
+      {error && (
+        <div className="text-red-300 text-sm bg-red-950/60 border border-red-500/30 px-3 py-2 rounded">
+          {error}
+        </div>
+      )}
 
       {/* Identity */}
       <div className={section}>
@@ -97,49 +105,94 @@ function CustomerForm({ initial = {}, onSave, onCancel, title }) {
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
             <label className={label}>First Name *</label>
-            <input className={inp} value={form.first_name} onChange={e => set("first_name", e.target.value)} required />
+            <input
+              className={inp}
+              value={form.first_name}
+              onChange={(e) => set("first_name", e.target.value)}
+              required
+            />
           </div>
           <div>
             <label className={label}>Middle Name</label>
-            <input className={inp} value={form.middle_name} onChange={e => set("middle_name", e.target.value)} />
+            <input
+              className={inp}
+              value={form.middle_name}
+              onChange={(e) => set("middle_name", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>Last Name *</label>
-            <input className={inp} value={form.last_name} onChange={e => set("last_name", e.target.value)} required />
+            <input
+              className={inp}
+              value={form.last_name}
+              onChange={(e) => set("last_name", e.target.value)}
+              required
+            />
           </div>
           <div>
             <label className={label}>Suffix</label>
-            <select className={inp} value={form.suffix} onChange={e => set("suffix", e.target.value)}>
+            <select
+              className={inp}
+              value={form.suffix}
+              onChange={(e) => set("suffix", e.target.value)}
+            >
               <option value="">—</option>
-              {["Jr.", "Sr.", "II", "III", "IV"].map(s => <option key={s}>{s}</option>)}
+              {["Jr.", "Sr.", "II", "III", "IV"].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
             </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
             <label className={label}>Date of Birth</label>
-            <input type="date" className={inp} value={form.dob} onChange={e => set("dob", e.target.value)} />
+            <input
+              type="date"
+              className={inp}
+              value={form.dob}
+              onChange={(e) => set("dob", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>SSN</label>
-            <input className={inp} placeholder="XXX-XX-XXXX" value={form.ssn} onChange={e => set("ssn", e.target.value)} />
+            <input
+              className={inp}
+              placeholder="XXX-XX-XXXX"
+              value={form.ssn}
+              onChange={(e) => set("ssn", e.target.value)}
+            />
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
             <label className={label}>DL Number</label>
-            <input className={inp} value={form.dl_number} onChange={e => set("dl_number", e.target.value)} />
+            <input
+              className={inp}
+              value={form.dl_number}
+              onChange={(e) => set("dl_number", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>DL State</label>
-            <select className={inp} value={form.dl_state} onChange={e => set("dl_state", e.target.value)}>
+            <select
+              className={inp}
+              value={form.dl_state}
+              onChange={(e) => set("dl_state", e.target.value)}
+            >
               <option value="">—</option>
-              {STATES.map(s => <option key={s}>{s}</option>)}
+              {STATES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className={label}>DL Expiration</label>
-            <input type="date" className={inp} value={form.dl_expiration} onChange={e => set("dl_expiration", e.target.value)} />
+            <input
+              type="date"
+              className={inp}
+              value={form.dl_expiration}
+              onChange={(e) => set("dl_expiration", e.target.value)}
+            />
           </div>
         </div>
       </div>
@@ -150,15 +203,28 @@ function CustomerForm({ initial = {}, onSave, onCancel, title }) {
         <div className="grid grid-cols-3 gap-3">
           <div>
             <label className={label}>Email</label>
-            <input type="email" className={inp} value={form.email} onChange={e => set("email", e.target.value)} />
+            <input
+              type="email"
+              className={inp}
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>Primary Phone</label>
-            <input className={inp} value={form.phone} onChange={e => set("phone", e.target.value)} />
+            <input
+              className={inp}
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>Secondary Phone</label>
-            <input className={inp} value={form.phone2} onChange={e => set("phone2", e.target.value)} />
+            <input
+              className={inp}
+              value={form.phone2}
+              onChange={(e) => set("phone2", e.target.value)}
+            />
           </div>
         </div>
       </div>
@@ -168,57 +234,108 @@ function CustomerForm({ initial = {}, onSave, onCancel, title }) {
         <div className={sectionTitle}>Residential</div>
         <div className="mb-3">
           <label className={label}>Current Address</label>
-          <input className={inp} placeholder="Street address" value={form.address} onChange={e => set("address", e.target.value)} />
+          <input
+            className={inp}
+            placeholder="Street address"
+            value={form.address}
+            onChange={(e) => set("address", e.target.value)}
+          />
         </div>
         <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
             <label className={label}>City</label>
-            <input className={inp} value={form.city} onChange={e => set("city", e.target.value)} />
+            <input
+              className={inp}
+              value={form.city}
+              onChange={(e) => set("city", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>State</label>
-            <select className={inp} value={form.state} onChange={e => set("state", e.target.value)}>
+            <select
+              className={inp}
+              value={form.state}
+              onChange={(e) => set("state", e.target.value)}
+            >
               <option value="">—</option>
-              {STATES.map(s => <option key={s}>{s}</option>)}
+              {STATES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className={label}>ZIP</label>
-            <input className={inp} value={form.zip} onChange={e => set("zip", e.target.value)} />
+            <input
+              className={inp}
+              value={form.zip}
+              onChange={(e) => set("zip", e.target.value)}
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
             <label className={label}>Housing Status</label>
-            <select className={inp} value={form.housing_status} onChange={e => set("housing_status", e.target.value)}>
+            <select
+              className={inp}
+              value={form.housing_status}
+              onChange={(e) => set("housing_status", e.target.value)}
+            >
               <option value="">—</option>
-              {HOUSING_OPTIONS.map(h => <option key={h}>{h}</option>)}
+              {HOUSING_OPTIONS.map((h) => (
+                <option key={h} value={h}>{h}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className={label}>Time at Address</label>
-            <input className={inp} placeholder="e.g. 2 years 3 months" value={form.time_at_address} onChange={e => set("time_at_address", e.target.value)} />
+            <input
+              className={inp}
+              placeholder="e.g. 2 years 3 months"
+              value={form.time_at_address}
+              onChange={(e) => set("time_at_address", e.target.value)}
+            />
           </div>
         </div>
-        <div className="text-xs font-medium text-gray-500 mb-2">Previous Address (if less than 2 years at current)</div>
+        <div className="text-xs font-medium text-slate-400 mb-2">
+          Previous Address (if less than 2 years at current)
+        </div>
         <div className="mb-3">
-          <input className={inp} placeholder="Previous street address" value={form.prev_address} onChange={e => set("prev_address", e.target.value)} />
+          <input
+            className={inp}
+            placeholder="Previous street address"
+            value={form.prev_address}
+            onChange={(e) => set("prev_address", e.target.value)}
+          />
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
             <label className={label}>City</label>
-            <input className={inp} value={form.prev_city} onChange={e => set("prev_city", e.target.value)} />
+            <input
+              className={inp}
+              value={form.prev_city}
+              onChange={(e) => set("prev_city", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>State</label>
-            <select className={inp} value={form.prev_state} onChange={e => set("prev_state", e.target.value)}>
+            <select
+              className={inp}
+              value={form.prev_state}
+              onChange={(e) => set("prev_state", e.target.value)}
+            >
               <option value="">—</option>
-              {STATES.map(s => <option key={s}>{s}</option>)}
+              {STATES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className={label}>ZIP</label>
-            <input className={inp} value={form.prev_zip} onChange={e => set("prev_zip", e.target.value)} />
+            <input
+              className={inp}
+              value={form.prev_zip}
+              onChange={(e) => set("prev_zip", e.target.value)}
+            />
           </div>
         </div>
       </div>
@@ -229,38 +346,75 @@ function CustomerForm({ initial = {}, onSave, onCancel, title }) {
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
             <label className={label}>Employer</label>
-            <input className={inp} value={form.employer} onChange={e => set("employer", e.target.value)} />
+            <input
+              className={inp}
+              value={form.employer}
+              onChange={(e) => set("employer", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>Employer Phone</label>
-            <input className={inp} value={form.employer_phone} onChange={e => set("employer_phone", e.target.value)} />
+            <input
+              className={inp}
+              value={form.employer_phone}
+              onChange={(e) => set("employer_phone", e.target.value)}
+            />
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
             <label className={label}>Gross Monthly Income</label>
-            <input className={inp} type="number" placeholder="0.00" value={form.gross_monthly} onChange={e => set("gross_monthly", e.target.value)} />
+            <input
+              className={inp}
+              type="number"
+              placeholder="0.00"
+              value={form.gross_monthly}
+              onChange={(e) => set("gross_monthly", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>Net Monthly Income</label>
-            <input className={inp} type="number" placeholder="0.00" value={form.net_monthly} onChange={e => set("net_monthly", e.target.value)} />
+            <input
+              className={inp}
+              type="number"
+              placeholder="0.00"
+              value={form.net_monthly}
+              onChange={(e) => set("net_monthly", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>Pay Frequency</label>
-            <select className={inp} value={form.income_frequency} onChange={e => set("income_frequency", e.target.value)}>
+            <select
+              className={inp}
+              value={form.income_frequency}
+              onChange={(e) => set("income_frequency", e.target.value)}
+            >
               <option value="">—</option>
-              {INCOME_FREQ.map(f => <option key={f}>{f}</option>)}
+              {INCOME_FREQ.map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
             </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={label}>Other Income ($)</label>
-            <input className={inp} type="number" placeholder="0.00" value={form.other_income} onChange={e => set("other_income", e.target.value)} />
+            <input
+              className={inp}
+              type="number"
+              placeholder="0.00"
+              value={form.other_income}
+              onChange={(e) => set("other_income", e.target.value)}
+            />
           </div>
           <div>
             <label className={label}>Other Income Source</label>
-            <input className={inp} placeholder="e.g. Social Security" value={form.other_income_source} onChange={e => set("other_income_source", e.target.value)} />
+            <input
+              className={inp}
+              placeholder="e.g. Social Security"
+              value={form.other_income_source}
+              onChange={(e) => set("other_income_source", e.target.value)}
+            />
           </div>
         </div>
       </div>
@@ -268,16 +422,28 @@ function CustomerForm({ initial = {}, onSave, onCancel, title }) {
       {/* Notes */}
       <div className={section}>
         <div className={sectionTitle}>Notes</div>
-        <textarea className={inp} rows={3} value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="Internal notes..." />
+        <textarea
+          className={inp}
+          rows={3}
+          value={form.notes}
+          onChange={(e) => set("notes", e.target.value)}
+          placeholder="Internal notes..."
+        />
       </div>
 
       <div className="flex gap-2 pt-2">
-        <button type="submit" disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-4 py-2 bg-indigo-600 text-white rounded text-sm font-medium hover:bg-indigo-500 disabled:opacity-50"
+        >
           {saving ? "Saving…" : "Save Customer"}
         </button>
-        <button type="button" onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 border border-white/15 text-slate-300 rounded text-sm hover:bg-white/5"
+        >
           Cancel
         </button>
       </div>
@@ -297,13 +463,15 @@ function CreditAppTab({ customerId }) {
     fetch(`${API}/credit-application/${customerId}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setForm({ ...emptyCreditApp, ...data }); })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) setForm({ ...emptyCreditApp, ...data });
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [customerId]);
 
-  const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+  const set = (field, val) => setForm((f) => ({ ...f, [field]: val }));
 
   const handleSave = async () => {
     setSaving(true);
@@ -311,7 +479,10 @@ function CreditAppTab({ customerId }) {
     try {
       const r = await fetch(`${API}/credit-application/${customerId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`
+        },
         body: JSON.stringify(form),
       });
       if (!r.ok) throw new Error("Save failed");
@@ -324,57 +495,87 @@ function CreditAppTab({ customerId }) {
     }
   };
 
-  const inp = "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const label = "block text-xs font-medium text-gray-600 mb-1";
-
-  if (loading) return <div className="text-gray-400 text-sm py-8 text-center">Loading…</div>;
+  if (loading) return <div className="text-slate-400 text-sm py-8 text-center">Loading…</div>;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={label}>Credit Score (optional)</label>
-          <input className={inp} type="number" placeholder="e.g. 620" value={form.credit_score} onChange={e => set("credit_score", e.target.value)} />
+          <input
+            className={inp}
+            type="number"
+            placeholder="e.g. 620"
+            value={form.credit_score}
+            onChange={(e) => set("credit_score", e.target.value)}
+          />
         </div>
         <div className="flex items-end pb-1">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={!!form.signature_obtained} onChange={e => set("signature_obtained", e.target.checked)}
-              className="w-4 h-4 rounded" />
-            <span className="text-sm text-gray-700">Physical Signature Obtained</span>
+            <input
+              type="checkbox"
+              checked={!!form.signature_obtained}
+              onChange={(e) => set("signature_obtained", e.target.checked)}
+              className="w-4 h-4 rounded"
+            />
+            <span className="text-sm text-slate-200">Physical Signature Obtained</span>
           </label>
         </div>
       </div>
 
       <div>
         <label className={label}>Vehicle Interest</label>
-        <input className={inp} placeholder="e.g. 2022 Toyota Camry" value={form.vehicle_interest} onChange={e => set("vehicle_interest", e.target.value)} />
+        <input
+          className={inp}
+          placeholder="e.g. 2022 Toyota Camry"
+          value={form.vehicle_interest}
+          onChange={(e) => set("vehicle_interest", e.target.value)}
+        />
       </div>
 
       <div>
-        <div className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b border-gray-200">References (up to 5)</div>
-        {[1,2,3,4,5].map(n => (
-          <div key={n} className="mb-4 p-3 bg-gray-50 rounded-lg">
-            <div className="text-xs font-semibold text-gray-500 mb-2">Reference {n}</div>
+        <div className={sectionTitle}>References (up to 5)</div>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <div key={n} className="mb-4 p-3 bg-[#121526] border border-white/10 rounded-lg">
+            <div className="text-xs font-semibold text-slate-400 mb-2">Reference {n}</div>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div>
                 <label className={label}>Full Name</label>
-                <input className={inp} value={form[`ref${n}_name`]} onChange={e => set(`ref${n}_name`, e.target.value)} />
+                <input
+                  className={inp}
+                  value={form[`ref${n}_name`]}
+                  onChange={(e) => set(`ref${n}_name`, e.target.value)}
+                />
               </div>
               <div>
                 <label className={label}>Phone</label>
-                <input className={inp} value={form[`ref${n}_phone`]} onChange={e => set(`ref${n}_phone`, e.target.value)} />
+                <input
+                  className={inp}
+                  value={form[`ref${n}_phone`]}
+                  onChange={(e) => set(`ref${n}_phone`, e.target.value)}
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={label}>Address</label>
-                <input className={inp} value={form[`ref${n}_address`]} onChange={e => set(`ref${n}_address`, e.target.value)} />
+                <input
+                  className={inp}
+                  value={form[`ref${n}_address`]}
+                  onChange={(e) => set(`ref${n}_address`, e.target.value)}
+                />
               </div>
               <div>
                 <label className={label}>Relationship</label>
-                <select className={inp} value={form[`ref${n}_relationship`]} onChange={e => set(`ref${n}_relationship`, e.target.value)}>
+                <select
+                  className={inp}
+                  value={form[`ref${n}_relationship`]}
+                  onChange={(e) => set(`ref${n}_relationship`, e.target.value)}
+                >
                   <option value="">—</option>
-                  {RELATIONSHIP_OPTIONS.map(r => <option key={r}>{r}</option>)}
+                  {RELATIONSHIP_OPTIONS.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -383,11 +584,14 @@ function CreditAppTab({ customerId }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={handleSave} disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-4 py-2 bg-indigo-600 text-white rounded text-sm font-medium hover:bg-indigo-500 disabled:opacity-50"
+        >
           {saving ? "Saving…" : "Save Credit App"}
         </button>
-        {msg && <span className="text-sm text-green-600">{msg}</span>}
+        {msg && <span className="text-sm text-emerald-400">{msg}</span>}
       </div>
     </div>
   );
@@ -405,13 +609,15 @@ function InsuranceTab({ customerId }) {
     fetch(`${API}/insurance/${customerId}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) setForm({ ...emptyInsurance, ...data }); })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) setForm({ ...emptyInsurance, ...data });
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [customerId]);
 
-  const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+  const set = (field, val) => setForm((f) => ({ ...f, [field]: val }));
 
   const handleSave = async () => {
     setSaving(true);
@@ -419,7 +625,10 @@ function InsuranceTab({ customerId }) {
     try {
       const r = await fetch(`${API}/insurance/${customerId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`
+        },
         body: JSON.stringify(form),
       });
       if (!r.ok) throw new Error("Save failed");
@@ -433,19 +642,17 @@ function InsuranceTab({ customerId }) {
   };
 
   const isExpired = form.expiration_date && new Date(form.expiration_date) < new Date();
-  const inp = "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const label = "block text-xs font-medium text-gray-600 mb-1";
 
-  if (loading) return <div className="text-gray-400 text-sm py-8 text-center">Loading…</div>;
+  if (loading) return <div className="text-slate-400 text-sm py-8 text-center">Loading…</div>;
 
   return (
     <div className="space-y-4">
       {isExpired && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-center gap-2">
-          <span className="text-red-500 text-lg">⚠️</span>
+        <div className="bg-red-950/60 border border-red-500/40 rounded-lg px-4 py-3 flex items-center gap-2">
+          <span className="text-red-400 text-lg">⚠️</span>
           <div>
-            <div className="text-red-700 font-semibold text-sm">Insurance Expired</div>
-            <div className="text-red-600 text-xs">
+            <div className="text-red-300 font-semibold text-sm">Insurance Expired</div>
+            <div className="text-red-400 text-xs">
               Policy expired {new Date(form.expiration_date).toLocaleDateString()}. Update before processing transactions.
             </div>
           </div>
@@ -454,38 +661,43 @@ function InsuranceTab({ customerId }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={label}>Insurance Company</label>
-          <input className={inp} value={form.company} onChange={e => set("company", e.target.value)} />
+          <input className={inp} value={form.company} onChange={(e) => set("company", e.target.value)} />
         </div>
         <div>
           <label className={label}>Policy Number</label>
-          <input className={inp} value={form.policy_number} onChange={e => set("policy_number", e.target.value)} />
+          <input className={inp} value={form.policy_number} onChange={(e) => set("policy_number", e.target.value)} />
         </div>
         <div>
           <label className={label}>Agent Name</label>
-          <input className={inp} value={form.agent_name} onChange={e => set("agent_name", e.target.value)} />
+          <input className={inp} value={form.agent_name} onChange={(e) => set("agent_name", e.target.value)} />
         </div>
         <div>
           <label className={label}>Agent Phone</label>
-          <input className={inp} value={form.agent_phone} onChange={e => set("agent_phone", e.target.value)} />
+          <input className={inp} value={form.agent_phone} onChange={(e) => set("agent_phone", e.target.value)} />
         </div>
         <div>
           <label className={label}>Effective Date</label>
-          <input type="date" className={inp} value={form.effective_date} onChange={e => set("effective_date", e.target.value)} />
+          <input type="date" className={inp} value={form.effective_date} onChange={(e) => set("effective_date", e.target.value)} />
         </div>
         <div>
           <label className={label}>Expiration Date</label>
-          <input type="date"
-            className={`${inp} ${isExpired ? "border-red-400 bg-red-50" : ""}`}
+          <input
+            type="date"
+            className={`${inp} ${isExpired ? "border-red-500 bg-red-950/40" : ""}`}
             value={form.expiration_date}
-            onChange={e => set("expiration_date", e.target.value)} />
+            onChange={(e) => set("expiration_date", e.target.value)}
+          />
         </div>
       </div>
       <div className="flex items-center gap-3 pt-2">
-        <button onClick={handleSave} disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-4 py-2 bg-indigo-600 text-white rounded text-sm font-medium hover:bg-indigo-500 disabled:opacity-50"
+        >
           {saving ? "Saving…" : "Save Insurance"}
         </button>
-        {msg && <span className="text-sm text-green-600">{msg}</span>}
+        {msg && <span className="text-sm text-emerald-400">{msg}</span>}
       </div>
     </div>
   );
@@ -501,17 +713,17 @@ function HistoryTab({ customerId }) {
     fetch(`${API}/customers/${customerId}/contracts`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setContracts(Array.isArray(data) ? data : []))
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setContracts(Array.isArray(data) ? data : []))
       .catch(() => setContracts([]))
       .finally(() => setLoading(false));
   }, [customerId]);
 
-  if (loading) return <div className="text-gray-400 text-sm py-8 text-center">Loading…</div>;
+  if (loading) return <div className="text-slate-400 text-sm py-8 text-center">Loading…</div>;
 
   if (contracts.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-400">
+      <div className="text-center py-12 text-slate-400">
         <div className="text-4xl mb-2">🚗</div>
         <div className="text-sm">No purchase history on file</div>
       </div>
@@ -520,30 +732,99 @@ function HistoryTab({ customerId }) {
 
   return (
     <div className="space-y-3">
-      {contracts.map(c => (
-        <div key={c.contract_id} className="border border-gray-200 rounded-lg p-4">
+      {contracts.map((c) => (
+        <div key={c.contract_id} className="border border-white/10 bg-[#121526] rounded-lg p-4">
           <div className="flex justify-between items-start">
             <div>
-              <div className="font-semibold text-gray-800">{c.vehicle || `${c.year || ''} ${c.make || ''} ${c.model || ''}`.trim()}</div>
-              <div className="text-xs text-gray-500 mt-0.5">Contract #{c.contract_id} · {c.sale_date}</div>
+              <div className="font-semibold text-white">
+                {c.vehicle || `${c.year || ""} ${c.make || ""} ${c.model || ""}`.trim()}
+              </div>
+              <div className="text-xs text-slate-400 mt-0.5">
+                Contract #{c.contract_id} · {c.sale_date}
+              </div>
             </div>
             <div className="text-right">
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                c.status === "Active" ? "bg-green-100 text-green-700" :
-                c.status === "Paid Off" ? "bg-blue-100 text-blue-700" :
-                c.status === "Completed" ? "bg-gray-100 text-gray-600" :
-                "bg-gray-100 text-gray-600"
-              }`}>{c.status}</span>
-              <div className="text-xs text-gray-400 mt-1">{c.sale_type}</div>
+              <span
+                className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  c.status === "Active"
+                    ? "bg-emerald-500/20 text-emerald-300"
+                    : c.status === "Paid Off"
+                    ? "bg-indigo-500/20 text-indigo-300"
+                    : "bg-white/10 text-slate-300"
+                }`}
+              >
+                {c.status}
+              </span>
+              <div className="text-xs text-slate-400 mt-1">{c.sale_type}</div>
             </div>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-gray-600">
-            <div><span className="text-gray-400 block">Sale Price</span>${Number(c.sale_price || 0).toLocaleString()}</div>
-            <div><span className="text-gray-400 block">Balance</span>${Number(c.remaining_balance || 0).toLocaleString()}</div>
-            <div><span className="text-gray-400 block">Payment</span>${Number(c.payment_amount || 0).toLocaleString()}/{c.payment_frequency || "mo"}</div>
+          <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-slate-300">
+            <div>
+              <span className="text-slate-400 block">Sale Price</span>${Number(c.sale_price || 0).toLocaleString()}
+            </div>
+            <div>
+              <span className="text-slate-400 block">Balance</span>${Number(c.remaining_balance || 0).toLocaleString()}
+            </div>
+            <div>
+              <span className="text-slate-400 block">Payment</span>${Number(c.payment_amount || 0).toLocaleString()}/
+              {c.payment_frequency || "mo"}
+            </div>
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ProfileOverview({ customer }) {
+  const field = (lbl, val) => (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{lbl}</div>
+      <div className="text-sm text-slate-200 mt-0.5">{val || <span className="italic text-slate-500">None on file</span>}</div>
+    </div>
+  );
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-4">
+        <div className={sectionTitle}>Identity</div>
+        {field("Date of Birth", customer.dob)}
+        {field("SSN", customer.ssn)}
+        {field(
+          "Driver's License",
+          [customer.dl_number, customer.dl_state, customer.dl_expiration && `Exp: ${customer.dl_expiration}`]
+            .filter(Boolean)
+            .join(" · ")
+        )}
+
+        <div className={sectionTitle}>Employment & Income</div>
+        {field("Employer", [customer.employer, customer.employer_phone].filter(Boolean).join(" · "))}
+        {field("Gross Monthly", customer.gross_monthly ? `$${Number(customer.gross_monthly).toLocaleString()}` : "")}
+        {field("Net Monthly", customer.net_monthly ? `$${Number(customer.net_monthly).toLocaleString()}` : "")}
+        {field("Pay Frequency", customer.income_frequency)}
+      </div>
+
+      <div className="space-y-4">
+        <div className={sectionTitle}>Residential</div>
+        {field(
+          "Current Address",
+          [customer.address, [customer.city, customer.state, customer.zip].filter(Boolean).join(", ")]
+            .filter(Boolean)
+            .join(" — ")
+        )}
+        {field("Housing / Time", [customer.housing_status, customer.time_at_address].filter(Boolean).join(" · "))}
+        {field(
+          "Previous Address",
+          [customer.prev_address, [customer.prev_city, customer.prev_state, customer.prev_zip].filter(Boolean).join(", ")]
+            .filter(Boolean)
+            .join(" — ")
+        )}
+
+        <div className={sectionTitle}>Notes</div>
+        <div className="text-sm text-slate-200 whitespace-pre-wrap">
+          {customer.notes || <span className="italic text-slate-500">No notes on file</span>}
+        </div>
+      </div>
     </div>
   );
 }
@@ -573,9 +854,12 @@ export default function Customers() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   const fetchCustomer = async (id) => {
+    if (!id) return;
     try {
       const r = await fetch(`${API}/customers/${id}`, {
         headers: { Authorization: `Bearer ${getToken()}` }
@@ -587,34 +871,42 @@ export default function Customers() {
   const handleCreate = async (form) => {
     const r = await fetch(`${API}/customers`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`
+      },
       body: JSON.stringify(form),
     });
     if (!r.ok) throw new Error("Failed to create customer");
     const data = await r.json();
     await fetchCustomers();
     setShowNew(false);
-    await fetchCustomer(data.customer_id || data.id);
+    await fetchCustomer(getCustId(data));
     setActiveTab("profile");
   };
 
   const handleUpdate = async (form) => {
-    const r = await fetch(`${API}/customers/${selected.customer_id}`, {
+    const id = getCustId(selected);
+    const r = await fetch(`${API}/customers/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`
+      },
       body: JSON.stringify(form),
     });
     if (!r.ok) throw new Error("Failed to update customer");
     await fetchCustomers();
-    await fetchCustomer(selected.customer_id);
+    await fetchCustomer(id);
     setShowEdit(false);
     setEditMsg("✓ Updated");
     setTimeout(() => setEditMsg(""), 3000);
   };
 
   const handleDelete = async () => {
+    const id = getCustId(selected);
     try {
-      await fetch(`${API}/customers/${selected.customer_id}`, {
+      await fetch(`${API}/customers/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${getToken()}` }
       });
@@ -624,11 +916,12 @@ export default function Customers() {
     } catch {}
   };
 
-  const filtered = customers.filter(c => {
-    const q = search.toLowerCase();
+  const filtered = customers.filter((c) => {
+    const q = search.toLowerCase().trim();
+    if (!q) return true;
     return (
-      `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
-      (c.phone || "").includes(q) ||
+      `${c.first_name || ""} ${c.last_name || ""}`.toLowerCase().includes(q) ||
+      (c.phone || "").toLowerCase().includes(q) ||
       (c.email || "").toLowerCase().includes(q)
     );
   });
@@ -640,58 +933,76 @@ export default function Customers() {
     { id: "history", label: "🚗 History" },
   ];
 
+  const selectedId = getCustId(selected);
+
   return (
-    <div className="flex bg-gray-50" style={{ minHeight: "calc(100vh - 60px)" }}>
-      {/* Sidebar */}
-      <div className="w-72 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
-        <div className="p-4 border-b border-gray-100">
+    <div className="flex bg-[#070812] text-slate-100" style={{ minHeight: "calc(100vh - 60px)" }}>
+      {/* Left Sidebar: Shows all matching customers */}
+      <aside className="w-80 bg-[#0b0d1a] border-r border-white/10 flex flex-col flex-shrink-0">
+        <div className="p-4 border-b border-white/10">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-bold text-gray-800">Customers</h2>
+            <h2 className="text-lg font-bold text-white">Customers</h2>
             <button
-              onClick={() => { setShowNew(true); setSelected(null); setShowEdit(false); setDeleteConfirm(false); }}
-              className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-            >+ New</button>
+              type="button"
+              onClick={() => {
+                setShowNew(true);
+                setSelected(null);
+                setShowEdit(false);
+                setDeleteConfirm(false);
+              }}
+              className="text-xs px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 font-medium"
+            >
+              + New
+            </button>
           </div>
           <input
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={inp}
             placeholder="Search name, phone, email…"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex-1 overflow-y-auto">
+
+        <div className="flex-1 overflow-y-auto divide-y divide-white/10">
           {loading ? (
-            <div className="text-center text-gray-400 text-sm py-8">Loading…</div>
+            <div className="text-center text-slate-400 text-sm py-8">Loading…</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center text-gray-400 text-sm py-8">No customers found</div>
+            <div className="text-center text-slate-400 text-sm py-8">No customers found</div>
           ) : (
-            filtered.map(c => (
-              <button
-                key={c.customer_id || c.id}
-                onClick={() => {
-                  fetchCustomer(c.customer_id || c.id);
-                  setShowNew(false);
-                  setShowEdit(false);
-                  setDeleteConfirm(false);
-                  setActiveTab("profile");
-                }}
-                className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                  selected?.customer_id === (c.customer_id || c.id) ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
-                }`}
-              >
-                <div className="font-medium text-gray-800 text-sm">{c.first_name} {c.last_name}</div>
-                {c.phone && <div className="text-xs text-gray-500 mt-0.5">{c.phone}</div>}
-                {c.email && <div className="text-xs text-gray-400 truncate">{c.email}</div>}
-              </button>
-            ))
+            filtered.map((c, idx) => {
+              const cid = getCustId(c);
+              const isSelected = selectedId != null && cid === selectedId;
+              return (
+                <button
+                  type="button"
+                  key={cid ?? `${c.email}-${idx}`}
+                  onClick={() => {
+                    fetchCustomer(cid);
+                    setShowNew(false);
+                    setShowEdit(false);
+                    setDeleteConfirm(false);
+                    setActiveTab("profile");
+                  }}
+                  className={`w-full text-left px-4 py-3 hover:bg-white/5 transition-colors ${
+                    isSelected ? "bg-indigo-500/20 border-l-4 border-l-indigo-400" : ""
+                  }`}
+                >
+                  <div className="font-medium text-white text-sm">
+                    {c.first_name} {c.last_name}
+                  </div>
+                  {c.phone && <div className="text-xs text-slate-400 mt-0.5">{c.phone}</div>}
+                  {c.email && <div className="text-xs text-slate-400 truncate">{c.email}</div>}
+                </button>
+              );
+            })
           )}
         </div>
-      </div>
+      </aside>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      {/* Right Detail Pane */}
+      <main className="flex-1 overflow-y-auto p-6">
         {showNew ? (
-          <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="max-w-3xl mx-auto bg-[#0b0d1a] rounded-xl border border-white/10 p-6">
             <CustomerForm
               title="New Customer"
               onSave={handleCreate}
@@ -701,51 +1012,77 @@ export default function Customers() {
         ) : selected ? (
           <div className="max-w-3xl mx-auto">
             {/* Header card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4">
-              <div className="flex justify-between items-start">
+            <div className="bg-[#0b0d1a] rounded-xl border border-white/10 p-5 mb-4">
+              <div className="flex justify-between items-start gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2 className="text-xl font-bold text-white">
                     {selected.first_name}
                     {selected.middle_name ? ` ${selected.middle_name}` : ""}
                     {` ${selected.last_name}`}
                     {selected.suffix ? ` ${selected.suffix}` : ""}
                   </h2>
-                  <div className="flex flex-wrap gap-4 mt-1 text-sm text-gray-500">
+                  <div className="flex flex-wrap gap-4 mt-1 text-sm text-slate-400">
                     {selected.phone && <span>📞 {selected.phone}</span>}
                     {selected.email && <span>✉️ {selected.email}</span>}
-                    {selected.city && <span>📍 {selected.city}, {selected.state}</span>}
+                    {selected.city && (
+                      <span>
+                        📍 {selected.city}
+                        {selected.state ? `, ${selected.state}` : ""}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2 items-center">
-                  {editMsg && <span className="text-sm text-green-600">{editMsg}</span>}
+                  {editMsg && <span className="text-sm text-emerald-400">{editMsg}</span>}
                   <button
-                    onClick={() => { setShowEdit(v => !v); setDeleteConfirm(false); }}
-                    className="px-3 py-1.5 text-xs border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50"
-                  >{showEdit ? "Cancel Edit" : "Edit"}</button>
+                    type="button"
+                    onClick={() => {
+                      setShowEdit((v) => !v);
+                      setDeleteConfirm(false);
+                    }}
+                    className="px-3 py-1.5 text-xs border border-white/15 rounded-md text-slate-200 hover:bg-white/5"
+                  >
+                    {showEdit ? "Cancel Edit" : "Edit"}
+                  </button>
                   <button
-                    onClick={() => setDeleteConfirm(v => !v)}
-                    className="px-3 py-1.5 text-xs border border-red-200 rounded-md text-red-600 hover:bg-red-50"
-                  >Delete</button>
+                    type="button"
+                    onClick={() => setDeleteConfirm((v) => !v)}
+                    className="px-3 py-1.5 text-xs border border-red-500/30 rounded-md text-red-400 hover:bg-red-950/40"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* Delete confirm */}
             {deleteConfirm && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex justify-between items-center">
-                <span className="text-sm text-red-700 font-medium">
+              <div className="bg-red-950/60 border border-red-500/30 rounded-lg p-4 mb-4 flex justify-between items-center gap-3">
+                <span className="text-sm text-red-200 font-medium">
                   Delete {selected.first_name} {selected.last_name}? This cannot be undone.
                 </span>
                 <div className="flex gap-2">
-                  <button onClick={handleDelete} className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">Confirm Delete</button>
-                  <button onClick={() => setDeleteConfirm(false)} className="px-3 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50">Cancel</button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-500"
+                  >
+                    Confirm Delete
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirm(false)}
+                    className="px-3 py-1 text-xs border border-white/15 rounded text-slate-300 hover:bg-white/5"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
 
             {/* Edit form */}
             {showEdit && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-4">
+              <div className="bg-[#0b0d1a] rounded-xl border border-white/10 p-6 mb-4">
                 <CustomerForm
                   title="Edit Customer"
                   initial={selected}
@@ -757,85 +1094,39 @@ export default function Customers() {
 
             {/* Tabbed detail view */}
             {!showEdit && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="flex border-b border-gray-200 overflow-x-auto">
-                  {tabs.map(t => (
+              <div className="bg-[#0b0d1a] rounded-xl border border-white/10">
+                <div className="flex border-b border-white/10 overflow-x-auto">
+                  {tabs.map((t) => (
                     <button
+                      type="button"
                       key={t.id}
                       onClick={() => setActiveTab(t.id)}
-                      className={`px-5 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                      className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                         activeTab === t.id
-                          ? "border-blue-500 text-blue-600"
-                          : "border-transparent text-gray-500 hover:text-gray-700"
+                          ? "border-indigo-400 text-white"
+                          : "border-transparent text-slate-400 hover:text-slate-200"
                       }`}
-                    >{t.label}</button>
+                    >
+                      {t.label}
+                    </button>
                   ))}
                 </div>
-                <div className="p-6">
-                  {activeTab === "profile" && (
-                    <div className="grid grid-cols-2 gap-6 text-sm">
-                      <div>
-                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Identity</div>
-                        <div className="space-y-2">
-                          {selected.dob && <div><span className="text-gray-500">DOB: </span>{new Date(selected.dob).toLocaleDateString()}</div>}
-                          {selected.ssn && <div><span className="text-gray-500">SSN: </span>***-**-{String(selected.ssn).slice(-4)}</div>}
-                          {selected.dl_number && <div><span className="text-gray-500">DL: </span>{selected.dl_number} ({selected.dl_state})</div>}
-                          {selected.dl_expiration && <div><span className="text-gray-500">DL Exp: </span>{new Date(selected.dl_expiration).toLocaleDateString()}</div>}
-                          {!selected.dob && !selected.ssn && !selected.dl_number && <div className="text-gray-400 italic text-xs">No identity info on file</div>}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Residential</div>
-                        <div className="space-y-2">
-                          {selected.address && <div>{selected.address}</div>}
-                          {selected.city && <div>{selected.city}, {selected.state} {selected.zip}</div>}
-                          {selected.housing_status && <div><span className="text-gray-500">Housing: </span>{selected.housing_status}</div>}
-                          {selected.time_at_address && <div><span className="text-gray-500">Time there: </span>{selected.time_at_address}</div>}
-                          {selected.prev_address && (
-                            <div className="mt-2 pt-2 border-t border-gray-100">
-                              <div className="text-xs text-gray-400 mb-1">Previous Address</div>
-                              <div>{selected.prev_address}</div>
-                              {selected.prev_city && <div>{selected.prev_city}, {selected.prev_state} {selected.prev_zip}</div>}
-                            </div>
-                          )}
-                          {!selected.address && <div className="text-gray-400 italic text-xs">No address on file</div>}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Employment & Income</div>
-                        <div className="space-y-2">
-                          {selected.employer && <div><span className="text-gray-500">Employer: </span>{selected.employer}</div>}
-                          {selected.employer_phone && <div><span className="text-gray-500">Work Phone: </span>{selected.employer_phone}</div>}
-                          {selected.gross_monthly && <div><span className="text-gray-500">Gross/mo: </span>${Number(selected.gross_monthly).toLocaleString()}</div>}
-                          {selected.net_monthly && <div><span className="text-gray-500">Net/mo: </span>${Number(selected.net_monthly).toLocaleString()}</div>}
-                          {selected.income_frequency && <div><span className="text-gray-500">Pay Freq: </span>{selected.income_frequency}</div>}
-                          {selected.other_income && <div><span className="text-gray-500">Other Income: </span>${Number(selected.other_income).toLocaleString()} — {selected.other_income_source}</div>}
-                          {!selected.employer && !selected.gross_monthly && <div className="text-gray-400 italic text-xs">No employment info on file</div>}
-                        </div>
-                      </div>
-                      {selected.notes && (
-                        <div>
-                          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Notes</div>
-                          <div className="text-gray-700 whitespace-pre-wrap text-sm">{selected.notes}</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {activeTab === "credit" && <CreditAppTab customerId={selected.customer_id} />}
-                  {activeTab === "insurance" && <InsuranceTab customerId={selected.customer_id} />}
-                  {activeTab === "history" && <HistoryTab customerId={selected.customer_id} />}
+
+                <div className="p-5">
+                  {activeTab === "profile" && <ProfileOverview customer={selected} />}
+                  {activeTab === "credit" && <CreditAppTab customerId={selectedId} />}
+                  {activeTab === "insurance" && <InsuranceTab customerId={selectedId} />}
+                  {activeTab === "history" && <HistoryTab customerId={selectedId} />}
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400" style={{ minHeight: "400px" }}>
-            <div className="text-6xl mb-4">👤</div>
-            <div className="text-lg font-medium mb-1">Select a customer</div>
-            <div className="text-sm">or click <span className="font-semibold text-blue-500">+ New</span> to add one</div>
+          <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+            Select a customer on the left or click <span className="text-slate-200 font-medium mx-1">+ New</span> to add one.
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
