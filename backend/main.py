@@ -2308,11 +2308,12 @@ def get_customer_contracts(customer_id: int, user=Depends(get_current_user)):
                    c.payment_frequency, c.payment_amount, c.status,
                    'BHPH' AS sale_type,
                    COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) AS total_collected,
-                   c.sale_price - COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) AS remaining_balance
+                   COALESCE(c.amount_financed, 0) + COALESCE(c.total_interest, 0)
+                     - COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) AS remaining_balance
             FROM {ct(client_id, 'bhph_contracts')} c
             LEFT JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
             WHERE c.customer_id = {customer_id}
-            GROUP BY c.id, c.vehicle, c.sale_price, c.amount_financed,
+            GROUP BY c.id, c.vehicle, c.sale_price, c.amount_financed, c.total_interest,
                      c.payment_frequency, c.payment_amount, c.status
             ORDER BY c.id DESC
         """)
