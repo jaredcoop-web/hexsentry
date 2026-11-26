@@ -1775,7 +1775,19 @@ def get_stats(user=Depends(get_current_user)):
         return {"error": str(e)}
     
 # ── BHPH / Collections endpoints ─────────────────────────────────────────────
-
+@app.get("/bhph/contracts")
+def get_bhph_contracts(user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    try:
+        rows = q(f"""
+            SELECT * FROM {ct(client_id, 'bhph_contracts')}
+            ORDER BY id DESC
+        """)
+        return rows
+    except Exception as e:
+        return []
+    
+    
 @app.post("/bhph/contracts")
 def create_bhph_contract(contract: dict = Body(...), user=Depends(get_current_user)):
     client_id = user["client_id"]
