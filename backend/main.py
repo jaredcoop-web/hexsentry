@@ -1783,7 +1783,15 @@ def get_bhph_contracts(user=Depends(get_current_user)):
             SELECT * FROM {ct(client_id, 'bhph_contracts')}
             ORDER BY id DESC
         """)
-        return rows
+        # Clean NaN values
+        import math
+        cleaned = []
+        for row in rows:
+            cleaned.append({
+                k: (None if isinstance(v, float) and math.isnan(v) else v)
+                for k, v in row.items()
+            })
+        return cleaned
     except Exception as e:
         return []
     
