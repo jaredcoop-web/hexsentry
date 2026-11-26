@@ -1230,6 +1230,56 @@ class NewClient(BaseModel):
     business_type: str = "general"
     pages:         str = ""
 
+# ── Schema migration: bring all client tables up to date ──────────────────────
+CLIENT_COLUMN_MIGRATIONS = {
+    "customers": {
+        "middle_name": "TEXT", "suffix": "TEXT", "phone2": "TEXT",
+        "dob": "TEXT", "ssn": "TEXT", "dl_number": "TEXT", "dl_state": "TEXT",
+        "dl_expiration": "TEXT", "housing_status": "TEXT", "time_at_address": "TEXT",
+        "prev_address": "TEXT", "prev_city": "TEXT", "prev_state": "TEXT", "prev_zip": "TEXT",
+        "employer": "TEXT", "employer_phone": "TEXT",
+        "gross_monthly": "FLOAT", "net_monthly": "FLOAT", "income_frequency": "TEXT",
+        "other_income": "FLOAT", "other_income_source": "TEXT",
+    },
+    "credit_applications": {
+        "signature_obtained": "BOOLEAN DEFAULT false", "vehicle_interest": "TEXT",
+        "credit_score": "INTEGER",
+        **{f"ref{n}_{f}": "TEXT" for n in range(1, 6)
+           for f in ("name", "phone", "address", "relationship")},
+    },
+    "insurance": {
+        "company": "TEXT", "policy_number": "TEXT", "agent_name": "TEXT",
+        "agent_phone": "TEXT", "effective_date": "TEXT", "expiration_date": "TEXT",
+    },
+    "sales": {"payment_type": "TEXT", "customer_id": "INTEGER"},
+    "bhph_contracts": {"customer_id": "INTEGER"},
+}
+
+
+def migrate_client_tables():
+    if not DATABASE_URL:
+        return
+    try:
+        with engine.begin() as conn:
+            tables = [r[0] for r in conn.execute(text("""
+                SELECT table_name FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name LIKE 'client\\_%'
+            """)).fetchall()]
+            for table in tables:
+                for suffix, columns in CLIENT_COLUMN_MIGRATIONS.items():
+                    if table.endswith(f"_{suffix}") and not table.endswith(f"_bhph_{suffix}"):
+                        for col, col_type in columns.items():
+                            conn.execute(text(
+                                f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type}'
+                            ))
+        print("Client table migration complete")
+    except Exception as e:
+        print(f"Migration error: {e}")
+
+
+migrate_client_tables()
+
+
 @app.post("/admin/clients")
 def create_client(client: NewClient, user=Depends(get_current_user)):
     if user.get("role") != "admin":
@@ -1311,7 +1361,7 @@ def create_client(client: NewClient, user=Depends(get_current_user)):
             conn.commit()
     except Exception as e:
         print(f"Table creation error: {e}")
-
+    migrate_client_tables()
     return {"message": f"Client {client.business_name} created successfully"}
 
 
