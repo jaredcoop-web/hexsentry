@@ -285,7 +285,7 @@ export default function Collections({ isMobile }) {
               </div>
               <div style={{ background: '#0A0A0A', borderRadius: '6px', padding: '8px 12px', flex: 1 }}>
                 <p style={{ color: '#555', fontSize: '10px', margin: '0 0 2px', textTransform: 'uppercase' }}>Remaining</p>
-                <p style={{ color: '#C0C0C0', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>{fmt(Number(selectedContract.amount_financed) - Number(selectedContract.total_collected || 0))}</p>
+                <p style={{ color: '#C0C0C0', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>{fmt(Number(selectedContract.amount_financed || 0) + Number(selectedContract.total_interest || 0) - Number(selectedContract.total_collected || 0))}</p>
               </div>
             </div>
             <h3 style={{ color: '#C0C0C0', fontSize: '13px', margin: '0 0 10px', textTransform: 'uppercase' }}>Payment Schedule</h3>

@@ -1830,19 +1830,21 @@ def get_bhph_contracts(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
         rows = q(f"""
-            SELECT * FROM {ct(client_id, 'bhph_contracts')}
-            ORDER BY id DESC
+            SELECT c.*,
+                   COALESCE(SUM(CASE WHEN p.status = 'Paid' THEN p.amount_paid ELSE 0 END), 0) AS total_collected,
+                   COUNT(CASE WHEN p.status = 'Late' THEN 1 END) AS late_count
+            FROM {ct(client_id, 'bhph_contracts')} c
+            LEFT JOIN {ct(client_id, 'bhph_payments')} p ON p.contract_id = c.id
+            GROUP BY c.id
+            ORDER BY c.id DESC
         """)
-        # Clean NaN values
         import math
-        cleaned = []
-        for row in rows:
-            cleaned.append({
-                k: (None if isinstance(v, float) and math.isnan(v) else v)
-                for k, v in row.items()
-            })
-        return cleaned
+        return [
+            {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row.items()}
+            for row in rows
+        ]
     except Exception as e:
+        print(f"BHPH contracts error: {e}")
         return []
     
     
