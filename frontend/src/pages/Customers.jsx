@@ -667,16 +667,16 @@ export default function Customers() {
           ) : (
             filtered.map(c => (
               <button
-                key={c.customer_id}
+                key={c.customer_id || c.id}
                 onClick={() => {
-                  fetchCustomer(c.customer_id);
+                  fetchCustomer(c.customer_id || c.id);
                   setShowNew(false);
                   setShowEdit(false);
                   setDeleteConfirm(false);
                   setActiveTab("profile");
                 }}
                 className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                  selected?.customer_id === c.customer_id ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
+                  selected?.customer_id === (c.customer_id || c.id) ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
                 }`}
               >
                 <div className="font-medium text-gray-800 text-sm">{c.first_name} {c.last_name}</div>
