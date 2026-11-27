@@ -1505,12 +1505,7 @@ def get_cashflow(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
         # Only count non-BHPH sales as immediate income
-        sales_data = q(f"""
-            SELECT month,
-                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 0) as income
-            FROM {ct(client_id, 'sales')}
-            GROUP BY month ORDER BY month
-        """)
+        
         expense_data = q(f"""
             SELECT month,
                    ROUND(CAST(SUM(amount) AS numeric), 0) as expenses
@@ -1544,8 +1539,7 @@ def get_cashflow(user=Depends(get_current_user)):
 
         months = {}
 
-        for s in sales_data:
-            months[s["month"]] = {"month": s["month"], "income": s["income"] or 0, "expenses": 0, "other_income": 0}
+        
 
         for e in expense_data:
             if e["month"] not in months:

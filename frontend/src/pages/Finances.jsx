@@ -19,7 +19,7 @@ export default function Finances({ isMobile }) {
   const [saving, setSaving]     = useState(false)
   const [msg, setMsg]           = useState(null)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = new Date().toLocaleDateString('en-CA')
   const [expenseForm, setExpenseForm] = useState({ date: today, category: 'Rent', description: '', amount: '', recurring: false, frequency: 'one-time', notes: '' })
   const [incomeForm, setIncomeForm]   = useState({ date: today, category: 'Owner Contribution', description: '', amount: '', notes: '' })
 
@@ -74,12 +74,10 @@ export default function Finances({ isMobile }) {
     catch { setMsg({ type: 'error', text: 'Failed to delete' }) }
   }
 
-  const thisMonth     = cashflow?.cashflow?.slice(-1)[0]
-  const totalIncome   = thisMonth?.income || 0
-  const totalExpenses = parseInt(data?.summary?.total_expenses || 0)
-  const totalOtherInc = parseInt(data?.summary?.total_other_income || 0)
-  const totalSaleInc  = parseInt(data?.summary?.total_sale_income || 0)
-  const netCashflow   = (totalIncome + totalOtherInc + totalSaleInc) - totalExpenses
+  const totalExpenses = parseFloat(data?.summary?.total_expenses || 0)
+  const totalOtherInc = parseFloat(data?.summary?.total_other_income || 0)
+  const totalSaleInc  = parseFloat(data?.summary?.total_sale_income || 0)
+  const netCashflow   = (totalSaleInc + totalOtherInc) - totalExpenses
 
   const gridCols = isMobile ? '1fr' : '1fr 1fr'
 
@@ -162,7 +160,7 @@ export default function Finances({ isMobile }) {
         <div style={CARD}>
           <h2 style={{ color: '#C0C0C0', fontSize: '15px', marginBottom: '16px' }}>Income vs Expenses</h2>
           <ResponsiveContainer width="100%" height={isMobile ? 180 : 240}>
-            <BarChart data={cashflow.cashflow}>
+            <BarChart data={cashflow.cashflow.map(m => ({ ...m, income: (m.income || 0) + (m.other_income || 0) }))}>
               <CartesianGrid strokeDasharray="3 3" stroke="#222" />
               <XAxis dataKey="month" stroke="#666" tick={{ fontSize: 10 }} />
               <YAxis stroke="#666" tick={{ fontSize: 10 }} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
@@ -221,9 +219,13 @@ export default function Finances({ isMobile }) {
                       {t.type === 'income' ? '+' : '-'}${Number(t.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </td>
                     <td style={{ padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
-                      <button onClick={() => t.type === 'income' ? handleDeleteIncome(t.id) : handleDeleteExpense(t.id)} style={{ padding: '3px 8px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
-                        Delete
-                      </button>
+                      {['BHPH Payment', 'Sale Income', 'Vehicle Purchase'].includes(t.category) ? (
+                        <span style={{ color: '#555', fontSize: '11px' }}>Auto</span>
+                      ) : (
+                        <button onClick={() => t.type === 'income' ? handleDeleteIncome(t.id) : handleDeleteExpense(t.id)} style={{ padding: '3px 8px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
