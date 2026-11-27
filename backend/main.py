@@ -1339,26 +1339,26 @@ CLIENT_COLUMN_MIGRATIONS = {
     "income": {"sale_id": "INTEGER", "bhph_payment_id": "INTEGER"},
 }
 
-
 def migrate_client_tables():
     if not DATABASE_URL:
         return
-    try:
-        with engine.begin() as conn:
-            tables = [r[0] for r in conn.execute(text("""
-                SELECT table_name FROM information_schema.tables
-                WHERE table_schema = 'public' AND table_name LIKE 'client\\_%'
-            """)).fetchall()]
-            for table in tables:
-                for suffix, columns in CLIENT_COLUMN_MIGRATIONS.items():
-                    if table.endswith(f"_{suffix}") and not table.endswith(f"_bhph_{suffix}"):
-                        for col, col_type in columns.items():
-                            conn.execute(text(
-                                f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type}'
-                            ))
-        print("Client table migration complete")
-    except Exception as e:
-        print(f"Migration error: {e}")
+    with engine.connect() as conn:
+        tables = [r[0] for r in conn.execute(text("""
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name LIKE 'client\\_%'
+        """)).fetchall()]
+    errors = 0
+    for table in tables:
+        for suffix, columns in CLIENT_COLUMN_MIGRATIONS.items():
+            if table.endswith(f"_{suffix}") and not table.endswith(f"_bhph_{suffix}"):
+                for col, col_type in columns.items():
+                    try:
+                        with engine.begin() as conn:
+                            conn.execute(text(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type}'))
+                    except Exception as e:
+                        errors += 1
+                        print(f"Migration error on {table}.{col}: {e}")
+    print(f"Client table migration complete ({errors} errors)")
 
 
 migrate_client_tables()
