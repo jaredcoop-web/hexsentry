@@ -97,6 +97,7 @@ export default function DealerInventory({ isMobile }) {
         name:          vehicleName,
         sku:           form.vin || form.stock_number,
         cost: (parseFloat(form.cost) || 0) + (parseFloat(form.recon) || 0) + (parseFloat(form.pack) || 0),
+        cash_cost: (parseFloat(form.cost) || 0) + (parseFloat(form.recon) || 0),
         asking_price:  parseFloat(form.asking_price) || 0,
         date_received: form.date_received,
         condition:     form.condition,

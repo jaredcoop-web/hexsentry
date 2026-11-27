@@ -487,10 +487,15 @@ def get_inventory(user=Depends(get_current_user)):
 @app.delete("/inventory")
 def clear_all_inventory(user=Depends(get_current_user)):
     client_id = user["client_id"]
+    table     = ct(client_id, "inventory")
+    exp_table = ct(client_id, "expenses")
     try:
-        with engine.connect() as conn:
-            conn.execute(text(f"DELETE FROM {ct(client_id, 'inventory')}"))
-            conn.commit()
+        with engine.begin() as conn:
+            conn.execute(text(f"""
+                DELETE FROM {exp_table}
+                WHERE inventory_id IN (SELECT id FROM {table} WHERE status IS DISTINCT FROM 'Sold')
+            """))
+            conn.execute(text(f"DELETE FROM {table}"))
         return {"message": "All inventory cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -926,7 +931,8 @@ class InventoryItem(BaseModel):
     name:           str
     category:       str = "General"
     sku:            Optional[str] = ""
-    cost:           float = 0
+    cost:           float = 0              # true cost (invoice + recon + pack), used for profit
+    cash_cost:      Optional[float] = None # money actually spent (invoice + recon)
     asking_price:   float = 0
     date_received:  str = ""
     condition:      str = "Used"
@@ -936,15 +942,18 @@ class InventoryItem(BaseModel):
 def add_inventory_item(item: InventoryItem, user=Depends(get_current_user)):
     client_id = user["client_id"]
     table     = ct(client_id, "inventory")
-    date      = item.date_received or datetime.local_today()
+    exp_table = ct(client_id, "expenses")
+    date      = item.date_received or local_today()
+    cash_cost = item.cash_cost if item.cash_cost is not None else item.cost
     try:
-        with engine.connect() as conn:
-            conn.execute(text(f"""
+        with engine.begin() as conn:
+            inv_id = conn.execute(text(f"""
                 INSERT INTO {table}
                 (vin, model, year, list_price, arrival_date, days_on_lot,
                  status, is_stale, color, age_bucket, cost, category, condition, notes)
                 VALUES (:vin, :model, :year, :list_price, :arrival_date, 0,
                         'Available', false, :condition, '0-30 days', :cost, :category, :condition, :notes)
+                RETURNING id
             """), {
                 "vin":          item.sku or f"SKU-{datetime.utcnow().timestamp()}",
                 "model":        item.name,
@@ -955,9 +964,23 @@ def add_inventory_item(item: InventoryItem, user=Depends(get_current_user)):
                 "category":     item.category,
                 "condition":    item.condition,
                 "notes":        item.notes or "",
-            })
-            conn.commit()
-        return {"message": "Item added successfully"}
+            }).fetchone()[0]
+
+            # Auto-record the purchase as an expense
+            if cash_cost and cash_cost > 0:
+                conn.execute(text(f"""
+                    INSERT INTO {exp_table}
+                    (date, category, description, amount, recurring, frequency, notes, month, year, inventory_id)
+                    VALUES (:date, 'Vehicle Purchase', :desc, :amount, false, 'one-time', '', :month, :year, :inventory_id)
+                """), {
+                    "date":         date,
+                    "desc":         f"Vehicle Purchase – {item.name}",
+                    "amount":       cash_cost,
+                    "month":        date[:7],
+                    "year":         date[:4],
+                    "inventory_id": inv_id,
+                })
+        return {"message": "Item added successfully", "id": inv_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1017,13 +1040,13 @@ def mark_item_sold(item_id: int, user=Depends(get_current_user)):
 def delete_inventory_item(item_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
     table     = ct(client_id, "inventory")
+    exp_table = ct(client_id, "expenses")
     try:
-        with engine.connect() as conn:
-            conn.execute(
-                text(f"DELETE FROM {table} WHERE id=:id"),
-                {"id": item_id}
-            )
-            conn.commit()
+        with engine.begin() as conn:
+            row = conn.execute(text(f"SELECT status FROM {table} WHERE id=:id"), {"id": item_id}).fetchone()
+            if row and row[0] != 'Sold':
+                conn.execute(text(f"DELETE FROM {exp_table} WHERE inventory_id=:id"), {"id": item_id})
+            conn.execute(text(f"DELETE FROM {table} WHERE id=:id"), {"id": item_id})
         return {"message": "Item deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1254,8 +1277,10 @@ CLIENT_COLUMN_MIGRATIONS = {
         "company": "TEXT", "policy_number": "TEXT", "agent_name": "TEXT",
         "agent_phone": "TEXT", "effective_date": "TEXT", "expiration_date": "TEXT",
     },
+    
     "sales": {"payment_type": "TEXT", "customer_id": "INTEGER"},
     "bhph_contracts": {"customer_id": "INTEGER"},
+    "expenses": {"inventory_id": "INTEGER"},
 }
 
 
