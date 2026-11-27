@@ -1994,37 +1994,57 @@ def get_contract_payments(contract_id: int, user=Depends(get_current_user)):
 @app.patch("/bhph/payments/{payment_id}/pay")
 def mark_payment_paid(payment_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
+    pay_table = ct(client_id, "bhph_payments")
+    con_table = ct(client_id, "bhph_contracts")
     today     = local_today()
     try:
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             payment = conn.execute(text(f"""
-                SELECT amount_due FROM {ct(client_id, 'bhph_payments')}
-                WHERE id = :id
+                SELECT p.amount_due, p.contract_id, p.status, c.customer_name, c.vehicle
+                FROM {pay_table} p
+                JOIN {con_table} c ON c.id = p.contract_id
+                WHERE p.id = :id
             """), {"id": payment_id}).fetchone()
+            if not payment:
+                raise HTTPException(status_code=404, detail="Payment not found")
+            amount, contract_id, status, customer, vehicle = payment
+
+            # Already paid: don't record the income twice
+            if status == "Paid":
+                return {"message": "Payment already recorded"}
 
             conn.execute(text(f"""
-                UPDATE {ct(client_id, 'bhph_payments')}
+                UPDATE {pay_table}
                 SET status = 'Paid', paid_date = :today, amount_paid = :amount
                 WHERE id = :id
-            """), {"today": today, "amount": payment[0], "id": payment_id})
+            """), {"today": today, "amount": amount, "id": payment_id})
 
-            # Add to income
             conn.execute(text(f"""
                 INSERT INTO {ct(client_id, 'income')}
                 (date, category, description, amount, month, year)
                 VALUES (:date, 'BHPH Payment', :desc, :amount, :month, :year)
             """), {
                 "date":   today,
-                "desc":   f"BHPH Payment #{payment_id}",
-                "amount": payment[0],
+                "desc":   f"BHPH Payment – {customer}, {vehicle}",
+                "amount": amount,
                 "month":  today[:7],
                 "year":   today[:4],
             })
-            conn.commit()
-        return {"message": "Payment marked as paid"}
+
+            # Last payment made → archive the contract
+            remaining = conn.execute(text(f"""
+                SELECT COUNT(*) FROM {pay_table}
+                WHERE contract_id = :cid AND status != 'Paid'
+            """), {"cid": contract_id}).scalar()
+            if remaining == 0:
+                conn.execute(text(f"UPDATE {con_table} SET status = 'Paid Off' WHERE id = :cid"),
+                             {"cid": contract_id})
+
+        return {"message": "Payment marked as paid", "paid_off": remaining == 0}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.patch("/bhph/payments/{payment_id}/late")
 def mark_payment_late(payment_id: int, user=Depends(get_current_user)):

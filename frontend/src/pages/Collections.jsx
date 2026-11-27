@@ -17,6 +17,7 @@ export default function Collections({ isMobile }) {
   const [showNew, setShowNew]                   = useState(false)
   const [saving, setSaving]                     = useState(false)
   const [msg, setMsg]                           = useState(null)
+  const [view, setView] = useState('Active')
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -151,6 +152,7 @@ export default function Collections({ isMobile }) {
 
   const calc     = form.sale_price && form.down_payment && form.interest_rate ? getCalc() : null
   const gridCols = isMobile ? '1fr' : '1fr 1fr'
+  const visibleContracts = contracts.filter(c => (c.status || 'Active') === view)
 
   if (loading) return <p style={{ color: '#666', padding: '40px' }}>Loading collections...</p>
 
@@ -235,11 +237,18 @@ export default function Collections({ isMobile }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : selectedContract ? '1fr 1fr' : '1fr', gap: '20px' }}>
         <div style={CARD}>
-          <h2 style={{ color: '#C0C0C0', fontSize: '15px', marginBottom: '16px' }}>Active Contracts</h2>
-          {contracts.length === 0 ? (
-            <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No contracts yet.</p>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
+            {['Active', 'Paid Off'].map(v => (
+              <button key={v} onClick={() => { setView(v); setSelectedContract(null) }}
+                style={{ padding: '6px 12px', background: view === v ? '#4a9eff' : 'transparent', color: view === v ? '#fff' : '#666', border: `1px solid ${view === v ? '#4a9eff' : '#333'}`, borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                {v} ({contracts.filter(c => (c.status || 'Active') === v).length})
+              </button>
+            ))}
+          </div>
+          {visibleContracts.length === 0 ? (
+            <p style={{ color: '#555', textAlign: 'center', padding: '20px' }}>No {view.toLowerCase()} contracts.</p>
           ) : (
-            contracts.map((c, i) => (
+            visibleContracts.map((c, i) => (
               <div key={i} onClick={() => handleSelectContract(c)}
                 style={{ padding: '14px', background: selectedContract?.id === c.id ? '#0d1a2d' : '#0A0A0A', border: `1px solid ${selectedContract?.id === c.id ? '#4a9eff' : '#222'}`, borderRadius: '8px', marginBottom: '8px', cursor: 'pointer', position: 'relative' }}>
                 <button onClick={e => { e.stopPropagation(); handleDeleteContract(c.id) }}
