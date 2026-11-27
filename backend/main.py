@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, HTTPException, Depends, Request, Body
@@ -29,7 +30,7 @@ from pipeline.auth import init_auth_db, auth_login, get_all_users, create_user, 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-
+from zoneinfo import ZoneInfo
 
 app = FastAPI(title="HexGuard API", version="1.0.0")
 
@@ -80,6 +81,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 init_auth_db()
 
+def local_today():
+    return datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d")
 
 # ── Token helpers ─────────────────────────────────────────────────────────────
 def create_token(data: dict):
@@ -801,7 +804,7 @@ def verify_square_signature(body: bytes, signature: str, url: str) -> bool:
 def parse_square_payment(event_data: dict) -> dict:
     payment      = event_data.get("object", {}).get("payment", {})
     amount       = payment.get("amount_money", {}).get("amount", 0) / 100
-    date         = payment.get("created_at", datetime.utcnow().isoformat())[:10]
+    date         = payment.get("created_at", local_today())[:10]
     method_map   = {"CARD": "Card", "CASH": "Cash", "BANK_ACCOUNT": "Bank Transfer", "EXTERNAL": "Other"}
     payment_type = method_map.get(payment.get("source_type", "CARD"), "Card")
     return {
@@ -933,7 +936,7 @@ class InventoryItem(BaseModel):
 def add_inventory_item(item: InventoryItem, user=Depends(get_current_user)):
     client_id = user["client_id"]
     table     = ct(client_id, "inventory")
-    date      = item.date_received or datetime.utcnow().strftime("%Y-%m-%d")
+    date      = item.date_received or datetime.local_today()
     try:
         with engine.connect() as conn:
             conn.execute(text(f"""
@@ -945,7 +948,7 @@ def add_inventory_item(item: InventoryItem, user=Depends(get_current_user)):
             """), {
                 "vin":          item.sku or f"SKU-{datetime.utcnow().timestamp()}",
                 "model":        item.name,
-                "year":         datetime.utcnow().year,
+                "year":         datetime.now(ZoneInfo("America/Chicago")).year,
                 "list_price":   item.asking_price,
                 "arrival_date": date,
                 "cost":         item.cost,
@@ -1132,7 +1135,7 @@ def _send_report(user: dict, recipient_email: str):
         reviews = q(f"SELECT ROUND(CAST(AVG(rating) AS numeric), 2) as avg_rating, COUNT(*) as total FROM {ct(client_id, 'reviews')}")[0]
     except: reviews = {}
 
-    week        = datetime.utcnow().strftime("%B %d, %Y")
+    week        = datetime.now(ZoneInfo("America/Chicago")).strftime("%B %d, %Y")
     deals       = int(sales.get("deals") or 0)
     total_gross = int(sales.get("total_gross") or 0)
     avg_gross   = int(sales.get("avg_gross") or 0)
@@ -1672,8 +1675,8 @@ def process_recurring(api_key: str):
     from pipeline.auth import get_all_users
     users         = get_all_users()
     processed     = 0
-    current_month = datetime.utcnow().strftime("%Y-%m")
-    today         = datetime.utcnow().strftime("%Y-%m-%d")
+    current_month = local_today()[:7]
+    today         = local_today()
     for u in users:
         if u[4] == "admin": continue
         client_id = u[3]
@@ -1966,7 +1969,7 @@ def get_contract_payments(contract_id: int, user=Depends(get_current_user)):
 @app.patch("/bhph/payments/{payment_id}/pay")
 def mark_payment_paid(payment_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
-    today     = datetime.utcnow().strftime("%Y-%m-%d")
+    today     = local_today()
     try:
         with engine.connect() as conn:
             payment = conn.execute(text(f"""

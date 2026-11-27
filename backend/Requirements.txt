@@ -12,3 +12,4 @@ sqlalchemy
 anthropic
 resend
 slowapi
+tzdata
