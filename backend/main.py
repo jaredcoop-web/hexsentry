@@ -1333,7 +1333,7 @@ CLIENT_COLUMN_MIGRATIONS = {
         "agent_phone": "TEXT", "effective_date": "TEXT", "expiration_date": "TEXT",
     },
     
-    "sales": {"payment_type": "TEXT", "customer_id": "INTEGER"},
+    "sales": {"payment_type": "TEXT", "customer_id": "INTEGER", "inventory_id": "INTEGER"},
     "bhph_contracts": {"customer_id": "INTEGER"},
     "expenses": {"inventory_id": "INTEGER"},
     "income": {"sale_id": "INTEGER", "bhph_payment_id": "INTEGER"},
