@@ -7,7 +7,7 @@ const LABEL  = { color: '#999', fontSize: '13px', display: 'block', marginBottom
 const SELECT = { ...INPUT, cursor: 'pointer' }
 
 export default function AddSale({ user, isMobile }) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = new Date().toLocaleDateString('en-CA')
   const [showFI, setShowFI]               = useState(false)
   const [status, setStatus]               = useState(null)
   const [loading, setLoading]             = useState(false)
@@ -115,10 +115,18 @@ export default function AddSale({ user, isMobile }) {
       setStatus({ type: 'error', msg: 'Please fill in Vehicle, Sale Price, and Salesperson.' })
       return
     }
+    const isBHPHSale = form.payment_type === 'In-House / BHPH'
+    if (isBHPHSale) {
+      if (!form.customer_name) { setStatus({ type: 'error', msg: 'BHPH sales need a customer.' }); return }
+      if (form.down_payment === '') { setStatus({ type: 'error', msg: 'Enter a down payment (0 if none).' }); return }
+      if ((parseFloat(form.down_payment) || 0) >= parseFloat(form.sale_price)) {
+        setStatus({ type: 'error', msg: 'Down payment must be less than the sale price.' }); return
+      }
+    }
     setLoading(true)
     setStatus(null)
     try {
-      const bhph = form.payment_type === 'In-House / BHPH' ? getBHPHCalc() : null
+      const bhph = isBHPHSale ? getBHPHCalc() : null
       await api.post('/sales/manual', {
         date:            form.date,
         description:     form.description,
@@ -128,44 +136,25 @@ export default function AddSale({ user, isMobile }) {
         salesperson:     form.salesperson,
         payment_type:    form.payment_type,
         lead_source:     form.lead_source,
-        notes:           [
-          form.notes || '',
-          bhph ? `Down: $${parseFloat(form.down_payment).toLocaleString()}` : '',
-          bhph ? `Rate: ${form.interest_rate}%` : '',
-          bhph ? `Term: ${form.term_months}mo` : '',
-          bhph ? `${bhph.frequencyLabel}: $${bhph.displayPayment.toFixed(2)}` : '',
-          bhph ? `Total Interest: $${bhph.totalInterest.toFixed(2)}` : '',
-        ].filter(Boolean).join(' | '),
+        notes:           form.notes || '',
         finance_reserve: parseFloat(form.finance_reserve) || 0,
         warranty:        parseFloat(form.warranty) || 0,
         gap_insurance:   parseFloat(form.gap_insurance) || 0,
         addons:          parseFloat(form.addons) || 0,
         inventory_id:    selectedInventoryId,
-        customer_id: form.customer_id || null,
+        customer_id:     form.customer_id || null,
+        customer_name:   form.customer_name,
+        customer_phone:  form.customer_phone,
+        ...(bhph && {
+          down_payment:      parseFloat(form.down_payment) || 0,
+          interest_rate:     parseFloat(form.interest_rate) || 0,
+          term_months:       parseInt(form.term_months),
+          payment_frequency: form.payment_frequency,
+          payment_amount:    bhph.displayPayment,
+          total_interest:    bhph.totalInterest,
+        }),
       })
-      // Auto-create BHPH contract
-      if (form.payment_type === 'In-House / BHPH' && form.customer_name && bhph) {
-         try {
-          await api.post('/bhph/contracts', {
-            sale_id:           null,
-            customer_name:     form.customer_name,
-            customer_phone:    form.customer_phone,
-            vehicle:           form.description,
-            sale_price:        parseFloat(form.sale_price),
-            down_payment:      parseFloat(form.down_payment),
-            amount_financed:   bhph.principal,
-            interest_rate:     parseFloat(form.interest_rate) || 0,
-            term_months:       parseInt(form.term_months),
-            payment_frequency: form.payment_frequency,
-            payment_amount:    bhph.displayPayment,
-            total_interest:    bhph.totalInterest,
-            start_date:        form.date,
-            notes:             form.notes,
-            customer_id: form.customer_id || null,
-          })
-        } catch {}
-      }
-      setStatus({ type: 'success', msg: 'Sale recorded successfully!' })
+      setStatus({ type: 'success', msg: isBHPHSale ? 'Sale recorded and BHPH contract created!' : 'Sale recorded successfully!' })
       setForm({
         date: today, description: '', sale_price: '', cost: '',
         salesperson: '', payment_type: 'Cash', lead_source: 'Walk-in', notes: '',
@@ -176,8 +165,8 @@ export default function AddSale({ user, isMobile }) {
       setFromInventory(false)
       setSelectedInventoryId(null)
       setShowFI(false)
-    } catch {
-      setStatus({ type: 'error', msg: 'Failed to save sale. Please try again.' })
+    } catch (err) {
+      setStatus({ type: 'error', msg: err.response?.data?.detail || 'Failed to save sale. Please try again.' })
     }
     setLoading(false)
   }

@@ -25,6 +25,7 @@ export default function Sales({ isMobile }) {
   useEffect(() => { load() }, [])
 
   const handleDelete = async (id) => {
+    if (!window.confirm('Delete this sale? Its Finances entries and any BHPH contract will be removed too.')) return
     try {
       const res = await api.delete(`/sales/${id}`)
       if (res.status === 200) {
@@ -72,7 +73,7 @@ export default function Sales({ isMobile }) {
         {[
           { label: 'Total Sales',    value: summary?.total_sales || 0 },
           { label: 'Total Gross',    value: fmt(summary?.total_gross), color: '#2ecc71' },
-          { label: 'BHPH Collected', value: fmt(summary?.bhph_collected), color: '#4a9eff' },
+          { label: 'Avg Profit / Car', value: fmt(summary?.avg_gross), color: '#4a9eff' },
           { label: 'This Month',     value: summary?.this_month || 0 },
         ].map((k, i) => (
           <div key={i} style={{ background: '#1A1A2E', border: '1px solid #333', borderRadius: '8px', padding: '16px', flex: '1 1', minWidth: isMobile ? 'calc(50% - 10px)' : '120px' }}>
@@ -127,7 +128,7 @@ export default function Sales({ isMobile }) {
             <table style={{ minWidth: '650px', width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  {['Date', 'Vehicle', 'Sale Price', 'Gross', 'Margin %', 'Salesperson', 'Lead Source', ''].map(h => (
+                  {['Date', 'Vehicle', 'Type', 'Sale Price', 'Gross', 'Margin %', 'Salesperson', 'Lead Source', ''].map(h => (
                     <th key={h} style={{ color: '#666', fontSize: '11px', textAlign: 'left', padding: '8px 6px', borderBottom: '1px solid #333' }}>{h}</th>
                   ))}
                 </tr>
@@ -137,6 +138,7 @@ export default function Sales({ isMobile }) {
                   <tr key={i}>
                     <td style={{ color: '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.date}</td>
                     <td style={{ color: '#C0C0C0', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{s.model}</td>
+                    <td style={{ color: s.payment_type === 'In-House / BHPH' ? '#4a9eff' : '#999', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.payment_type === 'In-House / BHPH' ? 'BHPH' : (s.payment_type || '—')}</td>
                     <td style={{ color: '#C0C0C0', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{fmt(s.sale_price)}</td>
                     <td style={{ color: '#2ecc71', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '13px' }}>{fmt(s.gross_profit)}</td>
                     <td style={{ color: '#f39c12', padding: '10px 6px', borderBottom: '1px solid #1a1a1a', fontSize: '12px' }}>{s.gross_margin_pct || 0}%</td>

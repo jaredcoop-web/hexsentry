@@ -339,8 +339,8 @@ def get_kpis(user=Depends(get_current_user)):
     try:
         sales = q(f"""
             SELECT COUNT(*) as total_sales,
-                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 2) as total_gross,
-                   ROUND(CAST(AVG(CASE WHEN payment_type = 'In-House / BHPH' THEN NULL ELSE gross_profit END) AS numeric), 2) as avg_gross
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 2) as total_gross,
+                   ROUND(CAST(AVG(gross_profit) AS numeric), 2) as avg_gross
             FROM {ct(client_id, 'sales')}
         """)
         inv = q(f"""
@@ -361,22 +361,19 @@ def get_sales(user=Depends(get_current_user)):
     try:
         summary = q(f"""
             SELECT COUNT(*) as total_sales,
-                   ROUND(CAST(
-                       COALESCE(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END), 0) +
-                       COALESCE((SELECT SUM(amount) FROM {ct(client_id, 'income')} WHERE category = 'BHPH Payment'), 0)
-                   AS numeric), 2) as total_gross,
-                   COALESCE((SELECT SUM(amount) FROM {ct(client_id, 'income')} WHERE category = 'BHPH Payment'), 0) as bhph_collected,
+                   ROUND(CAST(COALESCE(SUM(gross_profit), 0) AS numeric), 2) as total_gross,
+                   ROUND(CAST(COALESCE(AVG(gross_profit), 0) AS numeric), 2) as avg_gross,
                    SUM(CASE WHEN month = TO_CHAR(CURRENT_DATE, 'YYYY-MM') THEN 1 ELSE 0 END) as this_month
             FROM {table}
         """)[0]
         monthly = q(f"""
             SELECT month, COUNT(*) as units,
-                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 2) as gross
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 2) as gross
             FROM {table} GROUP BY month ORDER BY month
         """)
         top_salespeople = q(f"""
             SELECT salesperson, COUNT(*) as deals,
-                   ROUND(CAST(SUM(CASE WHEN payment_type = 'In-House / BHPH' THEN 0 ELSE gross_profit END) AS numeric), 2) as gross
+                   ROUND(CAST(SUM(gross_profit) AS numeric), 2) as gross
             FROM {table} GROUP BY salesperson ORDER BY gross DESC LIMIT 5
         """)
         top_models = q(f"""
@@ -384,13 +381,13 @@ def get_sales(user=Depends(get_current_user)):
             FROM {table} GROUP BY model ORDER BY units DESC LIMIT 5
         """)
         return {
-            "total_sales":    summary.get("total_sales") or 0,
-            "total_gross":    summary.get("total_gross"),
-            "bhph_collected": summary.get("bhph_collected"),
-            "this_month":     summary.get("this_month") or 0,
-            "monthly":        monthly,
-            "leaderboard":    top_salespeople,
-            "top_models":     top_models,
+            "total_sales": summary.get("total_sales") or 0,
+            "total_gross": summary.get("total_gross"),
+            "avg_gross":   summary.get("avg_gross"),
+            "this_month":  summary.get("this_month") or 0,
+            "monthly":     monthly,
+            "leaderboard": top_salespeople,
+            "top_models":  top_models,
         }
     except Exception as e:
         return {"error": str(e)}
@@ -400,8 +397,8 @@ def get_all_sales(user=Depends(get_current_user)):
     client_id = user["client_id"]
     try:
         sales = q(f"""
-            SELECT id, date, model, salesperson, sale_price, gross_profit, 
-                   lead_source,
+            SELECT id, date, model, salesperson, sale_price, gross_profit,
+                   lead_source, payment_type,
                    CASE WHEN sale_price > 0 
                         THEN ROUND(CAST(gross_profit / sale_price * 100 AS numeric), 1) 
                         ELSE 0 END as gross_margin_pct
@@ -418,20 +415,37 @@ def get_all_sales(user=Depends(get_current_user)):
 @app.delete("/sales/{sale_id}")
 def delete_sale(sale_id: int, user=Depends(get_current_user)):
     client_id = user["client_id"]
+    sales, inc, con, pay, inv = (ct(client_id, t) for t in
+                                 ("sales", "income", "bhph_contracts", "bhph_payments", "inventory"))
     try:
-        with engine.connect() as conn:
-            sale = conn.execute(text(f"SELECT model, date FROM {ct(client_id, 'sales')} WHERE id=:id"), {"id": sale_id}).fetchone()
-            conn.execute(text(f"DELETE FROM {ct(client_id, 'sales')} WHERE id=:id"), {"id": sale_id})
-            conn.commit()
-        # Try to delete matching F&I record separately
+        with engine.begin() as conn:
+            sale = conn.execute(text(f"SELECT model, date, inventory_id FROM {sales} WHERE id=:id"),
+                                {"id": sale_id}).fetchone()
+            if not sale:
+                raise HTTPException(status_code=404, detail="Sale not found")
+            # Finances entries: the sale's own + any BHPH payments on its contract
+            conn.execute(text(f"""
+                DELETE FROM {inc}
+                WHERE sale_id = :id
+                   OR bhph_payment_id IN (SELECT p.id FROM {pay} p
+                                          JOIN {con} c ON c.id = p.contract_id
+                                          WHERE c.sale_id = :id)
+            """), {"id": sale_id})
+            conn.execute(text(f"DELETE FROM {pay} WHERE contract_id IN (SELECT id FROM {con} WHERE sale_id = :id)"),
+                         {"id": sale_id})
+            conn.execute(text(f"DELETE FROM {con} WHERE sale_id = :id"), {"id": sale_id})
+            if sale[2]:
+                conn.execute(text(f"UPDATE {inv} SET status='Available' WHERE id=:iid"), {"iid": sale[2]})
+            conn.execute(text(f"DELETE FROM {sales} WHERE id=:id"), {"id": sale_id})
         try:
-            if sale:
-                with engine.connect() as conn2:
-                    conn2.execute(text(f"DELETE FROM {ct(client_id, 'fi')} WHERE model=:model AND date=:date"), {"model": sale[0], "date": sale[1]})
-                    conn2.commit()
-        except:
-            pass  # F&I table may not exist, that's ok
+            with engine.begin() as conn2:
+                conn2.execute(text(f"DELETE FROM {ct(client_id, 'fi')} WHERE model=:model AND date=:date"),
+                              {"model": sale[0], "date": sale[1]})
+        except Exception:
+            pass
         return {"message": "Sale deleted"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -439,11 +453,25 @@ def delete_sale(sale_id: int, user=Depends(get_current_user)):
 @app.delete("/sales")
 def clear_all_sales(user=Depends(get_current_user)):
     client_id = user["client_id"]
+    sales, inc, con, pay, inv = (ct(client_id, t) for t in
+                                 ("sales", "income", "bhph_contracts", "bhph_payments", "inventory"))
     try:
-        with engine.connect() as conn:
-            conn.execute(text(f"DELETE FROM {ct(client_id, 'sales')}"))
+        with engine.begin() as conn:
+            conn.execute(text(f"""
+                DELETE FROM {inc}
+                WHERE sale_id IS NOT NULL
+                   OR bhph_payment_id IN (SELECT p.id FROM {pay} p
+                                          JOIN {con} c ON c.id = p.contract_id
+                                          WHERE c.sale_id IS NOT NULL)
+            """))
+            conn.execute(text(f"DELETE FROM {pay} WHERE contract_id IN (SELECT id FROM {con} WHERE sale_id IS NOT NULL)"))
+            conn.execute(text(f"DELETE FROM {con} WHERE sale_id IS NOT NULL"))
+            conn.execute(text(f"""
+                UPDATE {inv} SET status='Available'
+                WHERE id IN (SELECT inventory_id FROM {sales} WHERE inventory_id IS NOT NULL)
+            """))
+            conn.execute(text(f"DELETE FROM {sales}"))
             conn.execute(text(f"DELETE FROM {ct(client_id, 'fi')}"))
-            conn.commit()
         return {"message": "All sales cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -642,39 +670,57 @@ from pydantic import BaseModel
 from typing import Optional
 
 class ManualSale(BaseModel):
-    date:            str
-    description:     str
-    sale_price:      float
-    cost:            float = 0
-    gross_profit:    float
-    salesperson:     str
-    payment_type:    str = "Cash"
-    lead_source:     str = "Walk-in"
-    notes:           Optional[str] = ""
-    finance_reserve: float = 0
-    warranty:        float = 0
-    gap_insurance:   float = 0
-    addons:          float = 0
-    inventory_id:    Optional[int] = None
-    customer_id: Optional[int] = None
-    
+    date:              str
+    description:       str
+    sale_price:        float
+    cost:              float = 0
+    gross_profit:      float
+    salesperson:       str
+    payment_type:      str = "Cash"
+    lead_source:       str = "Walk-in"
+    notes:             Optional[str] = ""
+    finance_reserve:   float = 0
+    warranty:          float = 0
+    gap_insurance:     float = 0
+    addons:            float = 0
+    inventory_id:      Optional[int] = None
+    customer_id:       Optional[int] = None
+    customer_name:     Optional[str] = ""
+    customer_phone:    Optional[str] = ""
+    # BHPH only
+    down_payment:      float = 0
+    interest_rate:     float = 0
+    term_months:       int = 24
+    payment_frequency: str = "Monthly"
+    payment_amount:    float = 0
+    total_interest:    float = 0
+
+BHPH = "In-House / BHPH"
 
 @app.post("/sales/manual")
 def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
     client_id     = user["client_id"]
-    table         = ct(client_id, "sales")
-    fi_table      = ct(client_id, "fi")
     total_backend = sale.finance_reserve + sale.warranty + sale.gap_insurance + sale.addons
+    is_bhph       = sale.payment_type == BHPH
+
+    if is_bhph:
+        if not (sale.customer_name or "").strip():
+            raise HTTPException(status_code=400, detail="BHPH sales need a customer.")
+        if sale.down_payment >= sale.sale_price:
+            raise HTTPException(status_code=400, detail="Down payment must be less than the sale price.")
 
     try:
-        with engine.connect() as conn:
-            conn.execute(text(f"""
-                INSERT INTO {table}
+        with engine.begin() as conn:
+            # 1. The sale (profit lives here)
+            sale_id = conn.execute(text(f"""
+                INSERT INTO {ct(client_id, 'sales')}
                 (date, model, sale_price, cost, gross_profit, salesperson,
                  lead_source, finance_income, total_income, month, year,
-                 days_on_lot, gross_margin_pct, payment_type, customer_id)
+                 days_on_lot, gross_margin_pct, payment_type, customer_id, inventory_id)
                 VALUES (:date, :model, :sale_price, :cost, :gross_profit, :salesperson,
-                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin, :payment_type, :customer_id)
+                        :lead_source, :finance_income, :total_income, :month, :year, 0, :margin,
+                        :payment_type, :customer_id, :inventory_id)
+                RETURNING id
             """), {
                 "date":           sale.date,
                 "model":          sale.description,
@@ -687,65 +733,74 @@ def add_manual_sale(sale: ManualSale, user=Depends(get_current_user)):
                 "total_income":   sale.gross_profit + total_backend,
                 "month":          sale.date[:7],
                 "year":           sale.date[:4],
-                "margin":         round((sale.gross_profit / sale.sale_price * 100), 2) if sale.sale_price else 0,
+                "margin":         round(sale.gross_profit / sale.sale_price * 100, 2) if sale.sale_price else 0,
                 "payment_type":   sale.payment_type,
-                "customer_id": sale.customer_id,
-            })
-            conn.commit()
+                "customer_id":    sale.customer_id,
+                "inventory_id":   sale.inventory_id,
+            }).fetchone()[0]
 
-        # Save F&I data if any backend income
-        if total_backend > 0:
-            with engine.connect() as conn:
+            # 2. F&I record
+            if total_backend > 0:
                 conn.execute(text(f"""
-                    INSERT INTO {fi_table}
+                    INSERT INTO {ct(client_id, 'fi')}
                     (date, salesperson, model, finance_reserve, warranty,
                      gap_insurance, addons, total_backend, month, year)
                     VALUES (:date, :salesperson, :model, :finance_reserve, :warranty,
                             :gap_insurance, :addons, :total_backend, :month, :year)
                 """), {
-                    "date":            sale.date,
-                    "salesperson":     sale.salesperson,
-                    "model":           sale.description,
-                    "finance_reserve": sale.finance_reserve,
-                    "warranty":        sale.warranty,
-                    "gap_insurance":   sale.gap_insurance,
-                    "addons":          sale.addons,
-                    "total_backend":   total_backend,
-                    "month":           sale.date[:7],
-                    "year":            sale.date[:4],
+                    "date": sale.date, "salesperson": sale.salesperson, "model": sale.description,
+                    "finance_reserve": sale.finance_reserve, "warranty": sale.warranty,
+                    "gap_insurance": sale.gap_insurance, "addons": sale.addons,
+                    "total_backend": total_backend, "month": sale.date[:7], "year": sale.date[:4],
                 })
-                conn.commit()
 
-        # Auto-mark specific inventory item as sold if selected
-        try:
-            inv_id = getattr(sale, 'inventory_id', None)
-            if inv_id:
-                inv_table = ct(client_id, "inventory")
-                with engine.connect() as inv_conn:
-                    inv_conn.execute(text(f"UPDATE {inv_table} SET status='Sold' WHERE id=:id"), {"id": inv_id})
-                    inv_conn.commit()
-        except:
-            pass
+            # 3. Mark the car sold
+            if sale.inventory_id:
+                conn.execute(text(f"UPDATE {ct(client_id, 'inventory')} SET status='Sold' WHERE id=:id"),
+                             {"id": sale.inventory_id})
 
-        # Add to income only if NOT BHPH
-        if sale.payment_type != 'In-House / BHPH' and sale.gross_profit > 0:
-            with engine.connect() as conn:
+            # 4. Cash actually received today → Finances
+            cash_in = sale.down_payment if is_bhph else sale.sale_price
+            if cash_in > 0:
                 conn.execute(text(f"""
                     INSERT INTO {ct(client_id, 'income')}
-                    (date, category, description, amount, month, year)
-                    VALUES (:date, 'Sale Income', :desc, :amount, :month, :year)
+                    (date, category, description, amount, month, year, sale_id)
+                    VALUES (:date, 'Sale Income', :desc, :amount, :month, :year, :sale_id)
                 """), {
-                    "date":   sale.date,
-                    "desc":   sale.description,
-                    "amount": sale.gross_profit,
-                    "month":  sale.date[:7],
-                    "year":   sale.date[:4],
+                    "date":    sale.date,
+                    "desc":    f"{'Down Payment' if is_bhph else 'Sale'} – {sale.description}",
+                    "amount":  cash_in,
+                    "month":   sale.date[:7],
+                    "year":    sale.date[:4],
+                    "sale_id": sale_id,
                 })
-                conn.commit()
 
-        return {"message": "Sale recorded successfully"}
+            # 5. BHPH contract + schedule
+            contract_id = None
+            if is_bhph:
+                contract_id = _create_bhph_contract(conn, client_id, {
+                    "sale_id":           sale_id,
+                    "customer_id":       sale.customer_id,
+                    "customer_name":     sale.customer_name,
+                    "customer_phone":    sale.customer_phone,
+                    "vehicle":           sale.description,
+                    "sale_price":        sale.sale_price,
+                    "down_payment":      sale.down_payment,
+                    "amount_financed":   sale.sale_price - sale.down_payment,
+                    "interest_rate":     sale.interest_rate,
+                    "term_months":       sale.term_months,
+                    "payment_frequency": sale.payment_frequency,
+                    "payment_amount":    sale.payment_amount,
+                    "total_interest":    sale.total_interest,
+                    "start_date":        sale.date,
+                    "notes":             sale.notes,
+                })
+
+        return {"message": "Sale recorded successfully", "sale_id": sale_id, "contract_id": contract_id}
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"ERROR: {str(e)}")
+        print(f"ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/fi")
@@ -1281,6 +1336,7 @@ CLIENT_COLUMN_MIGRATIONS = {
     "sales": {"payment_type": "TEXT", "customer_id": "INTEGER"},
     "bhph_contracts": {"customer_id": "INTEGER"},
     "expenses": {"inventory_id": "INTEGER"},
+    "income": {"sale_id": "INTEGER", "bhph_payment_id": "INTEGER"},
 }
 
 
@@ -1869,53 +1925,78 @@ def get_bhph_contracts(user=Depends(get_current_user)):
         print(f"BHPH contracts error: {e}")
         return []
     
-    
+import calendar
+
+def _create_bhph_contract(conn, client_id, c):
+    """Insert a BHPH contract and its payment schedule. Returns the contract id."""
+    contract_id = conn.execute(text(f"""
+        INSERT INTO {ct(client_id, 'bhph_contracts')}
+        (sale_id, customer_id, customer_name, customer_phone, vehicle, sale_price,
+         down_payment, amount_financed, interest_rate, term_months,
+         payment_frequency, payment_amount, total_interest, start_date, notes, status)
+        VALUES (:sale_id, :customer_id, :customer_name, :customer_phone, :vehicle, :sale_price,
+                :down_payment, :amount_financed, :interest_rate, :term_months,
+                :payment_frequency, :payment_amount, :total_interest, :start_date, :notes, 'Active')
+        RETURNING id
+    """), {
+        "sale_id":           c.get("sale_id"),
+        "customer_id":       c.get("customer_id"),
+        "customer_name":     c.get("customer_name"),
+        "customer_phone":    c.get("customer_phone"),
+        "vehicle":           c.get("vehicle"),
+        "sale_price":        c.get("sale_price"),
+        "down_payment":      c.get("down_payment") or 0,
+        "amount_financed":   c.get("amount_financed"),
+        "interest_rate":     c.get("interest_rate") or 0,
+        "term_months":       int(c.get("term_months") or 24),
+        "payment_frequency": c.get("payment_frequency") or "Monthly",
+        "payment_amount":    c.get("payment_amount"),
+        "total_interest":    c.get("total_interest") or 0,
+        "start_date":        c.get("start_date"),
+        "notes":             c.get("notes") or "",
+    }).fetchone()[0]
+
+    start = datetime.strptime(c["start_date"], "%Y-%m-%d")
+    freq  = c.get("payment_frequency") or "Monthly"
+    term  = int(c.get("term_months") or 24)
+    if freq == "Weekly":      count = round(term * 52 / 12)
+    elif freq == "Bi-Weekly": count = round(term * 26 / 12)
+    else:                     count = term
+
+    for i in range(1, count + 1):
+        if freq == "Weekly":
+            due = start + timedelta(weeks=i)
+        elif freq == "Bi-Weekly":
+            due = start + timedelta(weeks=2 * i)
+        else:
+            m     = start.month - 1 + i
+            year  = start.year + m // 12
+            month = m % 12 + 1
+            day   = min(start.day, calendar.monthrange(year, month)[1])
+            due   = start.replace(year=year, month=month, day=day)
+        conn.execute(text(f"""
+            INSERT INTO {ct(client_id, 'bhph_payments')} (contract_id, due_date, amount_due, status)
+            VALUES (:cid, :due, :amt, 'Upcoming')
+        """), {"cid": contract_id, "due": due.strftime("%Y-%m-%d"), "amt": c["payment_amount"]})
+    return contract_id
+
 @app.post("/bhph/contracts")
 def create_bhph_contract(contract: dict = Body(...), user=Depends(get_current_user)):
+    """Import an existing contract (sold before HexGuard). No sale and no income are recorded."""
     client_id = user["client_id"]
-    table     = ct(client_id, "bhph_contracts")
     pay_table = ct(client_id, "bhph_payments")
     try:
-        with engine.connect() as conn:
-            result = conn.execute(text(f"""
-                INSERT INTO {table}
-                (sale_id, customer_id, customer_name, customer_phone, vehicle, sale_price,
-                 down_payment, amount_financed, interest_rate, term_months,
-                 payment_frequency, payment_amount, total_interest, start_date, notes)
-                VALUES (:sale_id, :customer_id, :customer_name, :customer_phone, :vehicle, :sale_price,
-                        :down_payment, :amount_financed, :interest_rate, :term_months,
-                        :payment_frequency, :payment_amount, :total_interest, :start_date, :notes)
-                RETURNING id
-            """), {**contract, "customer_id": contract.get("customer_id")})
-            contract_id = result.fetchone()[0]
-
-            from datetime import datetime, timedelta
-            start = datetime.strptime(contract["start_date"], "%Y-%m-%d")
-            freq  = contract["payment_frequency"]
-            count = contract["term_months"]
-            if freq == "Weekly":    count = contract["term_months"] * 4
-            if freq == "Bi-Weekly": count = contract["term_months"] * 2
-
-            for i in range(count):
-                if freq == "Weekly":    due = start + timedelta(weeks=i+1)
-                if freq == "Bi-Weekly": due = start + timedelta(weeks=(i+1)*2)
-                if freq == "Monthly":
-                    month = (start.month + i) % 12 or 12
-                    year  = start.year + (start.month + i - 1) // 12
-                    due   = start.replace(month=month, year=year)
-
+        with engine.begin() as conn:
+            contract_id = _create_bhph_contract(conn, client_id, {**contract, "sale_id": None})
+            made = int(contract.get("payments_made") or 0)
+            if made > 0:
                 conn.execute(text(f"""
-                    INSERT INTO {pay_table}
-                    (contract_id, due_date, amount_due, status)
-                    VALUES (:contract_id, :due_date, :amount_due, :status)
-                """), {
-                    "contract_id": contract_id,
-                    "due_date":    due.strftime("%Y-%m-%d"),
-                    "amount_due":  contract["payment_amount"],
-                    "status":      "Upcoming"
-                })
-            conn.commit()
-        return {"message": "Contract created", "contract_id": contract_id}
+                    UPDATE {pay_table}
+                    SET status = 'Paid', amount_paid = amount_due, paid_date = due_date
+                    WHERE id IN (SELECT id FROM {pay_table} WHERE contract_id = :cid
+                                 ORDER BY due_date LIMIT :n)
+                """), {"cid": contract_id, "n": made})
+        return {"message": "Contract imported", "contract_id": contract_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -2014,15 +2095,16 @@ def mark_payment_paid(payment_id: int, user=Depends(get_current_user)):
             """), {"today": today, "amount": amount, "id": payment_id})
 
             conn.execute(text(f"""
-                INSERT INTO {ct(client_id, 'income')}
-                (date, category, description, amount, month, year)
-                VALUES (:date, 'BHPH Payment', :desc, :amount, :month, :year)
+                    INSERT INTO {ct(client_id, 'income')}
+                (date, category, description, amount, month, year, bhph_payment_id)
+                VALUES (:date, 'BHPH Payment', :desc, :amount, :month, :year, :pid)
             """), {
                 "date":   today,
                 "desc":   f"BHPH Payment – {customer}, {vehicle}",
                 "amount": amount,
                 "month":  today[:7],
                 "year":   today[:4],
+                "pid":    payment_id,
             })
 
             # Last payment made → archive the contract
@@ -2035,6 +2117,26 @@ def mark_payment_paid(payment_id: int, user=Depends(get_current_user)):
                              {"cid": contract_id})
 
         return {"message": "Payment marked as paid", "paid_off": remaining == 0}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.patch("/bhph/payments/{payment_id}/unpay")
+def unmark_payment_paid(payment_id: int, user=Depends(get_current_user)):
+    client_id = user["client_id"]
+    pay, con, inc = (ct(client_id, t) for t in ("bhph_payments", "bhph_contracts", "income"))
+    try:
+        with engine.begin() as conn:
+            row = conn.execute(text(f"SELECT contract_id FROM {pay} WHERE id=:id"), {"id": payment_id}).fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Payment not found")
+            conn.execute(text(f"""
+                UPDATE {pay} SET status='Upcoming', amount_paid=0, paid_date=NULL WHERE id=:id
+            """), {"id": payment_id})
+            conn.execute(text(f"DELETE FROM {inc} WHERE bhph_payment_id=:id"), {"id": payment_id})
+            conn.execute(text(f"UPDATE {con} SET status='Active' WHERE id=:cid"), {"cid": row[0]})
+        return {"message": "Payment undone"}
     except HTTPException:
         raise
     except Exception as e:

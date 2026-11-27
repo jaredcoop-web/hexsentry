@@ -19,13 +19,13 @@ export default function Collections({ isMobile }) {
   const [msg, setMsg]                           = useState(null)
   const [view, setView] = useState('Active')
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = new Date().toLocaleDateString('en-CA')
 
   const [form, setForm] = useState({
     customer_name: '', customer_phone: '', vehicle: '',
     sale_price: '', down_payment: '', interest_rate: '',
     term_months: '24', payment_frequency: 'Monthly',
-    start_date: today, notes: ''
+    start_date: today, notes: '', payments_made: '0'
   })
 
   const update = (k, v) => setForm(p => ({ ...p, [k]: v }))
@@ -97,6 +97,15 @@ export default function Collections({ isMobile }) {
     } catch { setMsg({ type: 'error', text: 'Failed' }) }
   }
 
+  const handleUndoPaid = async (paymentId) => {
+    if (!window.confirm('Undo this payment? It will be removed from Finances too.')) return
+    try {
+      await api.patch(`/bhph/payments/${paymentId}/unpay`)
+      setMsg({ type: 'success', text: 'Payment undone' })
+      setTimeout(() => { loadPayments(selectedContract.id); load() }, 300)
+    } catch { setMsg({ type: 'error', text: 'Failed to undo payment' }) }
+  }
+
   const handleDeleteContract = async (contractId) => {
     try {
       await api.delete(`/bhph/contracts/${contractId}`)
@@ -141,9 +150,10 @@ export default function Collections({ isMobile }) {
         total_interest:    calc.totalInterest,
         start_date:        form.start_date,
         notes:             form.notes,
+        payments_made:     parseInt(form.payments_made) || 0,
       })
       setMsg({ type: 'success', text: `Contract created for ${form.customer_name}!` })
-      setForm({ customer_name: '', customer_phone: '', vehicle: '', sale_price: '', down_payment: '', interest_rate: '', term_months: '24', payment_frequency: 'Monthly', start_date: today, notes: '' })
+      setForm({ customer_name: '', customer_phone: '', vehicle: '', sale_price: '', down_payment: '', interest_rate: '', term_months: '24', payment_frequency: 'Monthly', start_date: today, notes: '', payments_made: '0' })
       setShowNew(false)
       load()
     } catch { setMsg({ type: 'error', text: 'Failed to create contract' }) }
@@ -168,7 +178,7 @@ export default function Collections({ isMobile }) {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={handleClearAll} style={{ padding: '8px 14px', background: 'transparent', color: '#e74c3c', border: '1px solid #e74c3c', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Clear All</button>
           <button onClick={() => setShowNew(!showNew)} style={{ padding: '10px 16px', background: '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
-            {showNew ? 'Cancel' : '➕ New Contract'}
+            {showNew ? 'Cancel' : '➕ Import Existing Contract'}
           </button>
         </div>
       </div>
@@ -198,7 +208,8 @@ export default function Collections({ isMobile }) {
 
       {showNew && (
         <div style={CARD}>
-          <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '20px' }}>New BHPH Contract</h2>
+          <h2 style={{ color: '#C0C0C0', fontSize: '16px', marginBottom: '6px' }}>Import Existing Contract</h2>
+          <p style={{ color: '#666', fontSize: '12px', margin: '0 0 20px' }}>For loans you made before using HexGuard. New BHPH sales should be logged on Add Sale — the contract is created automatically.</p>
           <div style={{ background: '#0d0d1a', border: '1px solid #222', borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
             <p style={{ color: '#4a9eff', fontSize: '13px', fontWeight: 'bold', margin: '0 0 12px' }}>👤 Customer</p>
             <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '14px' }}>
@@ -216,7 +227,8 @@ export default function Collections({ isMobile }) {
             <div><label style={LABEL}>Interest Rate (%)</label><input type="number" value={form.interest_rate} onChange={e => update('interest_rate', e.target.value)} placeholder="e.g. 18" style={INPUT} /></div>
             <div><label style={LABEL}>Term (Months)</label><select value={form.term_months} onChange={e => update('term_months', e.target.value)} style={SELECT}>{['12','18','24','30','36','48','60'].map(o => <option key={o}>{o}</option>)}</select></div>
             <div><label style={LABEL}>Payment Frequency</label><select value={form.payment_frequency} onChange={e => update('payment_frequency', e.target.value)} style={SELECT}>{['Weekly','Bi-Weekly','Monthly'].map(o => <option key={o}>{o}</option>)}</select></div>
-            <div><label style={LABEL}>Start Date</label><input type="date" value={form.start_date} onChange={e => update('start_date', e.target.value)} style={INPUT} /></div>
+            <div><label style={LABEL}>Original Sale Date</label><input type="date" value={form.start_date} onChange={e => update('start_date', e.target.value)} style={INPUT} /></div>
+            <div><label style={LABEL}>Payments already made</label><input type="number" min="0" value={form.payments_made} onChange={e => update('payments_made', e.target.value)} placeholder="0" style={INPUT} /></div>
           </div>
           {calc && (
             <div style={{ background: '#0A0A0A', border: '1px solid #333', borderRadius: '6px', padding: '14px', marginBottom: '16px', fontSize: '13px' }}>
@@ -230,7 +242,7 @@ export default function Collections({ isMobile }) {
             <textarea value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="optional" rows={2} style={{ ...INPUT, resize: 'vertical' }} />
           </div>
           <button onClick={handleCreate} disabled={saving} style={{ padding: '12px 24px', background: saving ? '#333' : '#C0C0C0', color: '#0A0A0A', border: 'none', borderRadius: '6px', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
-            {saving ? 'Creating...' : 'Create Contract & Generate Schedule'}
+            {saving ? 'Importing...' : 'Import Contract'}
           </button>
         </div>
       )}
@@ -314,6 +326,9 @@ export default function Collections({ isMobile }) {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ color: '#C0C0C0', fontSize: '13px' }}>{fmt(p.amount_due)}</span>
+                      {p.status === 'Paid' && (
+                        <button onClick={() => handleUndoPaid(p.id)} style={{ padding: '4px 8px', background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>Undo</button>
+                      )}
                       {p.status !== 'Paid' && (
                         <>
                           <button onClick={() => handleMarkPaid(p.id)} style={{ padding: '4px 8px', background: '#0d2d15', color: '#2ecc71', border: '1px solid #27ae60', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>Paid</button>
